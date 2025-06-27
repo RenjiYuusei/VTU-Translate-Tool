@@ -17,6 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vtu.translate.R
 import com.vtu.translate.viewmodel.MainViewModel
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import com.vtu.translate.ui.components.XmlHighlighter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +50,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
             if (fileName != "strings.xml") {
                 mainViewModel.onFileSelected(null)
                 mainViewModel.clearErrorMessage()
-                mainViewModel.setErrorMessage("Please select a file named strings.xml.")
+                mainViewModel.setErrorMessage(context.getString(R.string.please_select_strings_xml))
                 return@let
             }
 
@@ -54,7 +62,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
             } catch (e: Exception) {
                 mainViewModel.onFileSelected(null)
                 mainViewModel.clearErrorMessage()
-                mainViewModel.setErrorMessage("Error reading file: ${e.message}")
+                mainViewModel.setErrorMessage(context.getString(R.string.error_reading_file, e.message))
                 e.printStackTrace()
             }
         }
@@ -95,17 +103,32 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        var passwordVisible by rememberSaveable { mutableStateOf(false) }
                         OutlinedTextField(
                             value = apiKey ?: "",
                             onValueChange = { mainViewModel.onApiKeyChange(it) },
-                            label = { Text(stringResource(id = R.string.openrouter_api_key)) },
-                            modifier = Modifier.weight(1f)
+                            label = { Text(stringResource(id = R.string.api_key_hint)) },
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            trailingIcon = {
+                                val image = if (passwordVisible)
+                                    Icons.Filled.Visibility
+                                else Icons.Filled.VisibilityOff
+                                val description = if (passwordVisible) stringResource(id = R.string.hide_password) else stringResource(id = R.string.show_password)
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(imageVector = image, contentDescription = description)
+                                }
+                            },
+                            modifier = Modifier.weight(1f).height(56.dp) // Fixed height for alignment
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://openrouter.ai/keys"))
-                            context.startActivity(intent)
-                        }) {
+                        Button(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://openrouter.ai/keys"))
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.height(56.dp) // Fixed height for alignment
+                        ) {
                             Text(stringResource(id = R.string.get_api_key))
                         }
                     }
@@ -122,7 +145,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                             value = selectedModel,
                             onValueChange = { /* Read-only */ },
                             readOnly = true,
-                            label = { Text("Select AI Model") },
+                            label = { Text(stringResource(id = R.string.select_ai_model_label)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
@@ -151,8 +174,8 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     // Language Selection
-                    Text("Select Target Language:")
-                    val languages = listOf("Vietnamese", "Japanese", "French", "German", "Spanish", "Korean", "Chinese")
+                    Text(stringResource(id = R.string.select_target_language_label))
+                    val languages = listOf(stringResource(id = R.string.language_vietnamese), stringResource(id = R.string.language_japanese), stringResource(id = R.string.language_french), stringResource(id = R.string.language_german), stringResource(id = R.string.language_spanish), stringResource(id = R.string.language_korean), stringResource(id = R.string.language_chinese))
                     var expanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -162,8 +185,8 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                             value = selectedLanguage,
                             onValueChange = { /* Read-only */ },
                             readOnly = true,
-                            label = { Text("Target Language") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            label = { Text(stringResource(id = R.string.target_language_label)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded, contentDescription = stringResource(id = R.string.target_language_label)) },
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
                         ExposedDropdownMenu(
@@ -187,7 +210,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                         onClick = { pickFileLauncher.launch(arrayOf("application/xml", "text/xml", "text/plain")) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Select strings.xml")
+                        Text(stringResource(id = R.string.select_strings_xml))
                     }
                 }
             }
@@ -199,7 +222,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Original Content:")
+                        Text(stringResource(id = R.string.original_content_label))
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -207,7 +230,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                             shape = MaterialTheme.shapes.small,
                             color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
-                            Text(it, modifier = Modifier.padding(8.dp))
+                            XmlHighlighter(xmlContent = it, modifier = Modifier.padding(8.dp))
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -220,7 +243,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                 enabled = !isLoading && !selectedFileContent.isNullOrEmpty() && !apiKey.isNullOrEmpty(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (isLoading) "Translating..." else "Translate")
+                Text(if (isLoading) stringResource(id = R.string.translating) else stringResource(id = R.string.translate))
             }
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -230,7 +253,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Translated Content:")
+                        Text(stringResource(id = R.string.translated_content_label))
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -238,7 +261,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                             shape = MaterialTheme.shapes.small,
                             color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
-                            Text(it, modifier = Modifier.padding(8.dp))
+                            XmlHighlighter(xmlContent = it, modifier = Modifier.padding(8.dp))
                         }
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -247,7 +270,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                             enabled = !isLoading,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Save Translated File")
+                            Text(stringResource(id = R.string.save_translated_file))
                         }
                     }
                 }

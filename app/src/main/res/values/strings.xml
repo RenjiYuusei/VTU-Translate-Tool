@@ -16,4 +16,19 @@
     <string name="please_enter_api_key">Please enter your OpenRouter API Key.</string>
     <string name="error_during_translation">Error during translation:</string>
     <string name="get_api_key">Get API Key</string>
+    <string name="select_ai_model_label">Select AI Model</string>
+    <string name="select_target_language_label">Select Target Language</string>
+    <string name="target_language_label">Target Language</string>
+    <string name="original_content_label">Original Content</string>
+    <string name="translated_content_label">Translated Content</string>
+    <string name="api_key_hint">API Key (hidden)</string>
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
+    <string name="language_vietnamese">Vietnamese</string>
+    <string name="language_japanese">Japanese</string>
+    <string name="language_french">French</string>
+    <string name="language_german">German</string>
+    <string name="language_spanish">Spanish</string>
+    <string name="language_korean">Korean</string>
+    <string name="language_chinese">Chinese</string>
 </resources>

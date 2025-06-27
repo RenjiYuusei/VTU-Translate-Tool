@@ -16,4 +16,19 @@
     <string name="please_enter_api_key">Vui lòng nhập Khóa API OpenRouter của bạn.</string>
     <string name="error_during_translation">Lỗi trong quá trình dịch:</string>
     <string name="get_api_key">Lấy khóa API</string>
+    <string name="select_ai_model_label">Chọn mô hình AI</string>
+    <string name="select_target_language_label">Chọn ngôn ngữ đích</string>
+    <string name="target_language_label">Ngôn ngữ đích</string>
+    <string name="original_content_label">Nội dung gốc</string>
+    <string name="translated_content_label">Nội dung đã dịch</string>
+    <string name="api_key_hint">Khóa API (ẩn)</string>
+    <string name="hide_password">Ẩn mật khẩu</string>
+    <string name="show_password">Hiện mật khẩu</string>
+    <string name="language_vietnamese">Tiếng Việt</string>
+    <string name="language_japanese">Tiếng Nhật</string>
+    <string name="language_french">Tiếng Pháp</string>
+    <string name="language_german">Tiếng Đức</string>
+    <string name="language_spanish">Tiếng Tây Ban Nha</string>
+    <string name="language_korean">Tiếng Hàn</string>
+    <string name="language_chinese">Tiếng Trung</string>
 </resources>

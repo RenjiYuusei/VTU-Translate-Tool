@@ -14,6 +14,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import com.vtu.translate.R
 import java.io.StringReader
+import org.json.JSONObject // Import for JSON parsing
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -95,37 +96,69 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 parser.setInput(StringReader(originalContent))
 
                 var eventType = parser.eventType
-                val translatedStrings = mutableMapOf<String, String>()
-                val stringBuilder = StringBuilder()
+                val stringsToTranslate = mutableMapOf<String, String>()
+
+                var currentStringName: String? = null
+                var currentStringValue = StringBuilder()
+                var inStringTag = false
 
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     when (eventType) {
                         XmlPullParser.START_TAG -> {
                             if (parser.name == "string") {
-                                val name = parser.getAttributeValue(null, "name")
-                                parser.next()
-                                if (parser.eventType == XmlPullParser.TEXT) {
-                                    val originalText = parser.text
-                                    val translatedText = openRouterApiService.translateText(
-                                        model,
-                                        apiKey,
-                                        "Translate the following text to $targetLanguage: \"\"\"$originalText\"\"\"")
-                                    translatedStrings[name] = translatedText
-                                }
+                                currentStringName = parser.getAttributeValue(null, "name")
+                                inStringTag = true
+                                currentStringValue.clear() // Clear for new string
+                            }
+                        }
+                        XmlPullParser.TEXT -> {
+                            if (inStringTag) {
+                                currentStringValue.append(parser.text)
+                            }
+                        }
+                        XmlPullParser.END_TAG -> {
+                            if (parser.name == "string" && currentStringName != null) {
+                                stringsToTranslate[currentStringName!!] = currentStringValue.toString()
+                                inStringTag = false
+                                currentStringName = null
                             }
                         }
                     }
                     eventType = parser.next()
                 }
 
-                // Reconstruct the XML with translated strings
-                stringBuilder.append("<resources>\n")
-                translatedStrings.forEach { (name, value) ->
-                    stringBuilder.append("    <string name=\"" + name + "\">" + value + "</string>\n")
+                if (stringsToTranslate.isEmpty()) {
+                    _errorMessage.value = "No strings found in the selected strings.xml file."
+                    return@launch
                 }
-                stringBuilder.append("</resources>")
 
-                _translatedFileContent.value = stringBuilder.toString()
+                // Construct JSON for batch translation
+                val jsonForTranslation = JSONObject(stringsToTranslate as Map<*, *>).toString()
+                val prompt = "Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:\n$jsonForTranslation"
+
+                val translatedJsonString = openRouterApiService.translateText(
+                    model,
+                    apiKey,
+                    prompt
+                )
+
+                // Parse the translated JSON
+                val translatedStringsJson = JSONObject(translatedJsonString)
+                val translatedStringsMap = mutableMapOf<String, String>()
+                translatedStringsJson.keys().forEach { key ->
+                    translatedStringsMap[key] = translatedStringsJson.getString(key)
+                }
+
+                // Reconstruct the XML with translated strings using regex replacement
+                var reconstructedContent = originalContent
+                translatedStringsMap.forEach { (name, translatedValue) ->
+                    // Regex to find the string tag and its content
+                    // This regex is designed to be robust, handling potential whitespace around the text content
+                    val regex = Regex("(<string\\s+name=\"$name\">)(.*?)(</string>)")
+                    reconstructedContent = reconstructedContent.replaceFirst(regex, "$1$translatedValue$3")
+                }
+
+                _translatedFileContent.value = reconstructedContent
 
             } catch (e: Exception) {
                 _errorMessage.value = getApplication<Application>().getString(R.string.error_during_translation) + " ${e.message}"
