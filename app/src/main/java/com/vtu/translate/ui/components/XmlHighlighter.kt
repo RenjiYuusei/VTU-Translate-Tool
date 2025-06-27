@@ -4,6 +4,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.vtu.translate.ui.theme.XmlAttribute
@@ -39,7 +40,7 @@ fun XmlHighlighter(xmlContent: String, modifier: Modifier = Modifier) {
                 // It's a tag
                 val tagMatch = tagRegex.matchEntire(match.value)
                 if (tagMatch != null) {
-                    withStyle(style = SpanStyle(color = XmlTag)) {
+                    withStyle(style = SpanStyle(color = XmlTag, fontWeight = FontWeight.Bold)) {
                         append(tagMatch.value.substring(0, 1)) // < or </
                         append(tagMatch.groups[2]?.value) // tag name
                     }
@@ -61,7 +62,7 @@ fun XmlHighlighter(xmlContent: String, modifier: Modifier = Modifier) {
                         }
                     }
 
-                    withStyle(style = SpanStyle(color = XmlTag)) {
+                    withStyle(style = SpanStyle(color = XmlTag, fontWeight = FontWeight.Bold)) {
                         append(tagMatch.value.substring(tagMatch.value.length - 1)) // >
                     }
                 }

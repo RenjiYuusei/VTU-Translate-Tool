@@ -132,38 +132,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
 
-                // Construct JSON for batch translation
-                val jsonForTranslation = JSONObject(stringsToTranslate as Map<*, *>).toString()
-                val prompt = "Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:\n$jsonForTranslation"
+                val batchSize = 20 // Define your desired batch size
+                val allTranslatedStrings = mutableMapOf<String, String>()
 
-                val translatedJsonString = openRouterApiService.translateText(
-                    model,
-                    apiKey,
-                    prompt
-                )
+                stringsToTranslate.entries.chunked(batchSize).forEach { batch ->
+                    val batchMap = batch.associate { it.key to it.value }
+                    val jsonForTranslation = JSONObject(batchMap as Map<*, *>).toString()
+                    val prompt = "Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:\n$jsonForTranslation"
 
-                val translatedStringsMap = mutableMapOf<String, String>()
-                if (translatedJsonString.isNullOrEmpty()) {
-                    _errorMessage.value = "Error: API returned empty or null translation response."
-                    return@launch
-                }
+                    val translatedJsonString = openRouterApiService.translateText(
+                        model,
+                        apiKey,
+                        prompt
+                    )
 
-                val cleanedJsonString = translatedJsonString.substringAfter("```json").substringBeforeLast("```").trim()
-                Log.d("MainViewModel", "Cleaned JSON String: $cleanedJsonString")
-
-                try {
-                    val translatedStringsJson = JSONObject(cleanedJsonString)
-                    translatedStringsJson.keys().forEach { key ->
-                        translatedStringsMap[key] = translatedStringsJson.getString(key)
+                    if (translatedJsonString.isNullOrEmpty()) {
+                        _errorMessage.value = "Error: API returned empty or null translation response for a batch."
+                        return@launch
                     }
-                } catch (e: JSONException) {
-                    _errorMessage.value = "Error parsing API response: Invalid JSON format. Details: ${e.message}"
-                    e.printStackTrace()
-                    return@launch
-                } catch (e: Exception) {
-                    _errorMessage.value = "Unexpected error during API response parsing. Details: ${e.message}"
-                    e.printStackTrace()
-                    return@launch
+
+                    val cleanedJsonString = translatedJsonString.substringAfter("```json").substringBeforeLast("```").trim()
+                    Log.d("MainViewModel", "Cleaned JSON String: $cleanedJsonString")
+
+                    try {
+                        val translatedStringsJson = JSONObject(cleanedJsonString)
+                        translatedStringsJson.keys().forEach { key ->
+                            allTranslatedStrings[key] = translatedStringsJson.getString(key)
+                        }
+                    } catch (e: JSONException) {
+                        _errorMessage.value = "Error parsing API response for a batch: Invalid JSON format. Details: ${e.message}"
+                        e.printStackTrace()
+                        return@launch
+                    } catch (e: Exception) {
+                        _errorMessage.value = "Unexpected error during API response parsing for a batch. Details: ${e.message}"
+                        e.printStackTrace()
+                        return@launch
+                    }
                 }
 
                 // Second pass: Reconstruct the XML with translated strings
@@ -191,7 +195,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             stringBuilder.append(">")
                             if (parserForReconstruction.name == "string") {
                                 val name = parserForReconstruction.getAttributeValue(null, "name")
-                                val translatedText = translatedStringsMap[name]
+                                val translatedText = allTranslatedStrings[name]
                                 if (translatedText != null) {
                                     stringBuilder.append(translatedText)
                                     skipText = true // Skip the original text event
@@ -199,10 +203,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             }
                         }
                         XmlPullParser.END_TAG -> {
-                            if (!skipText || parserForReconstruction.name != "string") { // Only append end tag if not skipping text for string
-                                stringBuilder.append("</" + parserForReconstruction.name + ">")
+                            stringBuilder.append("</" + parserForReconstruction.name + ">")
+                            if (parserForReconstruction.name == "string") {
+                                skipText = false // Reset skipText after handling the string tag
                             }
-                            skipText = false // Reset skipText after handling the string tag
                         }
                         XmlPullParser.TEXT -> {
                             if (!skipText) {
