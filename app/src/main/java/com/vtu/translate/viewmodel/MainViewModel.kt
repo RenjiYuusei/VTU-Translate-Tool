@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
+import com.vtu.translate.R
 import java.io.StringReader
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -127,7 +128,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _translatedFileContent.value = stringBuilder.toString()
 
             } catch (e: Exception) {
-                _errorMessage.value = application.getString(R.string.error_during_translation) + " ${e.message}"
+                _errorMessage.value = getApplication<Application>().getString(R.string.error_during_translation) + " ${e.message}"
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false

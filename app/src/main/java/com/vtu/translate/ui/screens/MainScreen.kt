@@ -42,7 +42,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
             if (fileName != "strings.xml") {
                 mainViewModel.onFileSelected(null)
                 mainViewModel.clearErrorMessage()
-                mainViewModel.errorMessage.value = "Please select a file named strings.xml."
+                mainViewModel.setErrorMessage("Please select a file named strings.xml.")
                 return@let
             }
 
@@ -54,7 +54,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
             } catch (e: Exception) {
                 mainViewModel.onFileSelected(null)
                 mainViewModel.clearErrorMessage()
-                mainViewModel.errorMessage.value = "Error reading file: ${e.message}"
+                mainViewModel.setErrorMessage("Error reading file: ${e.message}")
                 e.printStackTrace()
             }
         }
