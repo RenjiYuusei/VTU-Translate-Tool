@@ -37,15 +37,16 @@ fun SettingsScreen(
     val apiKey by viewModel.apiKey.collectAsStateWithLifecycle()
     var apiKeyVisible by remember { mutableStateOf(false) }
 
-    val geminiModels = listOf("google/gemini-2.0-flash-exp:free", "google/gemma-3-27b-it:free")
-    val deepSeekModels = listOf("deepseek/deepseek-r1-0528:free", "deepseek/deepseek-chat-v3-0324:free")
-
-    val selectedGeminiModel by viewModel.geminiModel.collectAsStateWithLifecycle()
-    val selectedDeepSeekModel by viewModel.deepSeekModel.collectAsStateWithLifecycle()
+    val allModels = listOf(
+        "google/gemini-2.0-flash-exp:free",
+        "google/gemma-3-27b-it:free",
+        "deepseek/deepseek-r1-0528:free",
+        "deepseek/deepseek-chat-v3-0324:free"
+    )
+    val selectedModel by viewModel.selectedModel.collectAsStateWithLifecycle()
 
     var currentApiKey by remember(apiKey) { mutableStateOf(apiKey) }
-    var currentGeminiModel by remember(selectedGeminiModel) { mutableStateOf(selectedGeminiModel) }
-    var currentDeepSeekModel by remember(selectedDeepSeekModel) { mutableStateOf(selectedDeepSeekModel) }
+    var currentSelectedModel by remember(selectedModel) { mutableStateOf(selectedModel) }
 
 
     Column(
@@ -54,10 +55,7 @@ fun SettingsScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = stringResource(id = R.string.settings_tab), style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // API Key
+        Text(text = stringResource(id = R.string.api_key), style = MaterialTheme.typography.titleMedium)
         OutlinedTextField(
             value = currentApiKey,
             onValueChange = { currentApiKey = it },
@@ -75,6 +73,7 @@ fun SettingsScreen(
             },
             modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://openrouter.ai/keys"))
@@ -85,29 +84,18 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Gemini Models
         ModelSelector(
-            label = stringResource(id = R.string.gemini_models),
-            models = geminiModels,
-            selectedModel = currentGeminiModel,
-            onModelSelected = { currentGeminiModel = it }
+            label = stringResource(id = R.string.model),
+            models = allModels,
+            selectedModel = currentSelectedModel,
+            onModelSelected = { currentSelectedModel = it }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // DeepSeek Models
-        ModelSelector(
-            label = stringResource(id = R.string.deepseek_models),
-            models = deepSeekModels,
-            selectedModel = currentDeepSeekModel,
-            onModelSelected = { currentDeepSeekModel = it }
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(onClick = {
-            viewModel.saveSettings(currentApiKey, currentGeminiModel, currentDeepSeekModel)
-            Toast.makeText(context, R.string.api_key_saved, Toast.LENGTH_SHORT).show()
+            viewModel.saveSettings(currentApiKey, currentSelectedModel)
+            Toast.makeText(context, context.getString(R.string.settings_saved), Toast.LENGTH_SHORT).show()
         }) {
             Text(text = stringResource(id = R.string.save))
         }

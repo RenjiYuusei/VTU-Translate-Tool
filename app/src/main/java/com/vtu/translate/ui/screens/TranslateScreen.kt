@@ -57,7 +57,7 @@ fun TranslateScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = { filePickerLauncher.launch("application/xml") }) {
+        Button(onClick = { filePickerLauncher.launch("*/*") }) {
             Text(text = stringResource(id = R.string.load_strings_xml))
         }
 

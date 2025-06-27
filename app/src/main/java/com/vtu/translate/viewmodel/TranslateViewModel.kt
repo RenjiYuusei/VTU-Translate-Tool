@@ -78,14 +78,11 @@ class TranslateViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isTranslating = true, progress = 0f) }
             val apiKey = "Bearer ${settingsRepository.getApiKey.first()}"
-            // For simplicity, let's use the Gemini model first.
-            // A more robust implementation would let the user choose which model to use for the current translation.
-            val model = settingsRepository.getGeminiModel.first()
-
+            val model = settingsRepository.getSelectedModel.first()
             val originalStrings = _uiState.value.originalStrings
             val translatedStrings = mutableMapOf<String, String>()
-            var progress = 0f
             val totalStrings = originalStrings.size
+            var progress = 0f
 
             originalStrings.forEach { (key, value) ->
                 try {

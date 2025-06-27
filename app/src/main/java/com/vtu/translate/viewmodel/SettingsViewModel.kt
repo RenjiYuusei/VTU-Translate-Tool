@@ -16,21 +16,15 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
         initialValue = ""
     )
 
-    val geminiModel = settingsRepository.getGeminiModel.stateIn(
+    val selectedModel = settingsRepository.getSelectedModel.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = "google/gemini-2.0-flash-exp:free"
     )
 
-    val deepSeekModel = settingsRepository.getDeepSeekModel.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = "deepseek/deepseek-r1-0528:free"
-    )
-
-    fun saveSettings(apiKey: String, geminiModel: String, deepSeekModel: String) {
+    fun saveSettings(apiKey: String, selectedModel: String) {
         viewModelScope.launch {
-            settingsRepository.saveSettings(apiKey, geminiModel, deepSeekModel)
+            settingsRepository.saveSettings(apiKey, selectedModel)
         }
     }
 }

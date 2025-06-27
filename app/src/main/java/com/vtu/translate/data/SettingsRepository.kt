@@ -14,26 +14,20 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class SettingsRepository(private val context: Context) {
 
     private val apiKey = stringPreferencesKey("api_key")
-    private val geminiModel = stringPreferencesKey("gemini_model")
-    private val deepSeekModel = stringPreferencesKey("deepseek_model")
+    private val selectedModel = stringPreferencesKey("selected_model")
 
     val getApiKey: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[apiKey] ?: ""
     }
 
-    val getGeminiModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[geminiModel] ?: "google/gemini-2.0-flash-exp:free"
+    val getSelectedModel: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[selectedModel] ?: "google/gemini-2.0-flash-exp:free"
     }
 
-    val getDeepSeekModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[deepSeekModel] ?: "deepseek/deepseek-r1-0528:free"
-    }
-
-    suspend fun saveSettings(apiKey: String, geminiModel: String, deepSeekModel: String) {
+    suspend fun saveSettings(apiKey: String, selectedModel: String) {
         context.dataStore.edit { settings ->
             settings[this.apiKey] = apiKey
-            settings[this.geminiModel] = geminiModel
-            settings[this.deepSeekModel] = deepSeekModel
+            settings[this.selectedModel] = selectedModel
         }
     }
 } 
