@@ -18,7 +18,12 @@ import com.vtu.translate.data.SettingsRepository
 import com.vtu.translate.network.RetrofitInstance
 import com.vtu.translate.ui.screens.MainScreen
 import com.vtu.translate.ui.theme.VTUTranslateToolTheme
-import com.vtu.translate.viewmodel.*
+import com.vtu.translate.viewmodel.LogsViewModel
+import com.vtu.translate.viewmodel.LogsViewModelFactory
+import com.vtu.translate.viewmodel.SettingsViewModel
+import com.vtu.translate.viewmodel.SettingsViewModelFactory
+import com.vtu.translate.viewmodel.TranslateViewModel
+import com.vtu.translate.viewmodel.TranslateViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
