@@ -11,6 +11,8 @@
     <string name="model">Model</string>
     <string name="clear_log">Clear Log</string>
     <string name="copy_log">Copy Log</string>
+    <string name="original_text_label">Original</string>
+    <string name="translated_text_label">Translated</string>
     <string name="gemini_models">Gemini Models</string>
     <string name="deepseek_models">DeepSeek Models</string>
     <string name="select_model">Select a model</string>

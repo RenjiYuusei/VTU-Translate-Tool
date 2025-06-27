@@ -71,7 +71,11 @@ fun TranslateScreen(
 
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Original", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    text = stringResource(id = R.string.original_text_label),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 LazyColumn {
                     items(uiState.originalStrings.toList()) { (key, value) ->
                         Text("$key: $value", style = MaterialTheme.typography.bodyMedium)
@@ -80,7 +84,11 @@ fun TranslateScreen(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Translated", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    text = stringResource(id = R.string.translated_text_label),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 LazyColumn {
                     items(uiState.translatedStrings.toList()) { (key, value) ->
                         Text("$key: $value", style = MaterialTheme.typography.bodyMedium)

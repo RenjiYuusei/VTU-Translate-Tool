@@ -20,4 +20,6 @@
     <string name="log_copied">Nhật ký đã được sao chép vào bộ nhớ tạm</string>
     <string name="api_key_saved">API Key đã được lưu</string>
     <string name="settings_saved">Đã lưu cài đặt</string>
+    <string name="original_text_label">Bản gốc</string>
+    <string name="translated_text_label">Bản dịch</string>
 </resources> 
