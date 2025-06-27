@@ -29,18 +29,31 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
 
     val context = LocalContext.current
 
-    val pickFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-        uri: Uri? ->
+    val pickFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
+            val fileName = context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                cursor.moveToFirst()
+                cursor.getString(nameIndex)
+            }
+
+            if (fileName != "strings.xml") {
+                mainViewModel.onFileSelected(null)
+                mainViewModel.clearErrorMessage()
+                mainViewModel.errorMessage.value = "Please select a file named strings.xml."
+                return@let
+            }
+
             try {
-                context.contentResolver.openInputStream(it)?.use {
-                    inputStream ->
-                    val content = inputStream.bufferedReader().use { it.readText() }
+                context.contentResolver.openInputStream(it)?.use { inputStream ->
+                    val content = inputStream.bufferedReader().use { reader -> reader.readText() }
                     mainViewModel.onFileSelected(content)
                 }
             } catch (e: Exception) {
+                mainViewModel.onFileSelected(null)
                 mainViewModel.clearErrorMessage()
-                mainViewModel.onFileSelected("Error reading file: ${e.message}")
+                mainViewModel.errorMessage.value = "Error reading file: ${e.message}"
+                e.printStackTrace()
             }
         }
     }
@@ -75,109 +88,160 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            OutlinedTextField(
-                value = apiKey ?: "",
-                onValueChange = { mainViewModel.onApiKeyChange(it) },
-                label = { Text("OpenRouter API Key") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Model Selection
-            Text("Select AI Model:")
-            Row {
-                val models = listOf("google/gemma-3-27b-it:free", "deepseek/deepseek-r1-0528:free")
-                models.forEach { model ->
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        RadioButton(
-                            selected = (selectedModel == model),
-                            onClick = { mainViewModel.onModelSelected(model) }
-                        )
-                        Text(model)
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Language Selection
-            Text("Select Target Language:")
-            val languages = listOf("Vietnamese", "Japanese", "French", "German", "Spanish", "Korean", "Chinese")
-            var expanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                OutlinedTextField(
-                    value = selectedLanguage,
-                    onValueChange = { /* Read-only */ },
-                    readOnly = true,
-                    label = { Text("Target Language") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    languages.forEach { language ->
-                        DropdownMenuItem(
-                            text = { Text(language) },
-                            onClick = {
-                                mainViewModel.onLanguageSelected(language)
-                                expanded = false
-                            }
+                Column(modifier = Modifier.padding(16.dp)) {
+                    OutlinedTextField(
+                        value = apiKey ?: "",
+                        onValueChange = { mainViewModel.onApiKeyChange(it) },
+                        label = { Text("OpenRouter API Key") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Model Selection
+                    var modelExpanded by remember { mutableStateOf(false) }
+                    val models = listOf("google/gemma-3-27b-it:free", "deepseek/deepseek-r1-0528:free")
+                    ExposedDropdownMenuBox(
+                        expanded = modelExpanded,
+                        onExpandedChange = { modelExpanded = !modelExpanded }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedModel,
+                            onValueChange = { /* Read-only */ },
+                            readOnly = true,
+                            label = { Text("Select AI Model") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
+                            modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
+                        ExposedDropdownMenu(
+                            expanded = modelExpanded,
+                            onDismissRequest = { modelExpanded = false }
+                        ) {
+                            models.forEach { model ->
+                                DropdownMenuItem(
+                                    text = { Text(model) },
+                                    onClick = {
+                                        mainViewModel.onModelSelected(model)
+                                        modelExpanded = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = { pickFileLauncher.launch(arrayOf("application/xml")) }) {
-                Text("Select strings.xml")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Language Selection
+                    Text("Select Target Language:")
+                    val languages = listOf("Vietnamese", "Japanese", "French", "German", "Spanish", "Korean", "Chinese")
+                    var expanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedLanguage,
+                            onValueChange = { /* Read-only */ },
+                            readOnly = true,
+                            label = { Text("Target Language") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            languages.forEach { language ->
+                                DropdownMenuItem(
+                                    text = { Text(language) },
+                                    onClick = {
+                                        mainViewModel.onLanguageSelected(language)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { pickFileLauncher.launch(arrayOf("application/xml", "text/xml", "text/plain")) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Select strings.xml")
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(16.dp))
 
             selectedFileContent?.let {
-                Text("Original Content:")
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp),
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    Text(it, modifier = Modifier.padding(8.dp))
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Original Content:")
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp),
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(it, modifier = Modifier.padding(8.dp))
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             Button(
                 onClick = { mainViewModel.translateStringsXml() },
-                enabled = !isLoading && !selectedFileContent.isNullOrEmpty() && !apiKey.isNullOrEmpty()
+                enabled = !isLoading && !selectedFileContent.isNullOrEmpty() && !apiKey.isNullOrEmpty(),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(if (isLoading) "Translating..." else "Translate")
             }
             Spacer(modifier = Modifier.height(16.dp))
 
             translatedFileContent?.let {
-                Text("Translated Content:")
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp),
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    Text(it, modifier = Modifier.padding(8.dp))
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Translated Content:")
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp),
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(it, modifier = Modifier.padding(8.dp))
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { saveFileLauncher.launch("translated_strings.xml") },
+                            enabled = !isLoading,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Save Translated File")
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = { saveFileLauncher.launch("translated_strings.xml") },
-                    enabled = !isLoading
-                ) {
-                    Text("Save Translated File")
-                }
             }
 
             errorMessage?.let {
