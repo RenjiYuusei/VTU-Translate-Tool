@@ -64,7 +64,7 @@ class TranslateViewModel(
                 }
                 XmlPullParser.TEXT -> {
                     if (currentName != null) {
-                        strings[currentName!!] = parser.text
+                        strings[currentName] = parser.text
                         currentName = null
                     }
                 }

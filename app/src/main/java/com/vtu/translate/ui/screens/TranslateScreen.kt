@@ -64,7 +64,7 @@ fun TranslateScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         if (uiState.isTranslating) {
-            LinearProgressIndicator(progress = uiState.progress, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(progress = { uiState.progress }, modifier = Modifier.fillMaxWidth())
         }
 
         Spacer(modifier = Modifier.height(16.dp))
