@@ -1,5 +1,6 @@
 package com.vtu.translate.ui.screens
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -35,9 +36,9 @@ fun TranslateScreen(
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        if (uri != null) {
-            viewModel.onFileSelected(uri, context)
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.loadStringsXml(it)
         }
     }
 

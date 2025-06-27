@@ -189,13 +189,15 @@ class TranslateViewModel(
 }
 
 class TranslateViewModelFactory(
+    private val context: Context,
+    private val openRouterApi: OpenRouterApi,
     private val settingsRepository: SettingsRepository,
     private val logRepository: LogRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TranslateViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return TranslateViewModel(settingsRepository, logRepository) as T
+            return TranslateViewModel(context, openRouterApi, settingsRepository, logRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
