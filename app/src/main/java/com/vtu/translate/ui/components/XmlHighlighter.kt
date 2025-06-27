@@ -14,8 +14,8 @@ import com.vtu.translate.ui.theme.XmlText
 @Composable
 fun XmlHighlighter(xmlContent: String, modifier: Modifier = Modifier) {
     val annotatedString = buildAnnotatedString {
-        val tagRegex = Regex("<(/)?([a-zA-Z0-9_:]+)([^>]*)>")
-        val attributeRegex = Regex("([a-zA-Z0-9_:]+)="([^"]*)"")
+        val tagRegex = Regex("<(/)?([a-zA-Z0-9_:]+)([^>]*)")
+        val attributeRegex = Regex("""([a-zA-Z0-9_:]+)="([^"]*)""")
 
         var lastIndex = 0
         tagRegex.findAll(xmlContent).forEach { tagMatch ->
@@ -28,8 +28,8 @@ fun XmlHighlighter(xmlContent: String, modifier: Modifier = Modifier) {
 
             // Append the tag itself
             withStyle(style = SpanStyle(color = XmlTag)) {
-                append(tagMatch.value.substring(0, 1)) // <
-                append(tagMatch.value.substring(1, tagMatch.value.length - 1).split(" ")[0]) // tag name
+                append(tagMatch.value.substring(0, 1)) // < or </
+                append(tagMatch.groups[2]?.value) // tag name
             }
 
             // Append attributes
@@ -43,9 +43,9 @@ fun XmlHighlighter(xmlContent: String, modifier: Modifier = Modifier) {
                     append("=")
                 }
                 withStyle(style = SpanStyle(color = XmlAttributeValue)) {
-                    append(""")
+                    append("\"")
                     append(attrMatch.groups[2]?.value) // attribute value
-                    append(""")
+                    append("\"")
                 }
             }
 
