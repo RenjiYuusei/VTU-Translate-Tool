@@ -71,21 +71,23 @@ fun TranslateScreen(
 
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Original", style = MaterialTheme.typography.headlineSmall)
-                LazyColumn {
-                    items(uiState.originalStrings.toList()) { (key, value) ->
-                        Text("$key: $value", style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
+                Text(text = stringResource(id = R.string.original_text), style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = uiState.originalContent,
+                    onValueChange = { },
+                    readOnly = true
+                )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Translated", style = MaterialTheme.typography.headlineSmall)
-                LazyColumn {
-                    items(uiState.translatedStrings.toList()) { (key, value) ->
-                        Text("$key: $value", style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
+                Text(text = stringResource(id = R.string.translated_text), style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = uiState.translatedContent,
+                    onValueChange = { },
+                    readOnly = true
+                )
             }
         }
 

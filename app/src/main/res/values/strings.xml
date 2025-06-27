@@ -5,11 +5,14 @@
     <string name="logs_tab">Logs</string>
     <string name="api_key">API Key</string>
     <string name="enter_api_key">Enter your API Key</string>
-    <string name="get_api_key">Get API Key</string>
+    <string name="get_api_key">Get API Key from OpenRouter</string>
     <string name="save">Save</string>
+    <string name="settings_saved">Settings saved</string>
     <string name="model">Model</string>
     <string name="clear_log">Clear Log</string>
     <string name="copy_log">Copy Log</string>
+    <string name="original_text">Original</string>
+    <string name="translated_text">Translated</string>
     <string name="gemini_models">Gemini Models</string>
     <string name="deepseek_models">DeepSeek Models</string>
     <string name="select_model">Select a model</string>

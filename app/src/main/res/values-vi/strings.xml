@@ -5,9 +5,9 @@
     <string name="logs_tab">Nhật ký</string>
     <string name="api_key">API Key</string>
     <string name="enter_api_key">Nhập API Key của bạn</string>
-    <string name="get_api_key">Lấy API Key</string>
+    <string name="get_api_key">Lấy API Key từ OpenRouter</string>
     <string name="save">Lưu</string>
-    <string name="model">Model</string>
+    <string name="model">Mô hình</string>
     <string name="clear_log">Xoá nhật ký</string>
     <string name="copy_log">Sao chép nhật ký</string>
     <string name="gemini_models">Mô hình Gemini</string>
@@ -19,4 +19,7 @@
     <string name="log_cleared">Nhật ký đã được xoá</string>
     <string name="log_copied">Nhật ký đã được sao chép vào bộ nhớ tạm</string>
     <string name="api_key_saved">API Key đã được lưu</string>
+    <string name="settings_saved">Đã lưu cài đặt</string>
+qq    <string name="original_text">Bản gốc</string>
+    <string name="translated_text">Bản dịch</string>
 </resources> 
