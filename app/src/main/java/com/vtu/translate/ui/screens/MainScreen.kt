@@ -21,6 +21,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vtu.translate.R
+import com.vtu.translate.viewmodel.LogsViewModel
+import com.vtu.translate.viewmodel.SettingsViewModel
+import com.vtu.translate.viewmodel.TranslateViewModel
 
 sealed class Screen(val route: String, val resourceId: Int, val icon: @Composable () -> Unit) {
     object Translate : Screen("translate", R.string.translate_tab, { Icon(Icons.Filled.Translate, contentDescription = null) })
@@ -35,7 +38,11 @@ val items = listOf(
 )
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    settingsViewModel: SettingsViewModel,
+    logsViewModel: LogsViewModel,
+    translateViewModel: TranslateViewModel
+) {
     val navController = rememberNavController()
     Scaffold(
         bottomBar = {
@@ -61,10 +68,14 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        NavHost(navController, startDestination = Screen.Translate.route, Modifier.padding(innerPadding)) {
-            composable(Screen.Translate.route) { TranslateScreen() }
-            composable(Screen.Settings.route) { SettingsScreen() }
-            composable(Screen.Logs.route) { LogsScreen() }
+        NavHost(
+            navController = navController,
+            startDestination = "translate",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("translate") { TranslateScreen(translateViewModel) }
+            composable("settings") { SettingsScreen(settingsViewModel) }
+            composable("logs") { LogsScreen(logsViewModel) }
         }
     }
 } 

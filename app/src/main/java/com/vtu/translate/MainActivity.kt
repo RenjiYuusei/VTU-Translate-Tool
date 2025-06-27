@@ -13,6 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.vtu.translate.data.LogRepository
+import com.vtu.translate.data.SettingsRepository
+import com.vtu.translate.network.RetrofitInstance
 import com.vtu.translate.ui.screens.MainScreen
 import com.vtu.translate.ui.theme.VTUTranslateToolTheme
 import com.vtu.translate.viewmodel.LogsViewModel
