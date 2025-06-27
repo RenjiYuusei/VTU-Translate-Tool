@@ -3,6 +3,7 @@ package com.vtu.translate.network
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
+// import okhttp3.logging.HttpLoggingInterceptor // Keep it disabled for now
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
@@ -20,6 +21,13 @@ object RetrofitInstance {
 
     private val client = OkHttpClient.Builder()
         // .addInterceptor(loggingInterceptor)
+        .addInterceptor { chain ->
+            val original = chain.request()
+            val requestBuilder = original.newBuilder()
+                .header("Content-Type", "application/json")
+            val request = requestBuilder.build()
+            chain.proceed(request)
+        }
         .build()
 
     val api: OpenRouterApiService by lazy {
