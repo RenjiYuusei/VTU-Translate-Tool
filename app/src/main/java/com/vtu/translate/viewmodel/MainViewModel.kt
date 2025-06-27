@@ -15,6 +15,7 @@ import org.xmlpull.v1.XmlPullParserFactory
 import com.vtu.translate.R
 import java.io.StringReader
 import org.json.JSONObject // Import for JSON parsing
+import org.json.JSONException // Import for JSONException
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -140,11 +141,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     prompt
                 )
 
-                // Parse the translated JSON
-                val translatedStringsJson = JSONObject(translatedJsonString)
                 val translatedStringsMap = mutableMapOf<String, String>()
-                translatedStringsJson.keys().forEach { key ->
-                    translatedStringsMap[key] = translatedStringsJson.getString(key)
+                if (translatedJsonString.isNullOrEmpty()) {
+                    _errorMessage.value = "Error: API returned empty or null translation response."
+                    return@launch
+                }
+
+                try {
+                    val translatedStringsJson = JSONObject(translatedJsonString)
+                    translatedStringsJson.keys().forEach { key ->
+                        translatedStringsMap[key] = translatedStringsJson.getString(key)
+                    }
+                } catch (e: JSONException) {
+                    _errorMessage.value = "Error parsing API response: Invalid JSON format. Details: ${e.message}"
+                    e.printStackTrace()
+                    return@launch
+                } catch (e: Exception) {
+                    _errorMessage.value = "Unexpected error during API response parsing. Details: ${e.message}"
+                    e.printStackTrace()
+                    return@launch
                 }
 
                 // Second pass: Reconstruct the XML with translated strings
@@ -181,7 +196,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         XmlPullParser.END_TAG -> {
                             if (!skipText || parserForReconstruction.name != "string") { // Only append end tag if not skipping text for string
-                                stringBuilder.append("</" + parserForReconstruction.name + ">")
+                                stringBuilder.append("</" + parserForReconstruction.reconstruction.name + ">")
                             }
                             skipText = false // Reset skipText after handling the string tag
                         }
