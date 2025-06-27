@@ -10,93 +10,68 @@ import com.vtu.translate.data.SettingsRepository
 import com.vtu.translate.network.ChatRequest
 import com.vtu.translate.network.Message
 import com.vtu.translate.network.RetrofitInstance
-import com.vtu.translate.network.OpenRouterApi
-import com.vtu.translate.network.TranslateRequest
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
-import java.io.InputStream
 import java.io.StringReader
-import java.io.StringWriter
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.transform.OutputKeys
-import javax.xml.transform.TransformerFactory
-import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.stream.StreamResult
 
-data class TranslateUiState(
+data class TranslationState(
     val originalStrings: Map<String, String> = emptyMap(),
     val translatedStrings: Map<String, String> = emptyMap(),
-    val originalContent: String = "",
-    val translatedContent: String = "",
     val isTranslating: Boolean = false,
     val progress: Float = 0f,
-    val error: String? = null
+    val selectedFileUri: Uri? = null,
+    val targetLanguage: String = "vi" // Default to Vietnamese
 )
 
 class TranslateViewModel(
-    private val context: Context,
-    private val openRouterApi: OpenRouterApi,
     private val settingsRepository: SettingsRepository,
     private val logRepository: LogRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TranslateUiState())
+    private val _uiState = MutableStateFlow(TranslationState())
     val uiState = _uiState.asStateFlow()
 
-    fun loadStringsXml(uri: Uri) {
+    fun onFileSelected(uri: Uri, context: Context) {
         viewModelScope.launch {
-            try {
-                context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val content = inputStream.bufferedReader().use { it.readText() }
-                    val strings = parseStringsXml(context.contentResolver.openInputStream(uri))
-                    _uiState.update {
-                        it.copy(
-                            originalStrings = strings,
-                            originalContent = content,
-                            translatedStrings = emptyMap(),
-                            translatedContent = ""
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
-                logRepository.addLog("Error loading strings.xml: ${e.message}")
+            _uiState.update { it.copy(selectedFileUri = uri) }
+            val content = context.contentResolver.openInputStream(uri)?.bufferedReader().use { it?.readText() }
+            if (content != null) {
+                parseXml(content)
+                logRepository.addLog("File loaded: ${uri.path}")
+            } else {
+                logRepository.addLog("Error: Could not read file content.")
             }
         }
     }
 
-    private fun parseStringsXml(inputStream: InputStream?): Map<String, String> {
-        val strings = mutableMapOf<String, String>()
-        inputStream?.use {
-            val factory = XmlPullParserFactory.newInstance()
-            factory.isNamespaceAware = true
-            val parser = factory.newPullParser()
-            parser.setInput(it, null)
+    private fun parseXml(xmlContent: String) {
+        val factory = XmlPullParserFactory.newInstance()
+        factory.isNamespaceAware = true
+        val parser = factory.newPullParser()
+        parser.setInput(StringReader(xmlContent))
 
-            var eventType = parser.eventType
-            var currentKey: String? = null
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                when (eventType) {
-                    XmlPullParser.START_TAG -> {
-                        if (parser.name == "string") {
-                            currentKey = parser.getAttributeValue(null, "name")
-                        }
-                    }
-                    XmlPullParser.TEXT -> {
-                        if (currentKey != null) {
-                            strings[currentKey!!] = parser.text
-                            currentKey = null
-                        }
+        val strings = mutableMapOf<String, String>()
+        var eventType = parser.eventType
+        var currentName: String? = null
+        while (eventType != XmlPullParser.END_DOCUMENT) {
+            when (eventType) {
+                XmlPullParser.START_TAG -> {
+                    if (parser.name == "string") {
+                        currentName = parser.getAttributeValue(null, "name")
                     }
                 }
-                eventType = parser.next()
+                XmlPullParser.TEXT -> {
+                    if (currentName != null) {
+                        strings[currentName] = parser.text
+                        currentName = null
+                    }
+                }
             }
+            eventType = parser.next()
         }
-        return strings
+        _uiState.update { it.copy(originalStrings = strings) }
     }
 
     fun translateAll() {
@@ -107,97 +82,60 @@ class TranslateViewModel(
             val originalStrings = _uiState.value.originalStrings
             val translatedStrings = mutableMapOf<String, String>()
             val totalStrings = originalStrings.size
-            var completedCount = 0
+            var progress = 0f
 
-            logRepository.addLog("Starting translation with model: $model")
-
-            val translationJobs = originalStrings.map { (key, value) ->
-                async {
-                    try {
-                        val request = TranslateRequest(
-                            model = model,
-                            messages = listOf(
-                                mapOf("role" to "user", "content" to "Translate the following text to Vietnamese: $value")
-                            )
+            originalStrings.forEach { (key, value) ->
+                try {
+                    val request = ChatRequest(
+                        model = model,
+                        messages = listOf(
+                            Message("system", "You are a helpful assistant that translates Android strings.xml files. Translate the given text to ${_uiState.value.targetLanguage}. Only return the translated string, without any extra text or explanations."),
+                            Message("user", value)
                         )
-                        val response = openRouterApi.translate(apiKey, request)
-                        val translatedText = response.choices.first().message.content
-                        logRepository.addLog("SUCCESS: '$key' -> '$translatedText'")
-                        synchronized(translatedStrings) {
-                            translatedStrings[key] = translatedText
-                        }
-                    } catch (e: Exception) {
-                        logRepository.addLog("ERROR translating '$key': ${e.message}")
-                        // Keep original if translation fails
-                        synchronized(translatedStrings) {
-                            translatedStrings[key] = value
-                        }
-                    } finally {
-                        synchronized(this) {
-                            completedCount++
-                            val currentProgress = completedCount.toFloat() / totalStrings.toFloat()
-                            _uiState.update { it.copy(progress = currentProgress) }
-                        }
-                    }
+                    )
+                    val response = RetrofitInstance.api.getChatCompletion(apiKey, request)
+                    val translatedText = response.choices.first().message.content
+                    translatedStrings[key] = translatedText
+                    logRepository.addLog("Translated '$key': '$value' -> '$translatedText'")
+                } catch (e: Exception) {
+                    logRepository.addLog("Error translating string '$key': ${e.message}")
+                    translatedStrings[key] = value // Keep original if translation fails
                 }
+                progress += 1f / totalStrings
+                _uiState.update { it.copy(progress = progress) }
             }
 
-            translationJobs.awaitAll()
-
-            val translatedXmlContent = createXmlString(translatedStrings)
-            _uiState.update {
-                it.copy(
-                    isTranslating = false,
-                    translatedStrings = translatedStrings,
-                    translatedContent = translatedXmlContent
-                )
-            }
+            _uiState.update { it.copy(translatedStrings = translatedStrings, isTranslating = false) }
             logRepository.addLog("Translation finished.")
         }
     }
 
     fun getTranslatedXmlContent(): String {
-        return createXmlString(_uiState.value.translatedStrings)
-    }
-
-    private fun createXmlString(strings: Map<String, String>): String {
-        try {
-            val docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-            val doc = docBuilder.newDocument()
-            val rootElement = doc.createElement("resources")
-            doc.appendChild(rootElement)
-
-            strings.forEach { (key, value) ->
-                val stringElement = doc.createElement("string")
-                stringElement.setAttribute("name", key)
-                stringElement.appendChild(doc.createTextNode(value))
-                rootElement.appendChild(stringElement)
-            }
-
-            val transformer = TransformerFactory.newInstance().newTransformer()
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes")
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4")
-
-            val writer = StringWriter()
-            transformer.transform(DOMSource(doc), StreamResult(writer))
-            return writer.buffer.toString()
-        } catch (e: Exception) {
-            logRepository.addLog("Error creating XML string: ${e.message}")
-            return "Error creating XML: ${e.message}"
+        val builder = StringBuilder()
+        builder.append("<resources>\n")
+        _uiState.value.translatedStrings.forEach { (key, value) ->
+            // Basic XML escaping
+            val escapedValue = value.replace("&", "&amp;")
+                                     .replace("<", "&lt;")
+                                     .replace(">", "&gt;")
+                                     .replace("'", "\\'")
+                                     .replace("\"", "\\\"")
+            builder.append("    <string name=\"$key\">$escapedValue</string>\n")
         }
+        builder.append("</resources>")
+        return builder.toString()
     }
 }
 
+
 class TranslateViewModelFactory(
-    private val context: Context,
-    private val openRouterApi: OpenRouterApi,
     private val settingsRepository: SettingsRepository,
     private val logRepository: LogRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TranslateViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return TranslateViewModel(context, openRouterApi, settingsRepository, logRepository) as T
+            return TranslateViewModel(settingsRepository, logRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

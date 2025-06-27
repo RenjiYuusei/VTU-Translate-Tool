@@ -1,6 +1,5 @@
 package com.vtu.translate.ui.screens
 
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -23,15 +22,22 @@ import com.vtu.translate.viewmodel.TranslateViewModel
 import com.vtu.translate.viewmodel.TranslateViewModelFactory
 
 @Composable
-fun TranslateScreen(viewModel: TranslateViewModel) {
-    val context = LocalContext.current
+fun TranslateScreen(
+    viewModel: TranslateViewModel = viewModel(
+        factory = TranslateViewModelFactory(
+            SettingsRepository(LocalContext.current),
+            LogRepository
+        )
+    )
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            viewModel.loadStringsXml(it)
+    ) { uri ->
+        if (uri != null) {
+            viewModel.onFileSelected(uri, context)
         }
     }
 
@@ -65,23 +71,21 @@ fun TranslateScreen(viewModel: TranslateViewModel) {
 
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = stringResource(id = R.string.original_text), style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = uiState.originalContent,
-                    onValueChange = { },
-                    readOnly = true
-                )
+                Text("Original", style = MaterialTheme.typography.headlineSmall)
+                LazyColumn {
+                    items(uiState.originalStrings.toList()) { (key, value) ->
+                        Text("$key: $value", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = stringResource(id = R.string.translated_text), style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = uiState.translatedContent,
-                    onValueChange = { },
-                    readOnly = true
-                )
+                Text("Translated", style = MaterialTheme.typography.headlineSmall)
+                LazyColumn {
+                    items(uiState.translatedStrings.toList()) { (key, value) ->
+                        Text("$key: $value", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
             }
         }
 
