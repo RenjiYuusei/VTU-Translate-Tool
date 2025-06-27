@@ -23,16 +23,9 @@ import com.vtu.translate.viewmodel.TranslateViewModel
 import com.vtu.translate.viewmodel.TranslateViewModelFactory
 
 @Composable
-fun TranslateScreen(
-    viewModel: TranslateViewModel = viewModel(
-        factory = TranslateViewModelFactory(
-            SettingsRepository(LocalContext.current),
-            LogRepository
-        )
-    )
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+fun TranslateScreen(viewModel: TranslateViewModel) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()

@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -28,12 +29,10 @@ import com.vtu.translate.viewmodel.SettingsViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
-    context: Context = LocalContext.current,
-    viewModel: SettingsViewModel = viewModel(
-        factory = SettingsViewModelFactory(SettingsRepository(context))
-    )
-) {
+fun SettingsScreen(viewModel: SettingsViewModel) {
+    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
+
     val apiKey by viewModel.apiKey.collectAsStateWithLifecycle()
     var apiKeyVisible by remember { mutableStateOf(false) }
 
