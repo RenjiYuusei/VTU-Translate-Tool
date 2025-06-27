@@ -13,5 +13,7 @@ dependencyResolutionManagement {
     }
 }
 
+enableFeaturePreview("VERSION_CATALOGS")
+
 rootProject.name = "VTU Translate Tool"
 include(":app")
