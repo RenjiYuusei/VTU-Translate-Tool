@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">VTU Translate Tool</string>
+    <string name="openrouter_api_key">OpenRouter API Key</string>
+    <string name="select_ai_model">Select AI Model</string>
+    <string name="select_target_language">Select Target Language</string>
+    <string name="select_strings_xml">Select strings.xml</string>
+    <string name="original_content">Original Content</string>
+    <string name="translate">Translate</string>
+    <string name="translating">Translating...</string>
+    <string name="translated_content">Translated Content</string>
+    <string name="save_translated_file">Save Translated File</string>
+    <string name="error_reading_file">Error reading file:</string>
+    <string name="error_saving_file">Error saving file:</string>
+    <string name="please_select_strings_xml">Please select a file named strings.xml.</string>
+    <string name="please_select_file_first">Please select a strings.xml file first.</string>
+    <string name="please_enter_api_key">Please enter your OpenRouter API Key.</string>
+    <string name="error_during_translation">Error during translation:</string>
+    <string name="get_api_key">Get API Key</string>
 </resources>

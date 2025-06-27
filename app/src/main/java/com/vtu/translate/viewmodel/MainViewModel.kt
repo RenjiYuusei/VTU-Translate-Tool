@@ -63,7 +63,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _selectedLanguage.value = language
     }
 
-    fun onFileSelected(content: String) {
+    fun onFileSelected(content: String?) {
         _selectedFileContent.value = content
         _translatedFileContent.value = null // Clear previous translation
         _errorMessage.value = null // Clear previous error
@@ -127,7 +127,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _translatedFileContent.value = stringBuilder.toString()
 
             } catch (e: Exception) {
-                _errorMessage.value = "Error during translation: ${e.message}"
+                _errorMessage.value = application.getString(R.string.error_during_translation) + " ${e.message}"
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false
@@ -137,5 +137,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearErrorMessage() {
         _errorMessage.value = null
+    }
+
+    fun setErrorMessage(message: String?) {
+        _errorMessage.value = message
     }
 }

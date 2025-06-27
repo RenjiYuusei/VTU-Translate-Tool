@@ -69,15 +69,14 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                     }
                 }
             } catch (e: Exception) {
-                mainViewModel.clearErrorMessage()
-                mainViewModel.onFileSelected("Error saving file: ${e.message}")
+                                mainViewModel.setErrorMessage(context.getString(R.string.error_saving_file, e.message))
             }
         }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("VTU Translate Tool") })
+            TopAppBar(title = { Text(stringResource(id = R.string.app_name)) })
         }
     ) {
         paddingValues ->
@@ -93,12 +92,21 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    OutlinedTextField(
-                        value = apiKey ?: "",
-                        onValueChange = { mainViewModel.onApiKeyChange(it) },
-                        label = { Text("OpenRouter API Key") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = apiKey ?: "",
+                            onValueChange = { mainViewModel.onApiKeyChange(it) },
+                            label = { Text(stringResource(id = R.string.openrouter_api_key)) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://openrouter.ai/keys"))
+                            context.startActivity(intent)
+                        }) {
+                            Text(stringResource(id = R.string.get_api_key))
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Model Selection

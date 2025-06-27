@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Công cụ dịch VTU</string>
+    <string name="openrouter_api_key">Khóa API OpenRouter</string>
+    <string name="select_ai_model">Chọn mô hình AI</string>
+    <string name="select_target_language">Chọn ngôn ngữ đích</string>
+    <string name="select_strings_xml">Chọn tệp strings.xml</string>
+    <string name="original_content">Nội dung gốc</string>
+    <string name="translate">Dịch</string>
+    <string name="translating">Đang dịch...</string>
+    <string name="translated_content">Nội dung đã dịch</string>
+    <string name="save_translated_file">Lưu tệp đã dịch</string>
+    <string name="error_reading_file">Lỗi đọc tệp:</string>
+    <string name="error_saving_file">Lỗi lưu tệp:</string>
+    <string name="please_select_strings_xml">Vui lòng chọn một tệp có tên strings.xml.</string>
+    <string name="please_select_file_first">Vui lòng chọn tệp strings.xml trước.</string>
+    <string name="please_enter_api_key">Vui lòng nhập Khóa API OpenRouter của bạn.</string>
+    <string name="error_during_translation">Lỗi trong quá trình dịch:</string>
+    <string name="get_api_key">Lấy khóa API</string>
+</resources>
