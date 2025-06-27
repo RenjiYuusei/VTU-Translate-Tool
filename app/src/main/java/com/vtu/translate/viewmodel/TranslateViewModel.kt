@@ -10,10 +10,12 @@ import com.vtu.translate.data.SettingsRepository
 import com.vtu.translate.network.ChatRequest
 import com.vtu.translate.network.Message
 import com.vtu.translate.network.RetrofitInstance
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
+import retrofit2.HttpException
 import java.io.StringReader
 
 data class TranslationState(
@@ -98,11 +100,17 @@ class TranslateViewModel(
                     translatedStrings[key] = translatedText
                     logRepository.addLog("Translated '$key': '$value' -> '$translatedText'")
                 } catch (e: Exception) {
-                    logRepository.addLog("Error translating string '$key': ${e.message}")
+                    val errorMessage = if (e is HttpException) {
+                        "HTTP ${e.code()}: ${e.response()?.errorBody()?.string() ?: e.message()}"
+                    } else {
+                        e.message ?: "Unknown error"
+                    }
+                    logRepository.addLog("Error translating string '$key': $errorMessage")
                     translatedStrings[key] = value // Keep original if translation fails
                 }
                 progress += 1f / totalStrings
                 _uiState.update { it.copy(progress = progress) }
+                delay(1000L) // Wait for 1 second to avoid rate limiting
             }
 
             _uiState.update { it.copy(translatedStrings = translatedStrings, isTranslating = false) }
