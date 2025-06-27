@@ -103,7 +103,7 @@ class TranslateViewModel(
                     val errorMessage = if (e is HttpException) {
                         "HTTP ${e.code()}: ${e.response()?.errorBody()?.string() ?: e.message()}"
                     } else {
-                        e.message ?: "Unknown error"
+                        e.toString()
                     }
                     logRepository.addLog("Error translating string '$key': $errorMessage")
                     translatedStrings[key] = value // Keep original if translation fails
