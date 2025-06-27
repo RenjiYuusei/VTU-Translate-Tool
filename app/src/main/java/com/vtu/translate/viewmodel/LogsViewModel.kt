@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class LogsViewModel : ViewModel() {
     val logs = LogRepository.logs.stateIn(
-        scope = androidx.lifecycle.viewModelScope,
+        scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
