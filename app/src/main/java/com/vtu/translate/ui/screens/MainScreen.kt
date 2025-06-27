@@ -33,7 +33,6 @@ import com.vtu.translate.ui.components.XmlHighlighter
 @Composable
 fun MainScreen(navController: NavController, mainViewModel: MainViewModel = viewModel()) {
     val apiKey by mainViewModel.apiKey.collectAsState()
-    val selectedModel by mainViewModel.selectedModel.collectAsState()
     val selectedFileContent by mainViewModel.selectedFileContent.collectAsState()
     val translatedFileContent by mainViewModel.translatedFileContent.collectAsState()
     val isLoading by mainViewModel.isLoading.collectAsState()
@@ -44,14 +43,6 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
 
     val pickFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
-            val fileName = context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
-                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                cursor.moveToFirst()
-                cursor.getString(nameIndex)
-            }
-
-            
-
             try {
                 context.contentResolver.openInputStream(it)?.use { inputStream ->
                     val content = inputStream.bufferedReader().use { reader -> reader.readText() }
