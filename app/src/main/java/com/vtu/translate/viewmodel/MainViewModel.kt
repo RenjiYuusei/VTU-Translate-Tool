@@ -120,7 +120,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 // Reconstruct the XML with translated strings
                 stringBuilder.append("<resources>\n")
                 translatedStrings.forEach { (name, value) ->
-                    stringBuilder.append("    <string name=\""$name\"">$value</string>\n")
+                    stringBuilder.append("    <string name=\"" + name + "\">" + value + "</string>\n")
                 }
                 stringBuilder.append("</resources>")
 
