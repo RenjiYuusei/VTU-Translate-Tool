@@ -92,39 +92,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val factory = XmlPullParserFactory.newInstance()
                 factory.isNamespaceAware = true
-                val parser = factory.newPullParser()
-                parser.setInput(StringReader(originalContent))
 
-                var eventType = parser.eventType
+                // First pass: Extract strings for translation
+                val parserForExtraction = factory.newPullParser()
+                parserForExtraction.setInput(StringReader(originalContent))
+
                 val stringsToTranslate = mutableMapOf<String, String>()
-
+                var eventType = parserForExtraction.eventType
                 var currentStringName: String? = null
-                var currentStringValue = StringBuilder()
                 var inStringTag = false
 
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     when (eventType) {
                         XmlPullParser.START_TAG -> {
-                            if (parser.name == "string") {
-                                currentStringName = parser.getAttributeValue(null, "name")
+                            if (parserForExtraction.name == "string") {
+                                currentStringName = parserForExtraction.getAttributeValue(null, "name")
                                 inStringTag = true
-                                currentStringValue.clear() // Clear for new string
                             }
                         }
                         XmlPullParser.TEXT -> {
-                            if (inStringTag) {
-                                currentStringValue.append(parser.text)
+                            if (inStringTag && currentStringName != null) {
+                                stringsToTranslate[currentStringName] = parserForExtraction.text
                             }
                         }
                         XmlPullParser.END_TAG -> {
-                            if (parser.name == "string" && currentStringName != null) {
-                                stringsToTranslate[currentStringName!!] = currentStringValue.toString()
+                            if (parserForExtraction.name == "string") {
                                 inStringTag = false
                                 currentStringName = null
                             }
                         }
                     }
-                    eventType = parser.next()
+                    eventType = parserForExtraction.next()
                 }
 
                 if (stringsToTranslate.isEmpty()) {
@@ -149,16 +147,69 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     translatedStringsMap[key] = translatedStringsJson.getString(key)
                 }
 
-                // Reconstruct the XML with translated strings using regex replacement
-                var reconstructedContent = originalContent
-                translatedStringsMap.forEach { (name, translatedValue) ->
-                    // Regex to find the string tag and its content
-                    // This regex is designed to be robust, handling potential whitespace around the text content
-                    val regex = Regex("(<string\\s+name=\"$name\">)(.*?)(</string>)")
-                    reconstructedContent = reconstructedContent.replaceFirst(regex, "$1$translatedValue$3")
+                // Second pass: Reconstruct the XML with translated strings
+                val parserForReconstruction = factory.newPullParser()
+                parserForReconstruction.setInput(StringReader(originalContent))
+                val stringBuilder = StringBuilder()
+
+                eventType = parserForReconstruction.eventType
+                var skipText = false
+
+                while (eventType != XmlPullParser.END_DOCUMENT) {
+                    when (eventType) {
+                        XmlPullParser.START_DOCUMENT -> {
+                            // Do nothing, handled by START_TAG for <resources>
+                        }
+                        XmlPullParser.END_DOCUMENT -> {
+                            // Do nothing
+                        }
+                        XmlPullParser.START_TAG -> {
+                            stringBuilder.append("<" + parserForReconstruction.name)
+                            for (i in 0 until parserForReconstruction.attributeCount) {
+                                stringBuilder.append(" " + parserForReconstruction.getAttributeName(i) + "=\"")
+                                stringBuilder.append(parserForReconstruction.getAttributeValue(i) + "\"")
+                            }
+                            stringBuilder.append(">")
+                            if (parserForReconstruction.name == "string") {
+                                val name = parserForReconstruction.getAttributeValue(null, "name")
+                                val translatedText = translatedStringsMap[name]
+                                if (translatedText != null) {
+                                    stringBuilder.append(translatedText)
+                                    skipText = true // Skip the original text event
+                                }
+                            }
+                        }
+                        XmlPullParser.END_TAG -> {
+                            if (!skipText || parserForReconstruction.name != "string") { // Only append end tag if not skipping text for string
+                                stringBuilder.append("</" + parserForReconstruction.name + ">")
+                            }
+                            skipText = false // Reset skipText after handling the string tag
+                        }
+                        XmlPullParser.TEXT -> {
+                            if (!skipText) {
+                                stringBuilder.append(parserForReconstruction.text)
+                            }
+                        }
+                        XmlPullParser.CDSECT -> {
+                            stringBuilder.append("<![CDATA[" + parserForReconstruction.text + "]]>")
+                        }
+                        XmlPullParser.COMMENT -> {
+                            stringBuilder.append("<!--" + parserForReconstruction.text + "-->")
+                        }
+                        XmlPullParser.ENTITY_REF -> {
+                            stringBuilder.append("&" + parserForReconstruction.name + ";")
+                        }
+                        XmlPullParser.IGNORABLE_WHITESPACE -> {
+                            stringBuilder.append(parserForReconstruction.text)
+                        }
+                        XmlPullParser.PROCESSING_INSTRUCTION -> {
+                            stringBuilder.append("<?" + parserForReconstruction.text + "?>")
+                        }
+                    }
+                    eventType = parserForReconstruction.next()
                 }
 
-                _translatedFileContent.value = reconstructedContent
+                _translatedFileContent.value = stringBuilder.toString()
 
             } catch (e: Exception) {
                 _errorMessage.value = getApplication<Application>().getString(R.string.error_during_translation) + " ${e.message}"
