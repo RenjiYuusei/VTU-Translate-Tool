@@ -5,3 +5,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
 }
+
+tasks.wrapper {
+    gradleVersion = "8.1.1"
+}
