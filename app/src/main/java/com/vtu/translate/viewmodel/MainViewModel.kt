@@ -26,7 +26,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _apiKey = MutableStateFlow<String?>("")
     val apiKey: StateFlow<String?> = _apiKey.asStateFlow()
 
-    private val _selectedModel = MutableStateFlow("google/gemma-3-27b-it:free")
+    private val _selectedModel = MutableStateFlow("google/gemini-2.0-flash-exp:free")
     val selectedModel: StateFlow<String> = _selectedModel.asStateFlow()
 
     private val _selectedFileContent = MutableStateFlow<String?>("")

@@ -78,7 +78,7 @@ fun SettingsScreen(mainViewModel: MainViewModel = viewModel()) {
 
                     // Model Selection
                     var modelExpanded by remember { mutableStateOf(false) }
-                    val models = listOf("google/gemma-3-27b-it:free", "deepseek/deepseek-r1-0528:free")
+                    val models = listOf("google/gemini-2.0-flash-exp:free", "google/gemma-3-27b-it:free", "deepseek/deepseek-r1-0528:free")
                     ExposedDropdownMenuBox(
                         expanded = modelExpanded,
                         onExpandedChange = { modelExpanded = !modelExpanded }

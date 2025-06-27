@@ -58,8 +58,14 @@ class OpenRouterApiService {
             }
 
             if (response.status.isSuccess()) {
-                val chatCompletionResponse: ChatCompletionResponse = response.body()
-                return chatCompletionResponse.choices.firstOrNull()?.message?.content ?: ""
+                try {
+                    val chatCompletionResponse: ChatCompletionResponse = response.body()
+                    return chatCompletionResponse.choices.firstOrNull()?.message?.content ?: ""
+                } catch (e: Exception) {
+                    val errorBody = response.body<String>()
+                    Log.e("OpenRouterApiService", "Error parsing successful API response: ${e.message}, Body: $errorBody", e)
+                    return "Error parsing API response: ${e.message}"
+                }
             } else {
                 val errorBody = response.body<String>()
                 Log.d("OpenRouterApiService", "API Error: ${response.status}, Body: $errorBody")
