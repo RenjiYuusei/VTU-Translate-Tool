@@ -17,7 +17,7 @@ fun XmlHighlighter(xmlContent: String, modifier: Modifier = Modifier) {
     val annotatedString = buildAnnotatedString {
         val tagRegex = Regex("<(/)?([a-zA-Z0-9_:]+)([^>]*)")
         val attributeRegex = Regex("([a-zA-Z0-9_:]+)=\"([^\"]*)\"")
-        val commentRegex = Regex("<!--[\s\S]*?-->")
+        val commentRegex = Regex("""<!--[\s\S]*?-->""")
 
         var lastIndex = 0
         val matches = (tagRegex.findAll(xmlContent) + commentRegex.findAll(xmlContent)).sortedBy { it.range.first }

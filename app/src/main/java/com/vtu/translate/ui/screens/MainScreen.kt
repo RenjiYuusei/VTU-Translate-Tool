@@ -1,5 +1,7 @@
 package com.vtu.translate.ui.screens
 
+import androidx.navigation.NavController
+import androidx.compose.material.icons.filled.Settings
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -26,11 +28,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.input.KeyboardType
 import com.vtu.translate.ui.components.XmlHighlighter
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-import androidx.navigation.NavController
-import androidx.compose.material.icons.filled.Settings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
