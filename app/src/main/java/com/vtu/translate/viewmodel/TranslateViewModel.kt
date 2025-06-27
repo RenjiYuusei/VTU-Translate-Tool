@@ -12,17 +12,22 @@ import com.vtu.translate.network.Message
 import com.vtu.translate.network.RetrofitInstance
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
+import java.io.InputStream
+import java.io.StringWriter
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
 
-data class TranslationState(
+data class TranslateUiState(
     val originalStrings: Map<String, String> = emptyMap(),
     val translatedStrings: Map<String, String> = emptyMap(),
+    val originalContent: String = "",
+    val translatedContent: String = "",
     val isTranslating: Boolean = false,
     val progress: Float = 0f,
-    val selectedFileUri: Uri? = null,
-    val targetLanguage: String = "vi" // Default to Vietnamese
+    val error: String? = null
 )
 
 class TranslateViewModel(
