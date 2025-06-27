@@ -196,7 +196,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         XmlPullParser.END_TAG -> {
                             if (!skipText || parserForReconstruction.name != "string") { // Only append end tag if not skipping text for string
-                                stringBuilder.append("</" + parserForReconstruction.reconstruction.name + ">")
+                                stringBuilder.append("</" + parserForReconstruction.name + ">")
                             }
                             skipText = false // Reset skipText after handling the string tag
                         }

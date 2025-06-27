@@ -48,12 +48,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                 cursor.getString(nameIndex)
             }
 
-            if (fileName != "strings.xml") {
-                mainViewModel.onFileSelected(null)
-                mainViewModel.clearErrorMessage()
-                mainViewModel.setErrorMessage(context.getString(R.string.please_select_strings_xml))
-                return@let
-            }
+            
 
             try {
                 context.contentResolver.openInputStream(it)?.use { inputStream ->
@@ -187,7 +182,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                             onValueChange = { /* Read-only */ },
                             readOnly = true,
                             label = { Text(stringResource(id = R.string.target_language_label)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded, contentDescription = stringResource(id = R.string.target_language_label)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
                         ExposedDropdownMenu(
