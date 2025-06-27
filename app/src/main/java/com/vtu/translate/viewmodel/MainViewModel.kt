@@ -16,6 +16,7 @@ import com.vtu.translate.R
 import java.io.StringReader
 import org.json.JSONObject // Import for JSON parsing
 import org.json.JSONException // Import for JSONException
+import android.util.Log // Import for logging
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -147,8 +148,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
 
+                val cleanedJsonString = translatedJsonString.substringAfter("```json").substringBeforeLast("```").trim()
+                Log.d("MainViewModel", "Cleaned JSON String: $cleanedJsonString")
+
                 try {
-                    val translatedStringsJson = JSONObject(translatedJsonString)
+                    val translatedStringsJson = JSONObject(cleanedJsonString)
                     translatedStringsJson.keys().forEach { key ->
                         translatedStringsMap[key] = translatedStringsJson.getString(key)
                     }

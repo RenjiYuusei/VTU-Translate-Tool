@@ -9,6 +9,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import android.util.Log
 
 @Serializable
 data class ChatCompletionRequest(
@@ -61,11 +62,11 @@ class OpenRouterApiService {
                 return chatCompletionResponse.choices.firstOrNull()?.message?.content ?: ""
             } else {
                 val errorBody = response.body<String>()
-                println("API Error: ${response.status}, Body: $errorBody")
+                Log.d("OpenRouterApiService", "API Error: ${response.status}, Body: $errorBody")
                 return "Error: ${response.status}"
             }
         } catch (e: Exception) {
-            println("Error parsing API response: ${e.message}")
+            Log.e("OpenRouterApiService", "Error parsing API response: ${e.message}", e)
             return "Error parsing API response: ${e.message}"
         }
     }
