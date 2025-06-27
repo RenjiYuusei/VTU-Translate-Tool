@@ -7,7 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.vtu.translate.ui.screens.MainScreen
+import com.vtu.translate.ui.screens.SettingsScreen
 import com.vtu.translate.ui.theme.VTUTranslateToolTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,7 +24,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "main_screen") {
+                        composable("main_screen") {
+                            MainScreen(navController = navController)
+                        }
+                        composable("settings_screen") {
+                            SettingsScreen()
+                        }
+                    }
                 }
             }
         }

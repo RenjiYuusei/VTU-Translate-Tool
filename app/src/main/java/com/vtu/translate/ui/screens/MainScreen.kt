@@ -29,7 +29,12 @@ import com.vtu.translate.ui.components.XmlHighlighter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
+import androidx.navigation.NavController
+import androidx.compose.material.icons.filled.Settings
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(navController: NavController, mainViewModel: MainViewModel = viewModel()) {
     val apiKey by mainViewModel.apiKey.collectAsState()
     val selectedModel by mainViewModel.selectedModel.collectAsState()
     val selectedFileContent by mainViewModel.selectedFileContent.collectAsState()
@@ -82,7 +87,14 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(id = R.string.app_name)) })
+            TopAppBar(
+                title = { Text(stringResource(id = R.string.app_name)) },
+                actions = {
+                    IconButton(onClick = { navController.navigate("settings_screen") }) {
+                        Icon(Icons.Filled.Settings, contentDescription = stringResource(id = R.string.settings_title))
+                    }
+                }
+            )
         }
     ) {
         paddingValues ->
@@ -93,76 +105,7 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        var passwordVisible by rememberSaveable { mutableStateOf(false) }
-                        OutlinedTextField(
-                            value = apiKey ?: "",
-                            onValueChange = { mainViewModel.onApiKeyChange(it) },
-                            label = { Text(stringResource(id = R.string.api_key_hint)) },
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                val image = if (passwordVisible)
-                                    Icons.Filled.Visibility
-                                else Icons.Filled.VisibilityOff
-                                val description = if (passwordVisible) stringResource(id = R.string.hide_password) else stringResource(id = R.string.show_password)
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(imageVector = image, contentDescription = description)
-                                }
-                            },
-                            modifier = Modifier.weight(1f).height(56.dp) // Fixed height for alignment
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://openrouter.ai/keys"))
-                                context.startActivity(intent)
-                            },
-                            modifier = Modifier.height(56.dp) // Fixed height for alignment
-                        ) {
-                            Text(stringResource(id = R.string.get_api_key))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Model Selection
-                    var modelExpanded by remember { mutableStateOf(false) }
-                    val models = listOf("google/gemma-3-27b-it:free", "deepseek/deepseek-r1-0528:free")
-                    ExposedDropdownMenuBox(
-                        expanded = modelExpanded,
-                        onExpandedChange = { modelExpanded = !modelExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedModel,
-                            onValueChange = { /* Read-only */ },
-                            readOnly = true,
-                            label = { Text(stringResource(id = R.string.select_ai_model_label)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = modelExpanded,
-                            onDismissRequest = { modelExpanded = false }
-                        ) {
-                            models.forEach { model ->
-                                DropdownMenuItem(
-                                    text = { Text(model) },
-                                    onClick = {
-                                        mainViewModel.onModelSelected(model)
-                                        modelExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+            
 
             Card(
                 modifier = Modifier.fillMaxWidth(),

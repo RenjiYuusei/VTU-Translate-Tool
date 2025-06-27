@@ -14,3 +14,4 @@ val XmlTag = Color(0xFF808080) // Grey for XML tags
 val XmlAttribute = Color(0xFF800000) // Maroon for XML attributes
 val XmlAttributeValue = Color(0xFF0000FF) // Blue for XML attribute values
 val XmlText = Color(0xFF000000) // Black for regular text
+val XmlComment = Color(0xFF008000) // Green for XML comments

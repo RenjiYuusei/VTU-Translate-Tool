@@ -31,4 +31,5 @@
     <string name="language_spanish">Spanish</string>
     <string name="language_korean">Korean</string>
     <string name="language_chinese">Chinese</string>
+    <string name="settings_title">Settings</string>
 </resources>
