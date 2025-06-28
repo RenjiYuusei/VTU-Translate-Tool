@@ -14,8 +14,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import com.vtu.translate.R
 import java.io.StringReader
-import org.json.JSONObject // Import for JSON parsing
-import org.json.JSONException // Import for JSONException
+import kotlinx.serialization.json.* // Import for Kotlinx JSON
 import android.util.Log // Import for logging
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -170,7 +169,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 stringsToTranslate.entries.chunked(batchSize).forEach { batch ->
                     val batchMap = batch.associate { it.key to it.value }
-                    val jsonForTranslation = JSONObject(batchMap as Map<*, *>).toString()
+                    val jsonForTranslation = Json.encodeToString(batchMap)
                     val prompt = """Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:
 $jsonForTranslation"""
 
@@ -190,23 +189,20 @@ $jsonForTranslation"""
                     addLog("Cleaned JSON String: $cleanedJsonString")
 
                     try {
+                        val json = Json { ignoreUnknownKeys = true }
                         if(cleanedJsonString.isNotEmpty()) {
-                            val translatedStringsJson = JSONObject(cleanedJsonString)
-                            translatedStringsJson.keys().forEach { key ->
-                                allTranslatedStrings[key] = translatedStringsJson.getString(key)
+                            val translatedStringsJson = json.decodeFromString<Map<String, String>>(cleanedJsonString)
+                            translatedStringsJson.forEach { (key, value) ->
+                                allTranslatedStrings[key] = value
                             }
                         } else {
-                            val translatedStringsJson = JSONObject(translatedJsonString)
-                            translatedStringsJson.keys().forEach { key ->
-                                allTranslatedStrings[key] = translatedStringsJson.getString(key)
+                            val translatedStringsJson = json.decodeFromString<Map<String, String>>(translatedJsonString)
+                            translatedStringsJson.forEach { (key, value) ->
+                                allTranslatedStrings[key] = value
                             }
                         }
-                    } catch (e: JSONException) {
-                        _errorMessage.value = "Error parsing API response for a batch: Invalid JSON format. Details: ${e.message}"
-                        e.printStackTrace()
-                        return@forEach
                     } catch (e: Exception) {
-                        _errorMessage.value = "Unexpected error during API response parsing for a batch. Details: ${e.message}"
+                        _errorMessage.value = "Error parsing API response for a batch: Invalid JSON format. Details: ${e.message}"
                         e.printStackTrace()
                         return@forEach
                     }
