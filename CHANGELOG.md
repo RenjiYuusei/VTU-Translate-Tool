@@ -17,6 +17,7 @@
 - Thêm tài liệu hướng dẫn sử dụng GitHub Actions để build APK.
 - Cải thiện quy trình phân phối APK thông qua artifacts của GitHub Actions.
 - Cập nhật các actions từ phiên bản v3 lên v4 để đáp ứng thông báo loại bỏ của GitHub và cải thiện hiệu suất.
+- Sử dụng gradle thay vì gradlew trong workflow để tránh lỗi quyền thực thi và đơn giản hóa quy trình.
 
 ## Phiên bản 1.0.1 (28-6-2025)
 

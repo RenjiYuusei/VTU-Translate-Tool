@@ -42,14 +42,12 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      
+    # Sử dụng Gradle trong Docker container thay vì gradlew
     - name: Build with Gradle
-      run: ./gradlew build
+      run: gradle build
       
     - name: Build Debug APK
-      run: ./gradlew assembleDebug
+      run: gradle assembleDebug
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -96,7 +94,7 @@ Bạn có thể tùy chỉnh workflow bằng cách chỉnh sửa file `.github/w
 
 ```yaml
 - name: Build Release APK
-  run: ./gradlew assembleRelease
+  run: gradle assembleRelease
   
 - name: Upload APK
   uses: actions/upload-artifact@v4
@@ -105,7 +103,19 @@ Bạn có thể tùy chỉnh workflow bằng cách chỉnh sửa file `.github/w
     path: app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
-## Phiên bản Actions
+## Phiên bản và Cấu hình
+
+### Sử dụng Gradle thay vì Gradle Wrapper
+
+Trong workflow của chúng tôi, chúng tôi sử dụng lệnh `gradle` trực tiếp thay vì `./gradlew` vì:
+
+1. **Tính sẵn có**: Môi trường GitHub Actions đã có sẵn Gradle được cài đặt, do đó không cần phải sử dụng Gradle Wrapper.
+
+2. **Tránh lỗi quyền thực thi**: Sử dụng `gradle` trực tiếp giúp tránh lỗi "No such file or directory" khi thực hiện lệnh `chmod +x gradlew` trong trường hợp file gradlew không tồn tại.
+
+3. **Đơn giản hóa workflow**: Giảm số lượng bước cần thiết để build ứng dụng.
+
+Nếu bạn gặp lỗi "chmod: cannot access 'gradlew': No such file or directory", hãy sử dụng `gradle` thay vì `./gradlew` trong file workflow của bạn.
 
 ### Cập nhật từ v3 lên v4
 
