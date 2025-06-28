@@ -2,16 +2,18 @@
 
 ## Giới thiệu
 
-VTU Translate Tool là một ứng dụng Android giúp dịch các file strings.xml trong các dự án Android từ tiếng Anh sang tiếng Việt. Ứng dụng sử dụng API của Groq để thực hiện việc dịch tự động, đồng thời cung cấp giao diện người dùng thân thiện để xem và chỉnh sửa các bản dịch.
+VTU Translate Tool là một ứng dụng Android giúp dịch các file strings.xml trong các dự án Android từ tiếng Anh sang tiếng Việt. Ứng dụng sử dụng API của Groq để thực hiện việc dịch tự động với model Meta Llama 4 Scout 17B mặc định, đồng thời cung cấp giao diện người dùng thân thiện để xem và chỉnh sửa các bản dịch. Ứng dụng có khả năng nhận diện thông minh các chuỗi không cần dịch như tên package, class, URL và format specifiers, đồng thời cho phép người dùng kiểm soát quá trình dịch với nút "Dừng Dịch".
 
 ## Tính năng
 
 - **Dịch tự động**: Dịch các chuỗi từ tiếng Anh sang tiếng Việt sử dụng API của Groq
-- **Xử lý thông minh**: Tự động nhận diện và xử lý các chuỗi đặc biệt như tên package, class, URL
+- **Xử lý thông minh**: Tự động nhận diện và xử lý các chuỗi đặc biệt như tên package, class, URL, format specifiers
+- **Kiểm soát quá trình dịch**: Có thể dừng quá trình dịch bất cứ lúc nào với nút "Dừng Dịch"
 - **Giao diện trực quan**: Hiển thị tiến trình dịch và trạng thái của từng chuỗi
 - **Chỉnh sửa thủ công**: Cho phép người dùng chỉnh sửa bản dịch trước khi lưu
 - **Xuất file**: Lưu kết quả dịch vào file strings.xml mới
 - **Nhật ký**: Ghi lại quá trình dịch để dễ dàng theo dõi và gỡ lỗi
+- **Model AI tiên tiến**: Sử dụng model Meta Llama 4 Scout 17B mặc định cho chất lượng dịch tốt nhất
 
 ## Cài đặt
 
@@ -22,11 +24,12 @@ VTU Translate Tool là một ứng dụng Android giúp dịch các file strings
 ## Cách sử dụng
 
 1. Mở ứng dụng VTU Translate Tool
-2. Vào màn hình Cài đặt để nhập API key của Groq và chọn model
+2. Vào màn hình Cài đặt để nhập API key của Groq (model Meta Llama 4 Scout 17B đã được cài đặt mặc định)
 3. Quay lại màn hình chính và chọn file strings.xml cần dịch
 4. Nhấn nút "Bắt đầu dịch" để bắt đầu quá trình dịch
-5. Xem và chỉnh sửa các bản dịch nếu cần
-6. Lưu kết quả dịch vào file mới
+5. Nếu cần dừng quá trình dịch giữa chừng, nhấn nút "Dừng Dịch"
+6. Xem và chỉnh sửa các bản dịch nếu cần
+7. Lưu kết quả dịch vào file mới bằng nút "Lưu file đã dịch"
 
 ## Cấu trúc dự án
 
@@ -48,48 +51,7 @@ app/
 └── build.gradle                   # Cấu hình build
 ```
 
-## Cải tiến mã nguồn
-
-### Xử lý trạng thái
-
-Ứng dụng sử dụng sealed class để quản lý trạng thái UI một cách toàn diện:
-
-```kotlin
-sealed class UiState<out T> {
-    object Loading : UiState<Nothing>()
-    data class Success<T>(val data: T) : UiState<T>()
-    data class Error(val message: String) : UiState<Nothing>()
-}
-```
-
-### Xử lý lỗi tập trung
-
-Ứng dụng sử dụng một hệ thống xử lý lỗi tập trung để hiển thị thông báo lỗi nhất quán:
-
-```kotlin
-fun handleError(error: Throwable) {
-    val errorMessage = when (error) {
-        is HttpException -> {
-            when (error.code()) {
-                429 -> "Đạt giới hạn tốc độ API. Vui lòng thử lại sau."
-                401 -> "API key không hợp lệ. Vui lòng kiểm tra lại."
-                else -> "Lỗi HTTP: ${error.code()}"
-            }
-        }
-        is IOException -> "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối của bạn."
-        else -> error.message ?: "Đã xảy ra lỗi không xác định."
-    }
-    _errorEvent.value = Event(errorMessage)
-}
-```
-
-### Tối ưu hiệu suất
-
-Ứng dụng sử dụng các kỹ thuật tối ưu hiệu suất như:
-
-- Sử dụng `key` trong `LazyColumn` để cải thiện hiệu suất khi danh sách thay đổi
-- Sử dụng `remember` và `derivedStateOf` để tránh tính toán lại không cần thiết
-- Xử lý batch và delay để tránh bị giới hạn tốc độ API
+### [Nhật kí thay đổi](CHANGELOG.md)
 
 ## Đóng góp
 
@@ -101,9 +63,9 @@ Chúng tôi rất hoan nghênh mọi đóng góp! Nếu bạn muốn đóng góp
 4. Push lên branch (`git push origin feature/amazing-feature`)
 5. Mở Pull Request
 
-## Giấy phép
+## [Giấy phép](LICENSE)
 
-Dự án này được phân phối dưới giấy phép GNU GPL v3.0. Xem file `LICENSE` để biết thêm chi tiết.
+Dự án này được phân phối dưới giấy phép GNU GPL v3.0. Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 
 ## Liên hệ
 
