@@ -230,7 +230,7 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
                             .verticalScroll(rememberScrollState())
                     ) {
                         if (logs.isEmpty()) {
-                            Text("No logs yet.", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(id = R.string.no_logs_yet), style = MaterialTheme.typography.bodySmall)
                         } else {
                             logs.forEach { logMessage ->
                                 Text(logMessage, style = MaterialTheme.typography.bodySmall)

@@ -14,6 +14,7 @@ class DataStoreManager(private val context: Context) {
     companion object {
         val API_KEY = stringPreferencesKey("api_key")
         val SELECTED_MODEL = stringPreferencesKey("selected_model")
+        val SELECTED_TARGET_LANGUAGE = stringPreferencesKey("selected_target_language")
     }
 
     val getApiKey: Flow<String?> = context.dataStore.data
@@ -26,6 +27,11 @@ class DataStoreManager(private val context: Context) {
             preferences[SELECTED_MODEL]
         }
 
+    val getSelectedTargetLanguage: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[SELECTED_TARGET_LANGUAGE]
+        }
+
     suspend fun saveApiKey(apiKey: String) {
         context.dataStore.edit {
             it[API_KEY] = apiKey
@@ -35,6 +41,12 @@ class DataStoreManager(private val context: Context) {
     suspend fun saveSelectedModel(model: String) {
         context.dataStore.edit {
             it[SELECTED_MODEL] = model
+        }
+    }
+
+    suspend fun saveSelectedTargetLanguage(language: String) {
+        context.dataStore.edit {
+            it[SELECTED_TARGET_LANGUAGE] = language
         }
     }
 }

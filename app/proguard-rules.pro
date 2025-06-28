@@ -13,3 +13,19 @@
 # you need to include the following rules to prevent ProGuard from renaming the fields.
 #-keepclassmembers class com.google.gson.examples.android.model.** { <fields>; }
 
+# Keep Kotlinx Serialization classes
+-keep class kotlin.Metadata { *; }
+-keep class kotlinx.serialization.** { *; }
+-keep class com.vtu.translate.network.** { *; }
+
+# Keep data classes used for serialization
+-keepclassmembers class com.vtu.translate.network.ChatCompletionRequest { *; }
+-keepclassmembers class com.vtu.translate.network.Message { *; }
+-keepclassmembers class com.vtu.translate.network.ChatCompletionResponse { *; }
+-keepclassmembers class com.vtu.translate.network.Choice { *; }
+
+# Keep generated serialization code
+-keepnames class * implements kotlinx.serialization.KSerializer
+-keepclassmembers class * {
+    *** Companion;
+}

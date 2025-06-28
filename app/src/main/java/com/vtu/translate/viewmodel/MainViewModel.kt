@@ -161,12 +161,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 stringsToTranslate.entries.chunked(batchSize).forEach { batch ->
                     val batchMap = batch.associate { it.key to it.value }
                     val jsonForTranslation = JSONObject(batchMap as Map<*, *>).toString()
-                    val prompt = "Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:\n$jsonForTranslation"
+                    val prompt = "Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:
+$jsonForTranslation"
 
                     val translatedJsonString = openRouterApiService.translateText(
                         model,
                         apiKey,
-                        prompt
+                        prompt,
+                        targetLanguage
                     )
 
                     if (translatedJsonString.isNullOrEmpty()) {

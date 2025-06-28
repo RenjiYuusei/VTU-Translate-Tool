@@ -42,10 +42,10 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
         }
     }
 
-    suspend fun translateText(model: String, apiKey: String, text: String): String {
+    suspend fun translateText(model: String, apiKey: String, text: String, targetLanguage: String): String {
         val requestBody = ChatCompletionRequest(
             model = model,
-            messages = listOf(Message(role = "user", content = "Translate the following text to Vietnamese: \"\"\"$text\"\"\""))
+            messages = listOf(Message(role = "user", content = "Translate the following text to $targetLanguage: \"\"\"$text\"\"\""))
         )
 
         try {
