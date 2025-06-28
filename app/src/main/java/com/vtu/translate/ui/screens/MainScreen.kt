@@ -39,7 +39,7 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
     val translatedFileContent by mainViewModel.translatedFileContent.collectAsState()
     val isLoading by mainViewModel.isLoading.collectAsState()
     val errorMessage by mainViewModel.errorMessage.collectAsState()
-    val selectedLanguage by mainViewModel.selectedLanguage.collectAsState()
+    val selectedTargetLanguage by mainViewModel.selectedTargetLanguage.collectAsState()
 
     val context = LocalContext.current
 
@@ -111,7 +111,7 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
                         onExpandedChange = { expanded = !expanded }
                     ) {
                         OutlinedTextField(
-                            value = selectedLanguage,
+                            value = selectedTargetLanguage,
                             onValueChange = { /* Read-only */ },
                             readOnly = true,
                             label = { Text(stringResource(id = R.string.target_language_label)) },
@@ -126,7 +126,7 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
                                 DropdownMenuItem(
                                     text = { Text(language) },
                                     onClick = {
-                                        mainViewModel.onLanguageSelected(language)
+                                        mainViewModel.onTargetLanguageSelected(language)
                                         expanded = false
                                     }
                                 )
