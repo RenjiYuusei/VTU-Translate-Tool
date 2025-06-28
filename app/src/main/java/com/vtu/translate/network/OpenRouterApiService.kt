@@ -12,11 +12,15 @@ import kotlinx.serialization.json.Json
 import android.util.Log
 
 @Serializable
+data class ResponseFormat(val type: String)
+
+@Serializable
 data class ChatCompletionRequest(
     val model: String,
     val messages: List<Message>,
     val max_tokens: Int? = null,
-    val temperature: Float? = null
+    val temperature: Float? = null,
+    val response_format: ResponseFormat? = null
 )
 
 @Serializable
@@ -55,7 +59,8 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
             model = model,
             messages = messages,
             max_tokens = 4096,
-            temperature = 0.7f
+            temperature = 0.7f,
+            response_format = ResponseFormat(type = "json_object")
         )
         log("Sending translation request to model: $model")
 

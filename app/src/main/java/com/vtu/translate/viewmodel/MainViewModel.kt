@@ -179,7 +179,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val batchMap = batch.associate { it.key to it.value }
                     val jsonForTranslation = json.encodeToString(batchMap)
 
-                    val systemPrompt = "You are a helpful assistant that translates JSON files. You will be given a JSON object where the values are strings to be translated. You must respond with ONLY a valid JSON object with the same keys, but with the values translated to $targetLanguage. Do not add any extra text or markdown formatting."
+                    val systemPrompt = "You are a helpful assistant that translates JSON files. You will be given a JSON object, and your task is to translate the string values into $targetLanguage. Respond with a JSON object that has the same keys but with the translated values."
                     val userPrompt = jsonForTranslation
 
                     val messages = listOf(
