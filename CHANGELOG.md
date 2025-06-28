@@ -16,6 +16,7 @@
 - Tích hợp GitHub Actions để tự động build APK khi có thay đổi code.
 - Thêm tài liệu hướng dẫn sử dụng GitHub Actions để build APK.
 - Cải thiện quy trình phân phối APK thông qua artifacts của GitHub Actions.
+- Cập nhật các actions từ phiên bản v3 lên v4 để đáp ứng thông báo loại bỏ của GitHub và cải thiện hiệu suất.
 
 ## Phiên bản 1.0.1 (28-6-2025)
 

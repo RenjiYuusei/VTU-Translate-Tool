@@ -33,10 +33,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -52,7 +52,7 @@ jobs:
       run: ./gradlew assembleDebug
       
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
@@ -99,11 +99,25 @@ Bạn có thể tùy chỉnh workflow bằng cách chỉnh sửa file `.github/w
   run: ./gradlew assembleRelease
   
 - name: Upload APK
-  uses: actions/upload-artifact@v3
+  uses: actions/upload-artifact@v4
   with:
     name: app-release
     path: app/build/outputs/apk/release/app-release-unsigned.apk
 ```
+
+## Phiên bản Actions
+
+### Cập nhật từ v3 lên v4
+
+Lưu ý rằng chúng tôi đã cập nhật các actions từ phiên bản v3 lên v4 vì:
+
+1. **Thông báo loại bỏ**: GitHub đã thông báo rằng từ ngày 30/01/2025, v3 của actions/upload-artifact và actions/download-artifact sẽ không còn được hỗ trợ.
+
+2. **Cải thiện hiệu suất**: Phiên bản v4 cải thiện tốc độ tải lên và tải xuống lên đến 98% và bao gồm nhiều tính năng mới.
+
+3. **Tính nhất quán**: Chúng tôi đã cập nhật tất cả các actions (checkout, setup-java, upload-artifact) lên phiên bản v4 để đảm bảo tính nhất quán.
+
+Nếu bạn gặp lỗi "This request has been automatically failed because it uses a deprecated version of `actions/upload-artifact: v3`", hãy cập nhật phiên bản của actions trong file workflow của bạn lên v4.
 
 ### Ký APK Release
 
