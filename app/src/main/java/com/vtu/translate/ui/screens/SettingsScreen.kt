@@ -130,7 +130,9 @@ fun ModelSelectionDropdown(
     // Define available models
     val metaModels = listOf(
         "llama3-70b-8192",
-        "llama3-8b-8192"
+        "llama3-8b-8192",
+        "meta-llama/llama-4-scout-17b-16e-instruct",
+        "meta-llama/llama-4-maverick-17b-128e-instruct"
     )
     
     val deepseekMetaModels = listOf(

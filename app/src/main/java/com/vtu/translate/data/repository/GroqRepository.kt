@@ -1,16 +1,19 @@
 package com.vtu.translate.data.repository
 
+import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.vtu.translate.data.model.ChatCompletionRequest
 import com.vtu.translate.data.model.ChatCompletionResponse
 import com.vtu.translate.data.model.ChatMessage
 import com.vtu.translate.data.model.GroqModelsResponse
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -40,6 +43,7 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
     
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
+9        .retryOnConnectionFailure(true)
         .build()
     
     private val retrofit = Retrofit.Builder()
@@ -90,13 +94,40 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
                 temperature = 0.7
             )
             
-            val response = groqService.createChatCompletion("Bearer $apiKey", request)
+            // Implement retry with exponential backoff for HTTP 429 errors
+            val maxRetries = 3
+            var retryCount = 0
+            var lastException: Exception? = null
             
-            if (response.choices.isNotEmpty()) {
-                Result.success(response.choices[0].message.content.trim())
-            } else {
-                Result.failure(Exception("No response from API"))
+            while (retryCount < maxRetries) {
+                try {
+                    val response = groqService.createChatCompletion("Bearer $apiKey", request)
+                    
+                    if (response.choices.isNotEmpty()) {
+                        return Result.success(response.choices[0].message.content.trim())
+                    } else {
+                        return Result.failure(Exception("No response from API"))
+                    }
+                } catch (e: HttpException) {
+                    // Handle HTTP 429 Too Many Requests
+                    if (e.code() == 429) {
+                        lastException = Exception("Rate limit exceeded (HTTP 429). Retrying...")
+                        Log.w("GroqRepository", "HTTP 429 received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
+                        
+                        // Exponential backoff: 1s, 2s, 4s
+                        val delayMs = (1000L * Math.pow(2.0, retryCount.toDouble())).toLong()
+                        delay(delayMs)
+                        retryCount++
+                    } else {
+                        return Result.failure(e)
+                    }
+                } catch (e: Exception) {
+                    return Result.failure(e)
+                }
             }
+            
+            // If we've exhausted all retries
+            Result.failure(lastException ?: Exception("Failed after $maxRetries retries"))
         } catch (e: Exception) {
             Result.failure(e)
         }

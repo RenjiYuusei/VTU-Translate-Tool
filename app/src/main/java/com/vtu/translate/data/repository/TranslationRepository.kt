@@ -6,6 +6,7 @@ import android.os.Environment
 import com.vtu.translate.data.model.LogType
 import com.vtu.translate.data.model.StringResource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,9 +66,27 @@ class TranslationRepository(
                                 }
                             }
                             XmlPullParser.TEXT -> {
-                                if (name != null && (translatable == null || translatable != "false")) {
+                                if (name != null) {
                                     val value = parser.text
-                                    stringResources.add(StringResource(name, value))
+                                    // Check if string is translatable
+                                    val isTranslatable = translatable == null || translatable != "false"
+                                    
+                                    // Special case handling for known non-translatable strings
+                                    val isSpecialCase = isSpecialNonTranslatableString(name, value)
+                                    
+                                    if (isTranslatable && !isSpecialCase) {
+                                        stringResources.add(StringResource(name, value))
+                                    } else if (isSpecialCase) {
+                                        // Add with pre-defined translation for special cases
+                                        val predefinedTranslation = getSpecialCaseTranslation(name, value)
+                                        stringResources.add(StringResource(
+                                            name = name,
+                                            value = value,
+                                            translatedValue = predefinedTranslation,
+                                            isTranslating = false,
+                                            hasError = false
+                                        ))
+                                    }
                                 }
                             }
                             XmlPullParser.END_TAG -> {
@@ -90,6 +109,33 @@ class TranslationRepository(
     }
     
     /**
+     * Check if a string is a special non-translatable string
+     */
+    private fun isSpecialNonTranslatableString(name: String, value: String): Boolean {
+        // Check for package names, class names, or other technical strings
+        return value.matches(Regex("^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$")) || // Package names like androidx.startup
+               value.matches(Regex("^[A-Z][a-zA-Z0-9]*$")) || // Class names like MainActivity
+               value.matches(Regex("^[a-zA-Z0-9_]+$")) || // Simple technical identifiers
+               value.startsWith("http://") || value.startsWith("https://") // URLs
+    }
+    
+    /**
+     * Get predefined translation for special case strings
+     */
+    private fun getSpecialCaseTranslation(name: String, value: String): String {
+        // Map of known special cases
+        return when {
+            value == "androidx.startup" -> "Bộ khởi động AndroidX"
+            value.startsWith("androidx.") -> "AndroidX ${value.substringAfter("androidx.")}"
+            value.startsWith("android.") -> "Android ${value.substringAfter("android.")}"
+            value.startsWith("java.") -> "Java ${value.substringAfter("java.")}"
+            value.startsWith("kotlin.") -> "Kotlin ${value.substringAfter("kotlin.")}"
+            value.startsWith("http") -> value // Keep URLs as is
+            else -> value // Keep as is if no special handling defined
+        }
+    }
+    
+    /**
      * Translate all string resources
      */
     suspend fun translateAll(): Result<Unit> {
@@ -107,35 +153,75 @@ class TranslationRepository(
                 // Create a mutable copy of the resources
                 val updatedResources = resources.toMutableList()
                 
-                for (i in resources.indices) {
-                    val resource = resources[i]
+                // Batch size and delay to avoid rate limiting
+                val batchSize = 5
+                val delayBetweenBatchesMs = 1000L // 1 second delay between batches
+                
+                // Process in batches
+                for (batchStart in resources.indices step batchSize) {
+                    val batchEnd = minOf(batchStart + batchSize, resources.size)
+                    var rateLimitHit = false
                     
-                    // Update status to translating
-                    updatedResources[i] = resource.copy(isTranslating = true)
-                    _stringResources.value = updatedResources.toList()
-                    
-                    // Translate the string
-                    val result = groqRepository.translateText(resource.value)
-                    
-                    if (result.isSuccess) {
-                        val translatedText = result.getOrNull() ?: ""
-                        updatedResources[i] = resource.copy(
-                            translatedValue = translatedText,
-                            isTranslating = false,
-                            hasError = false
-                        )
-                        logRepository.logSuccess("Dịch thành công key '${resource.name}'.")
-                    } else {
-                        updatedResources[i] = resource.copy(
-                            isTranslating = false,
-                            hasError = true
-                        )
-                        val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error"
-                        logRepository.logError("Dịch thất bại key '${resource.name}'. Lỗi: $errorMessage.")
+                    for (i in batchStart until batchEnd) {
+                        val resource = resources[i]
+                        
+                        // Skip if already has a translation (for special cases)
+                        if (resource.translatedValue.isNotBlank() && !resource.hasError) {
+                            continue
+                        }
+                        
+                        // Update status to translating
+                        updatedResources[i] = resource.copy(isTranslating = true)
+                        _stringResources.value = updatedResources.toList()
+                        
+                        // Translate the string
+                        val result = groqRepository.translateText(resource.value)
+                        
+                        if (result.isSuccess) {
+                            val translatedText = result.getOrNull() ?: ""
+                            updatedResources[i] = resource.copy(
+                                translatedValue = translatedText,
+                                isTranslating = false,
+                                hasError = false
+                            )
+                            logRepository.logSuccess("Dịch thành công key '${resource.name}'.") 
+                        } else {
+                            val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error"
+                            
+                            // Check if rate limit error
+                            if (errorMessage.contains("429") || errorMessage.contains("rate limit") || 
+                                errorMessage.contains("Rate limit")) {
+                                rateLimitHit = true
+                                updatedResources[i] = resource.copy(
+                                    isTranslating = false,
+                                    hasError = true
+                                )
+                                logRepository.logWarning("Đạt giới hạn tốc độ API (HTTP 429) khi dịch key '${resource.name}'. Sẽ thử lại sau.")
+                                break // Break the inner loop to pause and retry
+                            } else {
+                                updatedResources[i] = resource.copy(
+                                    isTranslating = false,
+                                    hasError = true
+                                )
+                                logRepository.logError("Dịch thất bại key '${resource.name}'. Lỗi: $errorMessage.")
+                            }
+                        }
+                        
+                        // Update the list
+                        _stringResources.value = updatedResources.toList()
+                        
+                        // Small delay between individual requests
+                        delay(200) // 200ms between individual requests
                     }
                     
-                    // Update the list
-                    _stringResources.value = updatedResources.toList()
+                    // If rate limit was hit, wait longer before continuing
+                    if (rateLimitHit) {
+                        logRepository.logInfo("Đợi 5 giây trước khi tiếp tục do đạt giới hạn tốc độ API...")
+                        delay(5000) // Wait 5 seconds before continuing
+                    } else if (batchEnd < resources.size) {
+                        // Only delay between batches if there are more batches to process
+                        delay(delayBetweenBatchesMs)
+                    }
                 }
                 
                 _isTranslating.value = false

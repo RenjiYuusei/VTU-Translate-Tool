@@ -6,23 +6,27 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
@@ -189,13 +193,39 @@ fun TranslateScreen(
             }
         }
         
-        // Show loading indicator if translating
-        if (isTranslating) {
-            Box(
+        // Show translation progress
+        if (isTranslating || stringResources.any { it.translatedValue.isNotBlank() }) {
+            val translatedCount = stringResources.count { it.translatedValue.isNotBlank() }
+            val totalCount = stringResources.size
+            val progressPercent = if (totalCount > 0) (translatedCount * 100 / totalCount) else 0
+            
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                CircularProgressIndicator()
+                // Progress text
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Đã dịch: $translatedCount/$totalCount chuỗi ($progressPercent%)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    
+                    if (isTranslating) {
+                        CircularProgressIndicator(modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                
+                // Progress bar
+                LinearProgressIndicator(
+                    progress = { translatedCount.toFloat() / totalCount.toFloat() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                )
             }
         }
         
@@ -223,19 +253,57 @@ fun StringResourceItem(
     resource: StringResource,
     onTranslatedValueChange: (String) -> Unit
 ) {
+    val isSpecialCase = resource.translatedValue.isNotBlank() && !resource.isTranslating && !resource.hasError
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSpecialCase) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Resource name
-            Text(
-                text = resource.name,
-                style = MaterialTheme.typography.titleMedium
-            )
+            // Resource name with badge for special cases
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = resource.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                if (isSpecialCase) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "Tự động",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                
+                if (resource.hasError) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "Lỗi",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
             
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -254,7 +322,12 @@ fun StringResourceItem(
                 onValueChange = onTranslatedValueChange,
                 label = { Text(stringResource(R.string.translated_value)) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !resource.isTranslating
+                enabled = !resource.isTranslating,
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface, // Keep text visible when disabled
+                    disabledBorderColor = if (isSpecialCase) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    disabledLabelColor = if (isSpecialCase) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
             
             // Show loading indicator if translating
@@ -265,6 +338,15 @@ fun StringResourceItem(
                 ) {
                     CircularProgressIndicator()
                 }
+            }
+            
+            // Show info message for special cases
+            if (isSpecialCase) {
+                Text(
+                    text = "Chuỗi này được dịch tự động dựa trên quy tắc đặc biệt.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
