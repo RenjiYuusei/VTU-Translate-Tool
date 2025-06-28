@@ -72,20 +72,27 @@ class TranslationRepository(
                                     val isTranslatable = translatable == null || translatable != "false"
                                     
                                     // Special case handling for known non-translatable strings
-                                    val isSpecialCase = isSpecialNonTranslatableString(value)
-                                    
-                                    if (isTranslatable && !isSpecialCase) {
-                                        stringResources.add(StringResource(name, value))
-                                    } else if (isSpecialCase) {
-                                        // Add with pre-defined translation for special cases
-                                        val predefinedTranslation = getSpecialCaseTranslation(value)
-                                        stringResources.add(StringResource(
-                                            name = name,
-                                            value = value,
-                                            translatedValue = predefinedTranslation,
-                                            isTranslating = false,
-                                            hasError = false
-                                        ))
+                    val isSpecialCase = isSpecialNonTranslatableString(value)
+                    
+                    if (isTranslatable && !isSpecialCase) {
+                        // Check if the string contains technical parts that should be preserved
+                        if (containsTechnicalParts(value)) {
+                            // Add with pre-processed value that marks technical parts
+                            val preprocessedValue = preprocessStringWithTechnicalParts(value)
+                            stringResources.add(StringResource(name, preprocessedValue))
+                        } else {
+                            stringResources.add(StringResource(name, value))
+                        }
+                    } else if (isSpecialCase) {
+                        // Add with pre-defined translation for special cases
+                        val predefinedTranslation = getSpecialCaseTranslation(value)
+                        stringResources.add(StringResource(
+                            name = name,
+                            value = value,
+                            translatedValue = predefinedTranslation,
+                            isTranslating = false,
+                            hasError = false
+                        ))
                                     }
                                 }
                             }
@@ -119,7 +126,16 @@ class TranslationRepository(
         return value.matches(Regex("^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$")) || // Package names like androidx.startup
                value.matches(Regex("^[A-Z][a-zA-Z0-9]*$")) || // Class names like MainActivity
                value.matches(Regex("^[a-zA-Z0-9_]+$")) || // Simple technical identifiers
-               value.startsWith("http://") || value.startsWith("https://") // URLs
+               value.startsWith("http://") || value.startsWith("https://") || // URLs
+               value.startsWith("androidx.") || // Specific package prefixes
+               value.startsWith("android.") ||
+               value.startsWith("java.") ||
+               value.startsWith("kotlin.") ||
+               value.contains("@") || // Email addresses or resource references
+               value.matches(Regex(".*\\{.*\\}.*")) || // Strings with placeholders like {0}
+               value.matches(Regex(".*%[sdfx].*")) || // Format specifiers like %s, %d
+               value.matches(Regex("^[0-9]+$")) || // Pure numbers
+               value.trim().isEmpty() // Empty strings
     }
     
     /**
@@ -129,12 +145,12 @@ class TranslationRepository(
      * @return The predefined translation for the special case string
      */
     private fun getSpecialCaseTranslation(value: String): String {
-        // Map of known special cases
+        // For technical strings, we keep them as-is without translation
         return when {
-            value.startsWith("androidx.") -> "AndroidX ${value.substringAfter("androidx.")}"
-            value.startsWith("android.") -> "Android ${value.substringAfter("android.")}"
-            value.startsWith("java.") -> "Java ${value.substringAfter("java.")}"
-            value.startsWith("kotlin.") -> "Kotlin ${value.substringAfter("kotlin.")}"
+            value.startsWith("androidx.") -> value // Keep package names as-is
+            value.startsWith("android.") -> value
+            value.startsWith("java.") -> value
+            value.startsWith("kotlin.") -> value
             value.startsWith("http") -> value // Keep URLs as is
             else -> value // Keep as is if no special handling defined
         }
@@ -347,6 +363,38 @@ class TranslationRepository(
     fun clearResources() {
         _stringResources.value = emptyList()
         _selectedFileName.value = null
+    }
+    
+    /**
+     * Check if a string contains technical parts that should be preserved during translation
+     * 
+     * @param value The string value to check
+     * @return True if the string contains technical parts
+     */
+    private fun containsTechnicalParts(value: String): Boolean {
+        // Check for strings that contain a mix of translatable text and technical identifiers
+        val technicalPatterns = listOf(
+            Regex("androidx\\.[a-zA-Z0-9_.]+"),  // androidx package references
+            Regex("android\\.[a-zA-Z0-9_.]+"),  // android package references
+            Regex("java\\.[a-zA-Z0-9_.]+"),     // java package references
+            Regex("kotlin\\.[a-zA-Z0-9_.]+"),   // kotlin package references
+            Regex("%[sdfx]"),                    // Format specifiers
+            Regex("\\{[^}]*\\}")                // Placeholders in curly braces
+        )
+        
+        return technicalPatterns.any { pattern -> pattern.containsMatchIn(value) }
+    }
+    
+    /**
+     * Preprocess a string to mark technical parts that should be preserved during translation
+     * 
+     * @param value The string value to preprocess
+     * @return The preprocessed string with technical parts marked
+     */
+    private fun preprocessStringWithTechnicalParts(value: String): String {
+        // This is a simple implementation that doesn't modify the string
+        // The actual preprocessing is handled by the improved prompt in GroqRepository
+        return value
     }
     
     /**

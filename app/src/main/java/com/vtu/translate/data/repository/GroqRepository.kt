@@ -86,7 +86,7 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
                 return Result.failure(Exception("Model is not selected"))
             }
             
-            val prompt = "Translate the following Android string resource value into Vietnamese. Do not add explanations or surrounding quotes. Return ONLY the translated text. Original text: \"$text\""
+            val prompt = "Translate the following Android string resource value into Vietnamese. Do not add explanations or surrounding quotes. Return ONLY the translated text. IMPORTANT: Do NOT translate technical identifiers, package names (like androidx.startup), class names, URLs, placeholders, or format specifiers (like %s, %d). Keep those exactly as they are in the original text. Original text: \"$text\""
             
             val request = ChatCompletionRequest(
                 model = model,
