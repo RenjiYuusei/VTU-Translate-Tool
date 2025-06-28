@@ -14,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -235,9 +237,17 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = { mainViewModel.clearLogs() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text("Clear Logs")
+                            Text(stringResource(id = R.string.clear_logs))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        val clipboardManager = LocalClipboardManager.current
+                        Button(
+                            onClick = { clipboardManager.setText(AnnotatedString(logs.joinToString("\n"))) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(stringResource(id = R.string.copy_logs))
                         }
                     }
                 }

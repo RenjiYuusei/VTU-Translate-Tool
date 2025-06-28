@@ -32,4 +32,6 @@
     <string name="language_korean">Korean</string>
     <string name="language_chinese">Chinese</string>
     <string name="settings_title">Settings</string>
+    <string name="clear_logs">Clear Logs</string>
+    <string name="copy_logs">Copy Logs</string>
 </resources>

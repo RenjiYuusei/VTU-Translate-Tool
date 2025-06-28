@@ -31,4 +31,6 @@
     <string name="language_spanish">Tiếng Tây Ban Nha</string>
     <string name="language_korean">Tiếng Hàn</string>
     <string name="language_chinese">Tiếng Trung</string>
+    <string name="clear_logs">Xóa nhật ký</string>
+    <string name="copy_logs">Sao chép nhật ký</string>
 </resources>
