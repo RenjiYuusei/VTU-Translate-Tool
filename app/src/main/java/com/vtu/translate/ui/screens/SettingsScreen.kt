@@ -109,11 +109,13 @@ fun SettingsScreen(mainViewModel: MainViewModel = viewModel()) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Target Language Selection
-                    var languageExpanded by remember { mutableStateOf(false) }
                     val languages = listOf(stringResource(id = R.string.language_vietnamese), stringResource(id = R.string.language_japanese), stringResource(id = R.string.language_french), stringResource(id = R.string.language_german), stringResource(id = R.string.language_spanish), stringResource(id = R.string.language_korean), stringResource(id = R.string.language_chinese))
+                    var languageExpanded by remember { mutableStateOf(false) }
+
                     ExposedDropdownMenuBox(
                         expanded = languageExpanded,
-                        onExpandedChange = { languageExpanded = !languageExpanded }
+                        onExpandedChange = { languageExpanded = !languageExpanded },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedTextField(
                             value = selectedTargetLanguage,
@@ -121,7 +123,7 @@ fun SettingsScreen(mainViewModel: MainViewModel = viewModel()) {
                             readOnly = true,
                             label = { Text(stringResource(id = R.string.select_target_language_label)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
                         ExposedDropdownMenu(
                             expanded = languageExpanded,
