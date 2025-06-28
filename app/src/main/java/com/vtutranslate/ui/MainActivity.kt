@@ -57,4 +57,4 @@ class MainActivity : AppCompatActivity() {
         val logManager = VTUTranslateApp.instance.logManager
         logManager.log("Application started - VTU Translate Tool")
     }
-} *
+}
