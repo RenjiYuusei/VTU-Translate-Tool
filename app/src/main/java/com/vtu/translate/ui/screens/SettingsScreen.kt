@@ -79,7 +79,10 @@ fun SettingsScreen(mainViewModel: MainViewModel) {
 
                     // Model Selection
                     var modelExpanded by remember { mutableStateOf(false) }
-                    val models = listOf("google/gemini-2.0-flash-exp:free", "google/gemma-3-27b-it:free", "deepseek/deepseek-r1-0528:free")
+                    val modelsByProvider = mapOf(
+                        "Google" to listOf("google/gemini-2.0-flash-exp:free", "google/gemma-3-27b-it:free"),
+                        "DeepSeek" to listOf("deepseek/deepseek-r1-0528:free", "deepseek/deepseek-chat-v3-0324:free")
+                    )
                     ExposedDropdownMenuBox(
                         expanded = modelExpanded,
                         onExpandedChange = { modelExpanded = !modelExpanded }
@@ -96,14 +99,23 @@ fun SettingsScreen(mainViewModel: MainViewModel) {
                             expanded = modelExpanded,
                             onDismissRequest = { modelExpanded = false }
                         ) {
-                            models.forEach { model ->
-                                DropdownMenuItem(
-                                    text = { Text(model) },
-                                    onClick = {
-                                        mainViewModel.onModelSelected(model)
-                                        modelExpanded = false
-                                    }
+                            modelsByProvider.forEach { (provider, models) ->
+                                Text(
+                                    text = provider,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
+                                models.forEach { model ->
+                                    DropdownMenuItem(
+                                        text = { Text(model) },
+                                        onClick = {
+                                            mainViewModel.onModelSelected(model)
+                                            modelExpanded = false
+                                        }
+                                    )
+                                }
+                                Divider()
                             }
                         }
                     }

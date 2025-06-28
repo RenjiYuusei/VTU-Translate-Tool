@@ -59,6 +59,8 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
         return try {
             val response = client.post("https://openrouter.ai/api/v1/chat/completions") {
                 header("Authorization", "Bearer $apiKey")
+                header("HTTP-Referer", "https://vtu-translate-tool.com")
+                header("X-Title", "VTU Translate Tool")
                 header("Content-Type", "application/json")
                 setBody(requestBody)
             }
