@@ -45,8 +45,7 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
     suspend fun translateText(
         model: String,
         apiKey: String,
-        prompt: String,
-        targetLanguage: String
+        prompt: String
     ): String? {
         val requestBody = ChatCompletionRequest(
             model = model,

@@ -175,8 +175,7 @@ $jsonForTranslation"""
                     val translatedJsonString = openRouterApiService.translateText(
                         model,
                         apiKey,
-                        prompt,
-                        targetLanguage
+                        prompt
                     )
 
                     if (translatedJsonString.isNullOrEmpty()) {
