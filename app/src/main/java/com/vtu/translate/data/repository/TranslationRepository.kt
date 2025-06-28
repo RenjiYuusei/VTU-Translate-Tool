@@ -1,38 +1,264 @@
 package com.vtu.translate.data.repository
 
-import com.vtu.translate.data.model.Message
-import com.vtu.translate.data.model.OpenRouterRequest
-import com.vtu.translate.data.remote.OpenRouterApi
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import com.vtu.translate.data.model.LogType
+import com.vtu.translate.data.model.StringResource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
+import org.xmlpull.v1.XmlSerializer
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStreamWriter
 
-class TranslationRepository(private val openRouterApi: OpenRouterApi) {
-
-    suspend fun translate(
-        apiKey: String,
-        model: String,
-        text: String
-    ): Result<String> {
+/**
+ * Repository for handling XML translation operations
+ */
+class TranslationRepository(
+    private val groqRepository: GroqRepository,
+    private val logRepository: LogRepository
+) {
+    
+    private val _stringResources = MutableStateFlow<List<StringResource>>(emptyList())
+    val stringResources: StateFlow<List<StringResource>> = _stringResources.asStateFlow()
+    
+    private val _isTranslating = MutableStateFlow(false)
+    val isTranslating: StateFlow<Boolean> = _isTranslating.asStateFlow()
+    
+    private val _selectedFileName = MutableStateFlow<String?>(null)
+    val selectedFileName: StateFlow<String?> = _selectedFileName.asStateFlow()
+    
+    /**
+     * Parse strings.xml file from URI
+     */
+    suspend fun parseStringsXml(context: Context, uri: Uri): Result<List<StringResource>> {
         return withContext(Dispatchers.IO) {
             try {
-                val prompt = "Translate the following Android string resource value into Vietnamese. Do not add explanations or surrounding quotes. Just return the translated text. Original text: \"$text\""
-                val request = OpenRouterRequest(
-                    model = model,
-                    messages = listOf(Message(role = "user", content = prompt))
-                )
-                val response = openRouterApi.getTranslation("Bearer $apiKey", request)
-
-                if (response.error != null) {
-                    Result.failure(Exception(response.error.message))
-                } else if (response.choices.isNotEmpty()) {
-                    val translatedText = response.choices[0].message.content.trim().removeSurrounding("\"")
-                    Result.success(translatedText)
-                } else {
-                    Result.failure(Exception("Unknown error: Empty response from API."))
-                }
+                val fileName = getFileName(context, uri)
+                _selectedFileName.value = fileName
+                
+                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+                inputStream?.use { stream ->
+                    val factory = XmlPullParserFactory.newInstance()
+                    factory.isNamespaceAware = true
+                    val parser = factory.newPullParser()
+                    parser.setInput(stream, null)
+                    
+                    val stringResources = mutableListOf<StringResource>()
+                    var eventType = parser.eventType
+                    var name: String? = null
+                    var translatable: String? = null
+                    
+                    while (eventType != XmlPullParser.END_DOCUMENT) {
+                        when (eventType) {
+                            XmlPullParser.START_TAG -> {
+                                if (parser.name == "string") {
+                                    name = parser.getAttributeValue(null, "name")
+                                    translatable = parser.getAttributeValue(null, "translatable")
+                                }
+                            }
+                            XmlPullParser.TEXT -> {
+                                if (name != null && (translatable == null || translatable != "false")) {
+                                    val value = parser.text
+                                    stringResources.add(StringResource(name, value))
+                                }
+                            }
+                            XmlPullParser.END_TAG -> {
+                                if (parser.name == "string") {
+                                    name = null
+                                    translatable = null
+                                }
+                            }
+                        }
+                        eventType = parser.next()
+                    }
+                    
+                    _stringResources.value = stringResources
+                    return@withContext Result.success(stringResources)
+                } ?: return@withContext Result.failure(Exception("Could not open file"))
             } catch (e: Exception) {
-                Result.failure(e)
+                return@withContext Result.failure(e)
             }
         }
     }
-} 
+    
+    /**
+     * Translate all string resources
+     */
+    suspend fun translateAll(): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                _isTranslating.value = true
+                
+                val resources = _stringResources.value
+                if (resources.isEmpty()) {
+                    return@withContext Result.failure(Exception("No strings to translate"))
+                }
+                
+                logRepository.logInfo("Bắt đầu dịch ${resources.size} chuỗi với model [${groqRepository.getSelectedModel()}].")
+                
+                // Create a mutable copy of the resources
+                val updatedResources = resources.toMutableList()
+                
+                for (i in resources.indices) {
+                    val resource = resources[i]
+                    
+                    // Update status to translating
+                    updatedResources[i] = resource.copy(isTranslating = true)
+                    _stringResources.value = updatedResources.toList()
+                    
+                    // Translate the string
+                    val result = groqRepository.translateText(resource.value)
+                    
+                    if (result.isSuccess) {
+                        val translatedText = result.getOrNull() ?: ""
+                        updatedResources[i] = resource.copy(
+                            translatedValue = translatedText,
+                            isTranslating = false,
+                            hasError = false
+                        )
+                        logRepository.logSuccess("Dịch thành công key '${resource.name}'.")
+                    } else {
+                        updatedResources[i] = resource.copy(
+                            isTranslating = false,
+                            hasError = true
+                        )
+                        val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error"
+                        logRepository.logError("Dịch thất bại key '${resource.name}'. Lỗi: $errorMessage.")
+                    }
+                    
+                    // Update the list
+                    _stringResources.value = updatedResources.toList()
+                }
+                
+                _isTranslating.value = false
+                return@withContext Result.success(Unit)
+            } catch (e: Exception) {
+                _isTranslating.value = false
+                return@withContext Result.failure(e)
+            }
+        }
+    }
+    
+    /**
+     * Save translated strings to a new XML file
+     */
+    suspend fun saveTranslatedFile(context: Context): Result<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val resources = _stringResources.value
+                if (resources.isEmpty()) {
+                    return@withContext Result.failure(Exception("No strings to save"))
+                }
+                
+                // Create directory structure in Downloads folder
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val resDir = File(downloadsDir, "res")
+                val valuesViDir = File(resDir, "values-vi")
+                
+                if (!valuesViDir.exists()) {
+                    valuesViDir.mkdirs()
+                }
+                
+                val outputFile = File(valuesViDir, "strings.xml")
+                
+                // Create XML file
+                val serializer = XmlPullParserFactory.newInstance().newSerializer()
+                val writer = OutputStreamWriter(FileOutputStream(outputFile), "UTF-8")
+                
+                serializer.setOutput(writer)
+                serializer.startDocument("UTF-8", true)
+                serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true)
+                
+                serializer.startTag("", "resources")
+                
+                for (resource in resources) {
+                    serializer.startTag("", "string")
+                    serializer.attribute("", "name", resource.name)
+                    
+                    // Use translated value if available, otherwise use original
+                    val value = if (resource.translatedValue.isNotBlank()) {
+                        resource.translatedValue
+                    } else {
+                        resource.value
+                    }
+                    
+                    serializer.text(value)
+                    serializer.endTag("", "string")
+                }
+                
+                serializer.endTag("", "resources")
+                serializer.endDocument()
+                writer.close()
+                
+                val filePath = outputFile.absolutePath
+                logRepository.logInfo("Đã lưu file vào $filePath.")
+                
+                return@withContext Result.success(filePath)
+            } catch (e: Exception) {
+                logRepository.logError("Lỗi khi lưu file: ${e.message}")
+                return@withContext Result.failure(e)
+            }
+        }
+    }
+    
+    /**
+     * Update a string resource in the list
+     */
+    fun updateStringResource(index: Int, translatedValue: String) {
+        val currentList = _stringResources.value.toMutableList()
+        if (index in currentList.indices) {
+            val updatedResource = currentList[index].copy(translatedValue = translatedValue)
+            currentList[index] = updatedResource
+            _stringResources.value = currentList
+        }
+    }
+    
+    /**
+     * Clear all string resources
+     */
+    fun clearResources() {
+        _stringResources.value = emptyList()
+        _selectedFileName.value = null
+    }
+    
+    /**
+     * Get file name from URI
+     */
+    private fun getFileName(context: Context, uri: Uri): String {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1) {
+                        result = it.getString(nameIndex)
+                    }
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            val cut = result?.lastIndexOf('/')
+            if (cut != -1 && cut != null) {
+                result = result?.substring(cut + 1)
+            }
+        }
+        return result ?: "Unknown file"
+    }
+    
+    /**
+     * Get the currently selected model
+     */
+    private suspend fun getSelectedModel(): String {
+        return groqRepository.getSelectedModel()
+    }
+}
