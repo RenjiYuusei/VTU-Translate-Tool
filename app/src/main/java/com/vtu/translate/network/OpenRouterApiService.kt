@@ -62,6 +62,7 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
                 header("Authorization", "Bearer $apiKey")
                 header("HTTP-Referer", "https://vtu-translate-tool.com")
                 header("X-Title", "VTU Translate Tool")
+                contentType(ContentType.Application.Json)
                 setBody(requestBody)
             }
 
