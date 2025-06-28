@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- TODO: Configure what data to backup. See https://developer.android.com/guide/topics/data/autobackup#configure -->
-</full-backup-content>
+    <!-- Exclude specific shared preferences that contain sensitive data -->
+    <exclude domain="sharedpref" path="sensitive_data.xml" />
+</full-backup-content> 

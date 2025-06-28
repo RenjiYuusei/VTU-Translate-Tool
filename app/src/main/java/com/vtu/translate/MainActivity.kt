@@ -6,15 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.tooling.preview.Preview
 import com.vtu.translate.ui.screens.MainScreen
-import com.vtu.translate.ui.screens.SettingsScreen
 import com.vtu.translate.ui.theme.VTUTranslateToolTheme
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.vtu.translate.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,18 +22,17 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
-                    val mainViewModel: MainViewModel = viewModel()
-                    NavHost(navController = navController, startDestination = "main_screen") {
-                        composable("main_screen") {
-                            MainScreen(navController = navController, mainViewModel = mainViewModel)
-                        }
-                        composable("settings_screen") {
-                            SettingsScreen(mainViewModel = mainViewModel)
-                        }
-                    }
+                    MainScreen()
                 }
             }
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    VTUTranslateToolTheme {
+        MainScreen()
+    }
+} 

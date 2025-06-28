@@ -12,8 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
-
-
 rootProject.name = "VTU Translate Tool"
-include(":app")
+include(":app") 
