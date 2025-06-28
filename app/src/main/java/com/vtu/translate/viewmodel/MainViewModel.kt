@@ -44,8 +44,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _errorMessage = MutableStateFlow<String?>("")
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    private val _selectedLanguage = MutableStateFlow("Vietnamese")
-    val selectedLanguage: StateFlow<String> = _selectedLanguage.asStateFlow()
+    private val _selectedTargetLanguage = MutableStateFlow("Vietnamese")
+    val selectedTargetLanguage: StateFlow<String> = _selectedTargetLanguage.asStateFlow()
 
     private val _logs = MutableStateFlow<List<String>>(emptyList())
     val logs: StateFlow<List<String>> = _logs.asStateFlow()
@@ -70,6 +70,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 model?.let { _selectedModel.value = it }
             }
         }
+        viewModelScope.launch {
+            dataStoreManager.getSelectedTargetLanguage.collect { language ->
+                language?.let { _selectedTargetLanguage.value = it }
+            }
+        }
     }
 
     fun onApiKeyChange(newKey: String) {
@@ -86,8 +91,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun onLanguageSelected(language: String) {
-        _selectedLanguage.value = language
+    fun onTargetLanguageSelected(language: String) {
+        _selectedTargetLanguage.value = language
+        viewModelScope.launch {
+            dataStoreManager.saveSelectedTargetLanguage(language)
+        }
     }
 
     fun onFileSelected(content: String?) {
@@ -104,7 +112,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val originalContent = _selectedFileContent.value
                 val apiKey = _apiKey.value
                 val model = _selectedModel.value
-                val targetLanguage = _selectedLanguage.value
+                val targetLanguage = _selectedTargetLanguage.value
 
                 if (originalContent.isNullOrEmpty()) {
                     _errorMessage.value = "Please select a strings.xml file first."

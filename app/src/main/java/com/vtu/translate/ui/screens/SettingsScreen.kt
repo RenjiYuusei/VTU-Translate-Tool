@@ -25,6 +25,7 @@ import com.vtu.translate.viewmodel.MainViewModel
 fun SettingsScreen(mainViewModel: MainViewModel = viewModel()) {
     val apiKey by mainViewModel.apiKey.collectAsState()
     val selectedModel by mainViewModel.selectedModel.collectAsState()
+    val selectedTargetLanguage by mainViewModel.selectedTargetLanguage.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
