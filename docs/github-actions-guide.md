@@ -42,7 +42,11 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    # Sử dụng Gradle trong Docker container thay vì gradlew
+    # Cài đặt Gradle
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      
+    # Sử dụng Gradle từ môi trường GitHub Actions
     - name: Build with Gradle
       run: gradle build
       
