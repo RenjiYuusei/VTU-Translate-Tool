@@ -118,7 +118,7 @@ class BatchProcessor<T, R> {
                     Result.failure(e)
                 }
                 
-                if (result.isSuccess) break
+                if (result?.isSuccess == true) break
                 
                 // Tăng thời gian chờ theo hệ số
                 currentDelay = (currentDelay * backoffFactor).toLong()

@@ -5,15 +5,13 @@ import com.vtu.translate.data.repository.LogRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.IOException
-import javax.inject.Inject
-import javax.inject.Singleton
+import retrofit2.HttpException
 
 /**
  * Lớp xử lý lỗi tập trung cho toàn bộ ứng dụng.
  * Cung cấp các phương thức để xử lý và hiển thị lỗi một cách nhất quán.
  */
-@Singleton
-class ErrorHandler @Inject constructor(
+class ErrorHandler(
     private val logRepository: LogRepository
 ) {
     private val _errorEvent = MutableStateFlow<Event<String>?>(null)
@@ -65,8 +63,3 @@ class ErrorHandler @Inject constructor(
         _errorEvent.value = null
     }
 }
-
-/**
- * Lớp đại diện cho lỗi HTTP
- */
-class HttpException(val code: () -> Int, message: String) : Exception(message)
