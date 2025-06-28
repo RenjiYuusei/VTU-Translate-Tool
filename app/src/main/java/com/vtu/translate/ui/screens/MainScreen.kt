@@ -215,26 +215,30 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
             }
 
             val logs by mainViewModel.logs.collectAsState()
-            if (logs.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Application Logs", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 200.dp)
-                                .verticalScroll(rememberScrollState())
-                        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(stringResource(id = R.string.application_logs), style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        if (logs.isEmpty()) {
+                            Text("No logs yet.", style = MaterialTheme.typography.bodySmall)
+                        } else {
                             logs.forEach { logMessage ->
                                 Text(logMessage, style = MaterialTheme.typography.bodySmall)
                             }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth()) {
                         Button(
                             onClick = { mainViewModel.clearLogs() },
                             modifier = Modifier.weight(1f)

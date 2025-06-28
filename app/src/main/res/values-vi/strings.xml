@@ -33,4 +33,5 @@
     <string name="language_chinese">Tiếng Trung</string>
     <string name="clear_logs">Xóa nhật ký</string>
     <string name="copy_logs">Sao chép nhật ký</string>
+    <string name="application_logs">Nhật ký ứng dụng</string>
 </resources>

@@ -13,6 +13,7 @@ class DataStoreManager(private val context: Context) {
 
     companion object {
         val API_KEY = stringPreferencesKey("api_key")
+        val SELECTED_MODEL = stringPreferencesKey("selected_model")
     }
 
     val getApiKey: Flow<String?> = context.dataStore.data
@@ -20,9 +21,20 @@ class DataStoreManager(private val context: Context) {
             preferences[API_KEY]
         }
 
+    val getSelectedModel: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[SELECTED_MODEL]
+        }
+
     suspend fun saveApiKey(apiKey: String) {
         context.dataStore.edit {
             it[API_KEY] = apiKey
+        }
+    }
+
+    suspend fun saveSelectedModel(model: String) {
+        context.dataStore.edit {
+            it[SELECTED_MODEL] = model
         }
     }
 }

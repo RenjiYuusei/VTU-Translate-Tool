@@ -65,6 +65,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _apiKey.value = key
             }
         }
+        viewModelScope.launch {
+            dataStoreManager.getSelectedModel.collect { model ->
+                model?.let { _selectedModel.value = it }
+            }
+        }
     }
 
     fun onApiKeyChange(newKey: String) {
@@ -76,6 +81,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onModelSelected(model: String) {
         _selectedModel.value = model
+        viewModelScope.launch {
+            dataStoreManager.saveSelectedModel(model)
+        }
     }
 
     fun onLanguageSelected(language: String) {

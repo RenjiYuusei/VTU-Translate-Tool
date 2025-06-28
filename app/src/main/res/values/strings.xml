@@ -34,4 +34,5 @@
     <string name="settings_title">Settings</string>
     <string name="clear_logs">Clear Logs</string>
     <string name="copy_logs">Copy Logs</string>
+    <string name="application_logs">Application Logs</string>
 </resources>
