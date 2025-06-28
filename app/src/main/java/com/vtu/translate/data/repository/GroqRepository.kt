@@ -6,6 +6,7 @@ import com.vtu.translate.data.model.ChatCompletionResponse
 import com.vtu.translate.data.model.ChatMessage
 import com.vtu.translate.data.model.GroqModelsResponse
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -40,6 +41,7 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
         .addInterceptor(loggingInterceptor)
         .build()
     
+    @OptIn(ExperimentalSerializationApi::class)
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(okHttpClient)
