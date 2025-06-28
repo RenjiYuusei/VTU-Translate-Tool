@@ -23,9 +23,9 @@ import androidx.navigation.compose.rememberNavController
 import com.vtu.translate.R
 
 sealed class Screen(val route: String, val resourceId: Int, val icon: @Composable () -> Unit) {
-    object Translate : Screen("translate", R.string.translate_tab, { Icon(Icons.Default.Translate, contentDescription = null) })
-    object Settings : Screen("settings", R.string.settings_tab, { Icon(Icons.Default.Settings, contentDescription = null) })
-    object Logs : Screen("logs", R.string.logs_tab, { Icon(Icons.Default.Book, contentDescription = null) })
+    object Translate : Screen("translate", R.string.translate_tab, { Icon(Icons.Filled.Translate, contentDescription = null) })
+    object Settings : Screen("settings", R.string.settings_tab, { Icon(Icons.Filled.Settings, contentDescription = null) })
+    object Logs : Screen("logs", R.string.logs_tab, { Icon(Icons.Filled.Book, contentDescription = null) })
 }
 
 val items = listOf(
