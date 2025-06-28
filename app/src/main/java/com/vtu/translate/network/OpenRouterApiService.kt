@@ -34,7 +34,7 @@ data class Choice(
     val message: Message
 )
 
-class OpenRouterApiService {
+class OpenRouterApiService(private val log: (String) -> Unit) {
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -63,16 +63,16 @@ class OpenRouterApiService {
                     return chatCompletionResponse.choices.firstOrNull()?.message?.content ?: ""
                 } catch (e: Exception) {
                     val errorBody = response.body<String>()
-                    Log.e("OpenRouterApiService", "Error parsing successful API response: ${e.message}, Body: $errorBody", e)
+                    log("Error parsing successful API response: ${e.message}, Body: $errorBody")
                     return "Error parsing API response: ${e.message}"
                 }
             } else {
                 val errorBody = response.body<String>()
-                Log.d("OpenRouterApiService", "API Error: ${response.status}, Body: $errorBody")
+                log("API Error: ${response.status}, Body: $errorBody")
                 return "Error: ${response.status}"
             }
         } catch (e: Exception) {
-            Log.e("OpenRouterApiService", "Error parsing API response: ${e.message}", e)
+            log("Error parsing API response: ${e.message}")
             return "Error parsing API response: ${e.message}"
         }
     }

@@ -17,11 +17,14 @@ import java.io.StringReader
 import org.json.JSONObject // Import for JSON parsing
 import org.json.JSONException // Import for JSONException
 import android.util.Log // Import for logging
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dataStoreManager = DataStoreManager(application)
-    private val openRouterApiService = OpenRouterApiService()
+    private val openRouterApiService = OpenRouterApiService(::addLog)
 
     private val _apiKey = MutableStateFlow<String?>("")
     val apiKey: StateFlow<String?> = _apiKey.asStateFlow()
@@ -43,6 +46,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _selectedLanguage = MutableStateFlow("Vietnamese")
     val selectedLanguage: StateFlow<String> = _selectedLanguage.asStateFlow()
+
+    private val _logs = MutableStateFlow<List<String>>(emptyList())
+    val logs: StateFlow<List<String>> = _logs.asStateFlow()
+
+    private fun addLog(message: String) {
+        val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        _logs.value = _logs.value + "[$timestamp] $message"
+    }
+
+    fun clearLogs() {
+        _logs.value = emptyList()
+    }
 
     init {
         viewModelScope.launch {
@@ -151,8 +166,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         return@launch
                     }
 
+                    addLog("Raw API Response: $translatedJsonString")
                     val cleanedJsonString = translatedJsonString.substringAfter("```json").substringBeforeLast("```").trim()
-                    Log.d("MainViewModel", "Cleaned JSON String: $cleanedJsonString")
+                    addLog("Cleaned JSON String: $cleanedJsonString")
 
                     try {
                         val translatedStringsJson = JSONObject(cleanedJsonString)

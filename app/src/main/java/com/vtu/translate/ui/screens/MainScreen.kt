@@ -211,6 +211,37 @@ fun MainScreen(navController: NavController, mainViewModel: MainViewModel = view
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
+
+            val logs by mainViewModel.logs.collectAsState()
+            if (logs.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Application Logs", style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            logs.forEach { logMessage ->
+                                Text(logMessage, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { mainViewModel.clearLogs() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Clear Logs")
+                        }
+                    }
+                }
+            }
         }
     }
 }
