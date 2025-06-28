@@ -6,6 +6,7 @@ import com.vtu.translate.data.model.ChatCompletionResponse
 import com.vtu.translate.data.model.ChatMessage
 import com.vtu.translate.data.model.GroqModelsResponse
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -19,6 +20,7 @@ import retrofit2.http.POST
 /**
  * Repository for interacting with the Groq API
  */
+@OptIn(ExperimentalSerializationApi::class)
 class GroqRepository(private val preferencesRepository: PreferencesRepository) {
     
     companion object {
