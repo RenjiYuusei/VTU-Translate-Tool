@@ -126,7 +126,7 @@ class TranslateViewModel : ViewModel() {
                     val tempOutputFile = File(context.cacheDir, "temp_output.xml")
                     
                     // Write translated strings to temp file
-                    if (currentFile != null && XmlUtils.writeTranslatedStringsXml(currentFile!!, tempOutputFile, resources)) {
+                    if (XmlUtils.writeTranslatedStringsXml(tempOutputFile, resources)) {
                         // Copy temp file to the selected output URI
                         context.contentResolver.openOutputStream(outputUri)?.use { outputStream ->
                             tempOutputFile.inputStream().use { inputStream ->

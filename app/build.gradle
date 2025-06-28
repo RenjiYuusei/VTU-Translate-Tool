@@ -6,6 +6,21 @@ plugins {
 
 android {
     compileSdk 34
+    
+    // Add a compatibility flag to avoid core-for-system-modules.jar issues
+    configurations.all {
+        resolutionStrategy.force 'androidx.core:core-ktx:1.10.1'
+        resolutionStrategy.force 'androidx.activity:activity:1.7.2'
+        resolutionStrategy.force 'androidx.activity:activity-ktx:1.7.2'
+        resolutionStrategy.force 'androidx.navigation:navigation-fragment-ktx:2.6.0'
+        resolutionStrategy.force 'androidx.navigation:navigation-ui-ktx:2.6.0'
+        resolutionStrategy.force 'androidx.navigation:navigation-common:2.6.0'
+        resolutionStrategy.force 'androidx.navigation:navigation-common-ktx:2.6.0'
+        resolutionStrategy.force 'androidx.navigation:navigation-runtime:2.6.0'
+        resolutionStrategy.force 'androidx.navigation:navigation-runtime-ktx:2.6.0'
+        resolutionStrategy.force 'androidx.navigation:navigation-fragment:2.6.0'
+        resolutionStrategy.force 'androidx.navigation:navigation-ui:2.6.0'
+    }
 
     defaultConfig {
         applicationId "com.vtutranslate"

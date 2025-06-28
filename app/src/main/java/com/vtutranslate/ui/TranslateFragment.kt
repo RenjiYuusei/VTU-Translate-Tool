@@ -128,7 +128,7 @@ class TranslateFragment : Fragment() {
             translatedAdapter.submitList(resources)
         }
         
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+        viewModel.isLoading.observe(viewLifecycleOwner) { _ ->
             // Handle loading state if needed
         }
         

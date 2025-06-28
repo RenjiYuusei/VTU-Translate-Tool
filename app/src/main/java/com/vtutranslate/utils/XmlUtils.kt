@@ -70,7 +70,6 @@ object XmlUtils {
      * Write translated strings to a new XML file
      */
     fun writeTranslatedStringsXml(
-        originalFile: File,
         outputFile: File,
         translatedStrings: List<StringResource>
     ): Boolean {
