@@ -48,11 +48,11 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
     suspend fun translateText(
         model: String,
         apiKey: String,
-        prompt: String
+        messages: List<Message>
     ): String? {
         val requestBody = ChatCompletionRequest(
             model = model,
-            messages = listOf(Message(role = "user", content = prompt)),
+            messages = messages,
             max_tokens = 4096
         )
         log("Sending translation request to model: $model")
