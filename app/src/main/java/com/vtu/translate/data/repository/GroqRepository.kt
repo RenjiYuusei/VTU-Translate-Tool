@@ -43,7 +43,7 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
     
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
-9        .retryOnConnectionFailure(true)
+        .retryOnConnectionFailure(true)
         .build()
     
     private val retrofit = Retrofit.Builder()
