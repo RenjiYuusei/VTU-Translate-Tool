@@ -42,38 +42,36 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
         }
     }
 
-    suspend fun translateText(model: String, apiKey: String, text: String, targetLanguage: String): String {
+    suspend fun translateText(
+        model: String,
+        apiKey: String,
+        prompt: String,
+        targetLanguage: String
+    ): String? {
         val requestBody = ChatCompletionRequest(
             model = model,
-            messages = listOf(Message(role = "user", content = "Translate the following text to $targetLanguage: \"\"\"$text\"\"\""))
+            messages = listOf(Message(role = "user", content = prompt))
         )
 
-        try {
+        return try {
             val response = client.post("https://openrouter.ai/api/v1/chat/completions") {
                 header("Authorization", "Bearer $apiKey")
-                header("HTTP-Referer", "https://vtu-translate-tool.com") // Replace with your actual domain
-                header("X-Title", "VTU Translate Tool") // Replace with your actual app name
-                contentType(ContentType.Application.Json)
+                header("Content-Type", "application/json")
                 setBody(requestBody)
             }
 
             if (response.status.isSuccess()) {
-                try {
-                    val chatCompletionResponse: ChatCompletionResponse = response.body()
-                    return chatCompletionResponse.choices.firstOrNull()?.message?.content ?: ""
-                } catch (e: Exception) {
-                    val errorBody = response.body<String>()
-                    log("Error parsing successful API response: ${e.message}, Body: $errorBody")
-                    return "Error parsing API response: ${e.message}"
-                }
+                val chatResponse = response.body<ChatCompletionResponse>()
+                chatResponse.choices.firstOrNull()?.message?.content
             } else {
                 val errorBody = response.body<String>()
-                log("API Error: ${response.status}, Body: $errorBody")
-                return "Error: ${response.status}"
+                log("API Error ${response.status}: $errorBody")
+                null
             }
         } catch (e: Exception) {
-            log("Error parsing API response: ${e.message}")
-            return "Error parsing API response: ${e.message}"
+            log("Exception during API call: ${e.message}")
+            e.printStackTrace()
+            null
         }
     }
 }

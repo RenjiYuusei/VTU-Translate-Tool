@@ -181,26 +181,33 @@ $jsonForTranslation"""
 
                     if (translatedJsonString.isNullOrEmpty()) {
                         _errorMessage.value = "Error: API returned empty or null translation response for a batch."
-                        return@launch
+                        return@forEach
                     }
 
                     addLog("Raw API Response: $translatedJsonString")
-                    val cleanedJsonString = translatedJsonString.substringAfter("```json").substringBeforeLast("```").trim()
+                    val cleanedJsonString = translatedJsonString.substringAfter("```json", translatedJsonString).substringBeforeLast("```", "").trim()
                     addLog("Cleaned JSON String: $cleanedJsonString")
 
                     try {
-                        val translatedStringsJson = JSONObject(cleanedJsonString)
-                        translatedStringsJson.keys().forEach { key ->
-                            allTranslatedStrings[key] = translatedStringsJson.getString(key)
+                        if(cleanedJsonString.isNotEmpty()) {
+                            val translatedStringsJson = JSONObject(cleanedJsonString)
+                            translatedStringsJson.keys().forEach { key ->
+                                allTranslatedStrings[key] = translatedStringsJson.getString(key)
+                            }
+                        } else {
+                            val translatedStringsJson = JSONObject(translatedJsonString)
+                            translatedStringsJson.keys().forEach { key ->
+                                allTranslatedStrings[key] = translatedStringsJson.getString(key)
+                            }
                         }
                     } catch (e: JSONException) {
                         _errorMessage.value = "Error parsing API response for a batch: Invalid JSON format. Details: ${e.message}"
                         e.printStackTrace()
-                        return@launch
+                        return@forEach
                     } catch (e: Exception) {
                         _errorMessage.value = "Unexpected error during API response parsing for a batch. Details: ${e.message}"
                         e.printStackTrace()
-                        return@launch
+                        return@forEach
                     }
                 }
 
