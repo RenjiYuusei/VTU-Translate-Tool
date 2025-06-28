@@ -110,51 +110,73 @@ fun TranslateScreen(
         }
         
         // Translation actions
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Start translation button
-            Button(
-                onClick = {
-                    if (apiKey.isBlank()) {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.error_no_api_key),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
-                    }
-                    
-                    if (selectedModel.isBlank()) {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.error_no_model_selected),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
-                    }
-                    
-                    if (stringResources.isEmpty()) {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.error_no_file_selected),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
-                    }
-                    
-                    viewModel.startTranslation()
-                },
-                modifier = Modifier.weight(1f),
-                enabled = !isTranslating && stringResources.isNotEmpty()
+            // Translation buttons row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_start_translate),
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(stringResource(if (isTranslating) R.string.translating else R.string.start_translate))
+                // Start translation button
+                Button(
+                    onClick = {
+                        if (apiKey.isBlank()) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.error_no_api_key),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        
+                        if (selectedModel.isBlank()) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.error_no_model_selected),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        
+                        if (stringResources.isEmpty()) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.error_no_file_selected),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        
+                        viewModel.startTranslation()
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isTranslating && stringResources.isNotEmpty()
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_start_translate),
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(stringResource(if (isTranslating) R.string.translating else R.string.start_translate))
+                }
+                
+                // Stop translation button
+                Button(
+                    onClick = {
+                        viewModel.stopTranslation()
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = isTranslating
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_stop_translate),
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(stringResource(R.string.stop_translation))
+                }
             }
             
             // Save file button
@@ -181,7 +203,7 @@ fun TranslateScreen(
                         }
                     }
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 enabled = !isTranslating && stringResources.isNotEmpty()
             ) {
                 Icon(

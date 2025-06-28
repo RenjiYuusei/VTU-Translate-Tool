@@ -64,6 +64,13 @@ class MainViewModel(
     }
     
     /**
+     * Stop translation process
+     */
+    fun stopTranslation() {
+        translationRepository.stopTranslation()
+    }
+    
+    /**
      * Update a translated string
      */
     fun updateTranslation(index: Int, translatedValue: String) {

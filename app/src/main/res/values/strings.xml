@@ -9,7 +9,8 @@
     <!-- Translate Screen -->
     <string name="select_file">Chọn file strings.xml</string>
     <string name="start_translate">Bắt đầu Dịch</string>
-    <string name="save_translated_file">Lưu file strings.xml đã dịch</string>
+    <string name="stop_translation">Dừng Dịch</string>
+    <string name="save_translated_file">Lưu file đã dịch</string>
     <string name="original_value">Value (gốc)</string>
     <string name="translated_value">Value-vi (đã dịch)</string>
     <string name="no_file_selected">Chưa chọn file</string>

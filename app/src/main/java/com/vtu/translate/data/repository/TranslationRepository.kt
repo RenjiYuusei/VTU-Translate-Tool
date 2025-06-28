@@ -131,7 +131,6 @@ class TranslationRepository(
     private fun getSpecialCaseTranslation(value: String): String {
         // Map of known special cases
         return when {
-            value == "androidx.startup" -> "Bộ khởi động AndroidX"
             value.startsWith("androidx.") -> "AndroidX ${value.substringAfter("androidx.")}"
             value.startsWith("android.") -> "Android ${value.substringAfter("android.")}"
             value.startsWith("java.") -> "Java ${value.substringAfter("java.")}"
@@ -142,12 +141,26 @@ class TranslationRepository(
     }
     
     /**
+     * Biến để kiểm soát việc dừng quá trình dịch
+     */
+    private var shouldStopTranslation = false
+    
+    /**
+     * Dừng quá trình dịch
+     */
+    fun stopTranslation() {
+        shouldStopTranslation = true
+        logRepository.logWarning("Đã yêu cầu dừng quá trình dịch.")
+    }
+    
+    /**
      * Translate all string resources
      */
     suspend fun translateAll(): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
                 _isTranslating.value = true
+                shouldStopTranslation = false
                 
                 val resources = _stringResources.value
                 if (resources.isEmpty()) {
@@ -165,10 +178,19 @@ class TranslationRepository(
                 
                 // Process in batches
                 for (batchStart in resources.indices step batchSize) {
+                    // Kiểm tra nếu người dùng đã yêu cầu dừng
+                    if (shouldStopTranslation) {
+                        logRepository.logInfo("Đã dừng quá trình dịch theo yêu cầu.")
+                        break
+                    }
+                    
                     val batchEnd = minOf(batchStart + batchSize, resources.size)
                     var rateLimitHit = false
                     
                     for (i in batchStart until batchEnd) {
+                        // Kiểm tra lại nếu người dùng đã yêu cầu dừng
+                        if (shouldStopTranslation) break
+                        
                         val resource = resources[i]
                         
                         // Skip if already has a translation (for special cases)
@@ -220,7 +242,13 @@ class TranslationRepository(
                         delay(200) // 200ms between individual requests
                     }
                     
-                    // If rate limit was hit, wait longer before continuing
+                    // Kiểm tra lại nếu người dùng đã yêu cầu dừng
+                    if (shouldStopTranslation) {
+                        logRepository.logInfo("Đã dừng quá trình dịch theo yêu cầu.")
+                        break
+                    }
+                    
+                // If rate limit was hit, wait longer before continuing
                     if (rateLimitHit) {
                         logRepository.logInfo("Đợi 5 giây trước khi tiếp tục do đạt giới hạn tốc độ API...")
                         delay(5000) // Wait 5 seconds before continuing
