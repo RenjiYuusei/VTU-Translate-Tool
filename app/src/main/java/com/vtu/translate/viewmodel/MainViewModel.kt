@@ -17,6 +17,9 @@ import java.io.StringReader
 import kotlinx.serialization.json.*
 import kotlinx.serialization.encodeToString
 import android.util.Log // Import for logging
+import android.util.Xml
+import org.xmlpull.v1.XmlSerializer
+import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -168,8 +171,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val batchSize = 20 // Define your desired batch size
                 val allTranslatedStrings = mutableMapOf<String, String>()
+                var batchError = false
 
                 stringsToTranslate.entries.chunked(batchSize).forEach { batch ->
+                    if (batchError) return@forEach
+
                     val batchMap = batch.associate { it.key to it.value }
                     val jsonForTranslation = json.encodeToString(batchMap)
                     val prompt = """Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:
@@ -181,100 +187,87 @@ $jsonForTranslation"""
                         prompt
                     )
 
-                    if (translatedJsonString.isNullOrEmpty()) {
+                    if (translatedJsonString.isNullOrBlank()) {
                         _errorMessage.value = "Error: API returned empty or null translation response for a batch."
+                        batchError = true
                         return@forEach
                     }
 
                     addLog("Raw API Response: $translatedJsonString")
-                    val cleanedJsonString = translatedJsonString.substringAfter("```json", translatedJsonString).substringBeforeLast("```", "").trim()
+                    val cleanedJsonString = translatedJsonString.substringAfter("```json", "").substringBeforeLast("```", "").trim()
                     addLog("Cleaned JSON String: $cleanedJsonString")
 
+                    val jsonToParse = if (cleanedJsonString.isNotEmpty() && cleanedJsonString.startsWith("{") && cleanedJsonString.endsWith("}")) {
+                        cleanedJsonString
+                    } else {
+                        translatedJsonString
+                    }
+
                     try {
-                        if(cleanedJsonString.isNotEmpty()) {
-                            val translatedStringsJson = json.decodeFromString<Map<String, String>>(cleanedJsonString)
-                            translatedStringsJson.forEach { (key, value) ->
-                                allTranslatedStrings[key] = value
-                            }
-                        } else {
-                            val translatedStringsJson = json.decodeFromString<Map<String, String>>(translatedJsonString)
-                            translatedStringsJson.forEach { (key, value) ->
-                                allTranslatedStrings[key] = value
-                            }
+                        val translatedStringsJson = json.decodeFromString<Map<String, String>>(jsonToParse)
+                        translatedStringsJson.forEach { (key, value) ->
+                            allTranslatedStrings[key] = value
                         }
                     } catch (e: Exception) {
                         _errorMessage.value = "Error parsing API response for a batch: Invalid JSON format. Details: ${e.message}"
                         e.printStackTrace()
+                        batchError = true
                         return@forEach
                     }
                 }
 
-                // Second pass: Reconstruct the XML with translated strings
-                val parserForReconstruction = factory.newPullParser()
-                parserForReconstruction.setInput(StringReader(originalContent))
-                val stringBuilder = StringBuilder()
-
-                eventType = parserForReconstruction.eventType
-                var skipText = false
-
-                while (eventType != XmlPullParser.END_DOCUMENT) {
-                    when (eventType) {
-                        XmlPullParser.START_DOCUMENT -> {
-                            // Do nothing, handled by START_TAG for <resources>
-                        }
-                        XmlPullParser.END_DOCUMENT -> {
-                            // Do nothing
-                        }
-                        XmlPullParser.START_TAG -> {
-                            stringBuilder.append("<" + parserForReconstruction.name)
-                            for (i in 0 until parserForReconstruction.attributeCount) {
-                                stringBuilder.append(" " + parserForReconstruction.getAttributeName(i) + "=\"")
-                                stringBuilder.append(parserForReconstruction.getAttributeValue(i) + "\"")
-                            }
-                            stringBuilder.append(">")
-                            if (parserForReconstruction.name == "string") {
-                                val name = parserForReconstruction.getAttributeValue(null, "name")
-                                val translatedText = allTranslatedStrings[name]
-                                if (translatedText != null) {
-                                    stringBuilder.append(translatedText)
-                                    skipText = true // Skip the original text event
-                                }
-                            }
-                        }
-                        XmlPullParser.END_TAG -> {
-                            stringBuilder.append("</" + parserForReconstruction.name + ">")
-                            if (parserForReconstruction.name == "string") {
-                                skipText = false // Reset skipText after handling the string tag
-                            }
-                        }
-                        XmlPullParser.TEXT -> {
-                            if (!skipText) {
-                                stringBuilder.append(parserForReconstruction.text)
-                            }
-                        }
-                        XmlPullParser.CDSECT -> {
-                            stringBuilder.append("<![CDATA[" + parserForReconstruction.text + "]]>")
-                        }
-                        XmlPullParser.COMMENT -> {
-                            stringBuilder.append("<!--" + parserForReconstruction.text + "-->")
-                        }
-                        XmlPullParser.ENTITY_REF -> {
-                            stringBuilder.append("&" + parserForReconstruction.name + ";")
-                        }
-                        XmlPullParser.IGNORABLE_WHITESPACE -> {
-                            stringBuilder.append(parserForReconstruction.text)
-                        }
-                        XmlPullParser.PROCESSING_INSTRUCTION -> {
-                            stringBuilder.append("<?" + parserForReconstruction.text + "?>")
-                        }
-                    }
-                    eventType = parserForReconstruction.next()
+                if(batchError) {
+                    _isLoading.value = false
+                    return@launch
                 }
 
-                _translatedFileContent.value = stringBuilder.toString()
+
+                // Second pass: Reconstruct the XML with translated strings using XmlSerializer
+                val serializer: XmlSerializer = Xml.newSerializer()
+                val writer = StringWriter()
+                serializer.setOutput(writer)
+                serializer.startDocument("UTF-8", true)
+                serializer.startTag(null, "resources")
+
+                val parserForReconstruction = factory.newPullParser()
+                parserForReconstruction.setInput(StringReader(originalContent))
+                var event = parserForReconstruction.eventType
+                while(event != XmlPullParser.END_DOCUMENT) {
+                    when(event) {
+                        XmlPullParser.START_TAG -> {
+                            if (parserForReconstruction.name == "string") {
+                                val name = parserForReconstruction.getAttributeValue(null, "name")
+                                val translatable = parserForReconstruction.getAttributeValue(null, "translatable")
+                                val translatedText = allTranslatedStrings[name]
+
+                                serializer.startTag(null, "string")
+                                serializer.attribute(null, "name", name)
+                                if (translatable != null) {
+                                     serializer.attribute(null, "translatable", translatable)
+                                }
+
+                                if (translatedText != null) {
+                                    serializer.text(translatedText)
+                                } else {
+                                    // Advance parser to get original text if no translation
+                                    if(parserForReconstruction.next() == XmlPullParser.TEXT) {
+                                        serializer.text(parserForReconstruction.text)
+                                    }
+                                }
+                                serializer.endTag(null, "string")
+                            }
+                        }
+                    }
+                    event = parserForReconstruction.next()
+                }
+
+
+                serializer.endTag(null, "resources")
+                serializer.endDocument()
+                _translatedFileContent.value = writer.toString()
 
             } catch (e: Exception) {
-                _errorMessage.value = getApplication<Application>().getString(R.string.error_during_translation) + " ${e.message}"
+                _errorMessage.value = "An unexpected error occurred: ${e.message}"
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false

@@ -14,7 +14,8 @@ import android.util.Log
 @Serializable
 data class ChatCompletionRequest(
     val model: String,
-    val messages: List<Message>
+    val messages: List<Message>,
+    val max_tokens: Int? = null
 )
 
 @Serializable
@@ -51,7 +52,8 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
     ): String? {
         val requestBody = ChatCompletionRequest(
             model = model,
-            messages = listOf(Message(role = "user", content = prompt))
+            messages = listOf(Message(role = "user", content = prompt)),
+            max_tokens = 4096
         )
         log("Sending translation request to model: $model")
 
@@ -60,7 +62,6 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
                 header("Authorization", "Bearer $apiKey")
                 header("HTTP-Referer", "https://vtu-translate-tool.com")
                 header("X-Title", "VTU Translate Tool")
-                header("Content-Type", "application/json")
                 setBody(requestBody)
             }
 
@@ -68,6 +69,10 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
             log("Raw API Response: $responseBody")
 
             if (response.status.isSuccess()) {
+                if (responseBody.isBlank()) {
+                    log("API Error: Received empty response body with success status ${response.status}.")
+                    return null
+                }
                 val chatResponse = Json{ignoreUnknownKeys=true}.decodeFromString<ChatCompletionResponse>(responseBody)
                 chatResponse.choices.firstOrNull()?.message?.content
             } else {
