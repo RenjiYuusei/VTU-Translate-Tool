@@ -1,38 +1,38 @@
 <resources>
     <string name="app_name">VTU Translate</string>
-    
-    <!-- Tab Titles -->
+
+    <!-- Tabs -->
     <string name="tab_translate">Dịch</string>
     <string name="tab_settings">Cài đặt</string>
-    <string name="tab_logs">Nhật ký</string>
-    
-    <!-- Translation Tab -->
-    <string name="load_file">Tải file</string>
-    <string name="translate">Dịch</string>
-    <string name="save_file">Lưu file</string>
-    <string name="original_text">Văn bản gốc</string>
-    <string name="translated_text">Văn bản đã dịch</string>
-    
-    <!-- Settings Tab -->
-    <string name="api_key">API Key</string>
-    <string name="api_key_hint">Nhập API key của bạn</string>
-    <string name="get_api_key">Lấy API key</string>
-    <string name="save_settings">Lưu cài đặt</string>
-    <string name="model_selection">Chọn mô hình</string>
-    <string name="gemini_models">Mô hình Gemini</string>
-    <string name="deepseek_models">Mô hình DeepSeek</string>
-    <string name="hide_api_key">Ẩn API key</string>
-    
-    <!-- Logs Tab -->
-    <string name="clear_logs">Xóa nhật ký</string>
-    <string name="copy_logs">Sao chép nhật ký</string>
-    
-    <!-- Messages -->
-    <string name="error_invalid_api_key">API key không hợp lệ</string>
-    <string name="error_no_file_selected">Chưa chọn file</string>
-    <string name="error_translation_failed">Dịch thất bại</string>
-    <string name="success_translation_complete">Dịch hoàn tất</string>
-    <string name="success_file_saved">File đã được lưu</string>
-    <string name="success_settings_saved">Cài đặt đã được lưu</string>
-    <string name="success_logs_copied">Nhật ký đã được sao chép</string>
+    <string name="tab_log">Nhật ký</string>
+
+    <!-- Translate Screen -->
+    <string name="translate_select_file">Chọn file strings.xml</string>
+    <string name="translate_start">Bắt đầu Dịch</string>
+    <string name="translate_save_file">Lưu file strings.xml đã dịch</string>
+    <string name="original_value_header">Value (gốc)</string>
+    <string name="translated_value_header">Value-vi (đã dịch)</string>
+    <string name="no_file_selected">Chưa có file nào được chọn.</string>
+    <string name="file_saved_successfully">Đã lưu file thành công vào thư mục Downloads.</string>
+    <string name="file_save_failed">Lưu file thất bại.</string>
+    <string name="translation_complete">Dịch hoàn tất.</string>
+    <string name="translation_in_progress">Đang dịch...</string>
+    <string name="error_no_api_key">Vui lòng nhập OpenRouter API Key trong tab Cài đặt.</string>
+    <string name="error_no_model_selected">Vui lòng chọn một model AI trong tab Cài đặt.</string>
+
+
+    <!-- Settings Screen -->
+    <string name="settings_api_key_label">OpenRouter API Key</string>
+    <string name="settings_get_api_key">Lấy API Key</string>
+    <string name="settings_ai_model_label">Chọn Model AI</string>
+    <string name="settings_key_saved">API Key đã được lưu.</string>
+    <string name="settings_model_saved">Model đã được lưu.</string>
+
+    <!-- Log Screen -->
+    <string name="log_copy">Sao chép Log</string>
+    <string name="log_clear">Xóa Log</string>
+    <string name="log_cleared">Nhật ký đã được xóa.</string>
+    <string name="log_copied">Nhật ký đã được sao chép vào clipboard.</string>
+    <string name="log_empty">Không có nhật ký.</string>
+
 </resources> 
