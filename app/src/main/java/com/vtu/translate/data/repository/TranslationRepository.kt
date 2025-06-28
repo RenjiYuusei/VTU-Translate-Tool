@@ -150,7 +150,7 @@ class TranslationRepository(
     /**
      * Save translated strings to a new XML file
      */
-    suspend fun saveTranslatedFile(context: Context): Result<String> {
+    suspend fun saveTranslatedFile(): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
                 val resources = _stringResources.value

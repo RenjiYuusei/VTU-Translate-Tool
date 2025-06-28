@@ -158,7 +158,7 @@ fun TranslateScreen(
                 onClick = {
                     coroutineScope.launch {
                         val app = context.applicationContext as com.vtu.translate.VtuTranslateApp
-                        val result = app.translationRepository.saveTranslatedFile(context)
+                        val result = app.translationRepository.saveTranslatedFile()
                         
                         if (result.isSuccess) {
                             val filePath = result.getOrNull()
