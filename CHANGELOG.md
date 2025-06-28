@@ -1,6 +1,6 @@
 # Changelog
 
-## Phiên bản 1.1.0 (30-6-2025)
+## Phiên bản 1.1.0 (29-6-2025)
 
 ### Cải tiến giao diện người dùng
 
@@ -10,6 +10,12 @@
 - Cải thiện màn hình Nhật ký với hiệu ứng animation khi hiển thị log mới và thiết kế thẻ theo loại log.
 - Cải thiện màn hình Cài đặt với bố cục thẻ riêng biệt cho từng mục: API Key, Chọn Model và Thông tin.
 - Nâng cấp thanh điều hướng với hiệu ứng animation và màu sắc phù hợp với theme.
+
+### Cải tiến quy trình phát triển
+
+- Tích hợp GitHub Actions để tự động build APK khi có thay đổi code.
+- Thêm tài liệu hướng dẫn sử dụng GitHub Actions để build APK.
+- Cải thiện quy trình phân phối APK thông qua artifacts của GitHub Actions.
 
 ## Phiên bản 1.0.1 (28-6-2025)
 

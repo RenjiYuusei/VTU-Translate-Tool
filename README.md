@@ -17,9 +17,23 @@ VTU Translate Tool là một ứng dụng Android giúp dịch các file strings
 
 ## Cài đặt
 
+### Phương pháp 1: Sử dụng Android Studio
+
 1. Clone repository này
 2. Mở dự án trong Android Studio
 3. Build và cài đặt ứng dụng trên thiết bị Android của bạn
+
+### Phương pháp 2: Sử dụng GitHub Actions
+
+Dự án này đã được cấu hình với GitHub Actions để tự động build APK:
+
+1. Truy cập tab "Actions" trong repository GitHub
+2. Chọn workflow "Android CI"
+3. Nhấn nút "Run workflow" và chọn branch muốn build
+4. Sau khi workflow hoàn tất, tải xuống APK từ artifacts
+5. Cài đặt APK trên thiết bị Android của bạn
+
+Xem [Hướng dẫn sử dụng GitHub Actions](docs/github-actions-guide.md) để biết thêm chi tiết.
 
 ## Cách sử dụng
 
