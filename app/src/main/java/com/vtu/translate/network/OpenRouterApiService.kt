@@ -14,8 +14,7 @@ import android.util.Log
 @Serializable
 data class ChatCompletionRequest(
     val model: String,
-    val messages: List<Message>,
-    val temperature: Double = 0.7
+    val messages: List<Message>
 )
 
 @Serializable
