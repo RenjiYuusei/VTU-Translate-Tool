@@ -22,7 +22,7 @@ import com.vtu.translate.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(mainViewModel: MainViewModel = viewModel()) {
+fun SettingsScreen(mainViewModel: MainViewModel) {
     val apiKey by mainViewModel.apiKey.collectAsState()
     val selectedModel by mainViewModel.selectedModel.collectAsState()
     val selectedTargetLanguage by mainViewModel.selectedTargetLanguage.collectAsState()

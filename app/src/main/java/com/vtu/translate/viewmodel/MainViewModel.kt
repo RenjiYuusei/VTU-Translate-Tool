@@ -114,6 +114,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val model = _selectedModel.value
                 val targetLanguage = _selectedTargetLanguage.value
 
+                addLog("Starting translation with model: $model")
+
                 if (originalContent.isNullOrEmpty()) {
                     _errorMessage.value = "Please select a strings.xml file first."
                     return@launch

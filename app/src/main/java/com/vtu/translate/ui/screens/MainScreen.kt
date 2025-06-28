@@ -33,7 +33,7 @@ import com.vtu.translate.ui.components.XmlHighlighter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController, mainViewModel: MainViewModel = viewModel()) {
+fun MainScreen(navController: NavController, mainViewModel: MainViewModel) {
     val apiKey by mainViewModel.apiKey.collectAsState()
     val selectedFileContent by mainViewModel.selectedFileContent.collectAsState()
     val translatedFileContent by mainViewModel.translatedFileContent.collectAsState()

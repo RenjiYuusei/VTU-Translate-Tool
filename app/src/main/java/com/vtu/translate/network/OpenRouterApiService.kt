@@ -38,7 +38,10 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            })
         }
     }
 
@@ -51,6 +54,7 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
             model = model,
             messages = listOf(Message(role = "user", content = prompt))
         )
+        log("Sending translation request to model: $model")
 
         return try {
             val response = client.post("https://openrouter.ai/api/v1/chat/completions") {
@@ -59,12 +63,14 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
                 setBody(requestBody)
             }
 
+            val responseBody = response.body<String>()
+            log("Raw API Response: $responseBody")
+
             if (response.status.isSuccess()) {
-                val chatResponse = response.body<ChatCompletionResponse>()
+                val chatResponse = Json{ignoreUnknownKeys=true}.decodeFromString<ChatCompletionResponse>(responseBody)
                 chatResponse.choices.firstOrNull()?.message?.content
             } else {
-                val errorBody = response.body<String>()
-                log("API Error ${response.status}: $errorBody")
+                log("API Error ${response.status}: $responseBody")
                 null
             }
         } catch (e: Exception) {

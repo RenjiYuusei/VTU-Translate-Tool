@@ -13,6 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import com.vtu.translate.ui.screens.MainScreen
 import com.vtu.translate.ui.screens.SettingsScreen
 import com.vtu.translate.ui.theme.VTUTranslateToolTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.vtu.translate.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,12 +27,13 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
+                    val mainViewModel: MainViewModel = viewModel()
                     NavHost(navController = navController, startDestination = "main_screen") {
                         composable("main_screen") {
-                            MainScreen(navController = navController)
+                            MainScreen(navController = navController, mainViewModel = mainViewModel)
                         }
                         composable("settings_screen") {
-                            SettingsScreen()
+                            SettingsScreen(mainViewModel = mainViewModel)
                         }
                     }
                 }
