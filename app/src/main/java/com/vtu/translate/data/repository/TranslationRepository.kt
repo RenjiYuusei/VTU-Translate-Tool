@@ -72,13 +72,13 @@ class TranslationRepository(
                                     val isTranslatable = translatable == null || translatable != "false"
                                     
                                     // Special case handling for known non-translatable strings
-                                    val isSpecialCase = isSpecialNonTranslatableString(name, value)
+                                    val isSpecialCase = isSpecialNonTranslatableString(value)
                                     
                                     if (isTranslatable && !isSpecialCase) {
                                         stringResources.add(StringResource(name, value))
                                     } else if (isSpecialCase) {
                                         // Add with pre-defined translation for special cases
-                                        val predefinedTranslation = getSpecialCaseTranslation(name, value)
+                                        val predefinedTranslation = getSpecialCaseTranslation(value)
                                         stringResources.add(StringResource(
                                             name = name,
                                             value = value,
@@ -110,8 +110,11 @@ class TranslationRepository(
     
     /**
      * Check if a string is a special non-translatable string
+     * 
+     * @param value The string value to check
+     * @return True if the string is a special non-translatable string
      */
-    private fun isSpecialNonTranslatableString(name: String, value: String): Boolean {
+    private fun isSpecialNonTranslatableString(value: String): Boolean {
         // Check for package names, class names, or other technical strings
         return value.matches(Regex("^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$")) || // Package names like androidx.startup
                value.matches(Regex("^[A-Z][a-zA-Z0-9]*$")) || // Class names like MainActivity
@@ -121,8 +124,11 @@ class TranslationRepository(
     
     /**
      * Get predefined translation for special case strings
+     * 
+     * @param value The string value to translate
+     * @return The predefined translation for the special case string
      */
-    private fun getSpecialCaseTranslation(name: String, value: String): String {
+    private fun getSpecialCaseTranslation(value: String): String {
         // Map of known special cases
         return when {
             value == "androidx.startup" -> "Bộ khởi động AndroidX"
