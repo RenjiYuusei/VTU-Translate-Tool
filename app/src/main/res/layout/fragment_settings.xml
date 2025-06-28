@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilApiKey"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/api_key"
+            app:endIconMode="password_toggle"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etApiKey"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGetApiKey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/get_api_key"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tilApiKey" />
+
+        <CheckBox
+            android:id="@+id/cbHideApiKey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:checked="true"
+            android:text="@string/hide_api_key"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tilApiKey" />
+
+        <TextView
+            android:id="@+id/tvModelSelection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/model_selection"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cbHideApiKey" />
+
+        <TextView
+            android:id="@+id/tvGeminiModels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/gemini_models"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvModelSelection" />
+
+        <RadioGroup
+            android:id="@+id/rgGeminiModels"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/tvGeminiModels">
+
+            <RadioButton
+                android:id="@+id/rbGemini27b"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Gemma 3 27B IT" />
+
+            <RadioButton
+                android:id="@+id/rbGemini2Flash"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Gemini 2.0 Flash" />
+
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/tvDeepseekModels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/deepseek_models"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rgGeminiModels" />
+
+        <RadioGroup
+            android:id="@+id/rgDeepseekModels"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/tvDeepseekModels">
+
+            <RadioButton
+                android:id="@+id/rbDeepseekR1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DeepSeek R1 0528" />
+
+            <RadioButton
+                android:id="@+id/rbDeepseekV3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DeepSeek V3 0324" />
+
+        </RadioGroup>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/save_settings"
+            app:layout_constraintTop_toBottomOf="@+id/rgDeepseekModels" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView> 

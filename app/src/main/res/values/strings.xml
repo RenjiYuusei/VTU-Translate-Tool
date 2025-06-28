@@ -1,25 +1,38 @@
 <resources>
-    <string name="app_name">VTU Translate Tool</string>
-    <string name="translate_tab">Translate</string>
-    <string name="settings_tab">Settings</string>
-    <string name="logs_tab">Logs</string>
+    <string name="app_name">VTU Translate</string>
+    
+    <!-- Tab Titles -->
+    <string name="tab_translate">Dịch</string>
+    <string name="tab_settings">Cài đặt</string>
+    <string name="tab_logs">Nhật ký</string>
+    
+    <!-- Translation Tab -->
+    <string name="load_file">Tải file</string>
+    <string name="translate">Dịch</string>
+    <string name="save_file">Lưu file</string>
+    <string name="original_text">Văn bản gốc</string>
+    <string name="translated_text">Văn bản đã dịch</string>
+    
+    <!-- Settings Tab -->
     <string name="api_key">API Key</string>
-    <string name="enter_api_key">Enter your API Key</string>
-    <string name="get_api_key">Get API Key from OpenRouter</string>
-    <string name="save">Save</string>
-    <string name="settings_saved">Settings saved</string>
-    <string name="model">Model</string>
-    <string name="clear_log">Clear Log</string>
-    <string name="copy_log">Copy Log</string>
-    <string name="original_text_label">Original</string>
-    <string name="translated_text_label">Translated</string>
-    <string name="gemini_models">Gemini Models</string>
-    <string name="deepseek_models">DeepSeek Models</string>
-    <string name="select_model">Select a model</string>
-    <string name="load_strings_xml">Load strings.xml</string>
-    <string name="save_translated_file">Save Translated File</string>
-    <string name="translation_error">Translation Error</string>
-    <string name="log_cleared">Log cleared</string>
-    <string name="log_copied">Log copied to clipboard</string>
-    <string name="api_key_saved">API Key saved</string>
+    <string name="api_key_hint">Nhập API key của bạn</string>
+    <string name="get_api_key">Lấy API key</string>
+    <string name="save_settings">Lưu cài đặt</string>
+    <string name="model_selection">Chọn mô hình</string>
+    <string name="gemini_models">Mô hình Gemini</string>
+    <string name="deepseek_models">Mô hình DeepSeek</string>
+    <string name="hide_api_key">Ẩn API key</string>
+    
+    <!-- Logs Tab -->
+    <string name="clear_logs">Xóa nhật ký</string>
+    <string name="copy_logs">Sao chép nhật ký</string>
+    
+    <!-- Messages -->
+    <string name="error_invalid_api_key">API key không hợp lệ</string>
+    <string name="error_no_file_selected">Chưa chọn file</string>
+    <string name="error_translation_failed">Dịch thất bại</string>
+    <string name="success_translation_complete">Dịch hoàn tất</string>
+    <string name="success_file_saved">File đã được lưu</string>
+    <string name="success_settings_saved">Cài đặt đã được lưu</string>
+    <string name="success_logs_copied">Nhật ký đã được sao chép</string>
 </resources> 

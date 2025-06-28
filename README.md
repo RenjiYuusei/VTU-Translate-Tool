@@ -1,47 +1,58 @@
 # VTU Translate Tool
 
-An Android application for translating `strings.xml` files using various AI models via the OpenRouter API.
+VTU Translate Tool is an Android application that helps you translate strings.xml files from English to Vietnamese using AI models from OpenRouter.
 
 ## Features
 
--   **Translate `strings.xml`:** Easily upload, translate, and save your Android string resource files.
--   **OpenRouter Integration:** Leverages the OpenRouter API to provide access to a variety of powerful AI models.
--   **Supported Models:**
-    -   `google/gemma-3-27b-it:free`
-    -   `deepseek/deepseek-r1-0528:free`
-    -   `deepseek/deepseek-chat-v3-0324:free`
-    -   `google/gemini-2.0-flash-exp:free`
--   **Bilingual Interface:** The application UI is in Vietnamese, while the source code is in English.
--   **Modern UI:** Built with Jetpack Compose for a modern, declarative UI.
--   **Tab-based Navigation:**
-    -   **Translate Tab:** Manage the file translation process.
-    -   **Settings Tab:** Configure your OpenRouter API key and select your preferred translation model.
-    -   **Log Tab:** View detailed logs of the translation process.
+- Translate strings.xml files using various AI models
+- Support for multiple OpenRouter AI models
+  - Gemini models: Gemma 3 27B IT, Gemini 2.0 Flash
+  - DeepSeek models: DeepSeek R1 0528, DeepSeek V3 0324
+- Securely store your OpenRouter API key
+- Save translated strings to a new file
+- Detailed logging system with copy and clear functionality
 
-## Tech Stack
+## Getting Started
 
--   **Language:** Kotlin
--   **UI:** Jetpack Compose
--   **Architecture:** MVVM (Model-View-ViewModel)
--   **Asynchronous Programming:** Kotlin Coroutines
--   **Networking:** Retrofit
--   **Data Persistence:** Jetpack DataStore
+### Prerequisites
 
-## How to Use
+- Android device running Android 7.0 (API level 24) or higher
+- OpenRouter API key (can be obtained from [https://openrouter.ai/keys](https://openrouter.ai/keys))
 
-1.  **Get an API Key:** Obtain an API key from [OpenRouter](https://openrouter.ai/keys).
-2.  **Configure the App:**
-    -   Navigate to the **Settings** tab.
-    -   Enter and save your API key.
-    -   Select your desired translation model from the dropdown list.
-3.  **Translate:**
-    -   Go to the **Translate** tab.
-    -   Click "Load strings.xml" to upload your file.
-    -   Click "Translate All" to start the translation.
-    -   The original and translated content will be displayed side-by-side.
-4.  **Save:**
-    -   Once the translation is complete, click "Save Translated File" to save the new `strings.xml` file.
+### Installation
 
-## Building from Source
+1. Download the latest APK from the Releases section
+2. Install the APK on your Android device
+3. Open the app and navigate to the Settings tab
+4. Enter your OpenRouter API key and select your preferred model
+5. Save your settings
 
-To build the project from the source code, you will need Android Studio. Clone the repository and open it in Android Studio. The project should sync and build automatically. 
+## Usage
+
+### Translating a strings.xml file
+
+1. In the Translate tab, click "Load File" to select your strings.xml file
+2. Review the loaded strings in the top section
+3. Click "Translate" to send the strings for translation
+4. The translated strings will appear in the bottom section
+5. Click "Save File" to save the translated strings to a new file
+
+### Managing Logs
+
+1. Navigate to the Logs tab to view the application logs
+2. Use the "Clear Logs" button to clear the log history
+3. Use the "Copy Logs" button to copy the logs to the clipboard for troubleshooting
+
+## Build from Source
+
+To build this project from source:
+
+```
+git clone https://github.com/your-username/VTU-Translate-Tool.git
+cd VTU-Translate-Tool
+./gradlew build
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
