@@ -15,7 +15,8 @@ import android.util.Log
 data class ChatCompletionRequest(
     val model: String,
     val messages: List<Message>,
-    val max_tokens: Int? = null
+    val max_tokens: Int? = null,
+    val temperature: Float? = null
 )
 
 @Serializable
@@ -53,7 +54,8 @@ class OpenRouterApiService(private val log: (String) -> Unit) {
         val requestBody = ChatCompletionRequest(
             model = model,
             messages = messages,
-            max_tokens = 4096
+            max_tokens = 4096,
+            temperature = 0.7f
         )
         log("Sending translation request to model: $model")
 
