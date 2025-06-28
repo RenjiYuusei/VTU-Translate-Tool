@@ -104,7 +104,7 @@ fun LogScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No logs yet")
+                Text(stringResource(R.string.log_yet))
             }
         } else {
             LazyColumn(

@@ -441,8 +441,7 @@ fun ModelSelectionDropdown(
     // Animation for dropdown expansion
     val elevation by animateDpAsState(
         targetValue = if (expanded) 8.dp else 4.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "ElevationAnimation"
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
     
     ExposedDropdownMenuBox(

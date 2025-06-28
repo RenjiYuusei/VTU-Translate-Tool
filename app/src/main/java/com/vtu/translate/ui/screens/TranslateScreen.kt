@@ -43,6 +43,29 @@ import com.vtu.translate.data.model.StringResource
 import com.vtu.translate.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * Kiểm tra xem một chuỗi có phải là chuỗi đặc biệt không cần dịch hay không
+ * 
+ * @param value Chuỗi cần kiểm tra
+ * @return True nếu chuỗi là chuỗi đặc biệt không cần dịch
+ */
+private fun isSpecialNonTranslatableString(value: String): Boolean {
+    // Kiểm tra tên gói, tên lớp, hoặc các chuỗi kỹ thuật khác
+    return value.matches(Regex("^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$")) || // Tên gói như androidx.startup
+           value.matches(Regex("^[A-Z][a-zA-Z0-9]*$")) || // Tên lớp như MainActivity
+           value.matches(Regex("^[a-zA-Z0-9_]+$")) || // Định danh kỹ thuật đơn giản
+           value.startsWith("http://") || value.startsWith("https://") || // URL
+           value.startsWith("androidx.") || // Tiền tố gói cụ thể
+           value.startsWith("android.") ||
+           value.startsWith("java.") ||
+           value.startsWith("kotlin.") ||
+           value.contains("@") || // Địa chỉ email hoặc tham chiếu tài nguyên
+           value.matches(Regex(".*\\{.*\\}.*")) || // Chuỗi có placeholder như {0}
+           value.matches(Regex(".*%[sdfx].*")) || // Định dạng như %s, %d
+           value.matches(Regex("^[0-9]+$")) || // Số thuần túy
+           value.trim().isEmpty() // Chuỗi rỗng
+}
+
 @Composable
 fun TranslateScreen(
     viewModel: MainViewModel,
@@ -275,7 +298,12 @@ fun StringResourceItem(
     resource: StringResource,
     onTranslatedValueChange: (String) -> Unit
 ) {
-    val isSpecialCase = resource.translatedValue.isNotBlank() && !resource.isTranslating && !resource.hasError
+    // Kiểm tra xem chuỗi có phải là chuỗi đặc biệt thực sự hay không
+    // Chỉ đánh dấu là chuỗi đặc biệt nếu nó thỏa mãn các điều kiện của isSpecialNonTranslatableString
+    val isSpecialCase = isSpecialNonTranslatableString(resource.value) && 
+                       resource.translatedValue.isNotBlank() && 
+                       !resource.isTranslating && 
+                       !resource.hasError
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -304,7 +332,7 @@ fun StringResourceItem(
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            text = "Tự động",
+                            text = "Đặc biệt",
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             color = MaterialTheme.colorScheme.primary
@@ -365,7 +393,7 @@ fun StringResourceItem(
             // Show info message for special cases
             if (isSpecialCase) {
                 Text(
-                    text = "Chuỗi này được dịch tự động dựa trên quy tắc đặc biệt.",
+                    text = "Chuỗi này được giữ nguyên do là định danh kỹ thuật hoặc chuỗi đặc biệt.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
