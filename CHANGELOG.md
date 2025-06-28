@@ -1,5 +1,16 @@
 # Changelog
 
+## Phiên bản 1.1.0 (30-6-2025)
+
+### Cải tiến giao diện người dùng
+
+- Cập nhật toàn bộ giao diện người dùng theo Material Design 3 với các thành phần hiện đại hơn.
+- Thêm animation cho các chuyển đổi màn hình và hiệu ứng tương tác.
+- Cải thiện màn hình Dịch với các thẻ nâng cao (ElevatedCard) và hiển thị trạng thái rõ ràng hơn.
+- Cải thiện màn hình Nhật ký với hiệu ứng animation khi hiển thị log mới và thiết kế thẻ theo loại log.
+- Cải thiện màn hình Cài đặt với bố cục thẻ riêng biệt cho từng mục: API Key, Chọn Model và Thông tin.
+- Nâng cấp thanh điều hướng với hiệu ứng animation và màu sắc phù hợp với theme.
+
 ## Phiên bản 1.0.1 (28-6-2025)
 
 ### Tính năng mới

@@ -28,6 +28,7 @@ class MainViewModel(
     // Expose repository flows
     val apiKey = preferencesRepository.apiKey
     val selectedModel = preferencesRepository.selectedModel
+    val appLanguage = preferencesRepository.appLanguage
     val stringResources = translationRepository.stringResources
     val isTranslating = translationRepository.isTranslating
     val selectedFileName = translationRepository.selectedFileName
@@ -52,6 +53,13 @@ class MainViewModel(
      */
     fun saveSelectedModel(model: String) {
         preferencesRepository.saveSelectedModel(model)
+    }
+    
+    /**
+     * Save app language
+     */
+    fun saveAppLanguage(language: String) {
+        preferencesRepository.saveAppLanguage(language)
     }
     
     /**
