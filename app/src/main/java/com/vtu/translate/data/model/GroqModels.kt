@@ -9,7 +9,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class GroqModel(
     val id: String,
-    val object: String,
+    @SerialName("object")
+    val objectType: String,
     val created: Long,
     @SerialName("owned_by")
     val ownedBy: String,
@@ -25,7 +26,8 @@ data class GroqModel(
  */
 @Serializable
 data class GroqModelsResponse(
-    val object: String,
+    @SerialName("object")
+    val objectType: String,
     val data: List<GroqModel>
 )
 
@@ -65,7 +67,8 @@ data class ChatCompletionChoice(
 @Serializable
 data class ChatCompletionResponse(
     val id: String,
-    val object: String,
+    @SerialName("object")
+    val objectType: String,
     val created: Long,
     val model: String,
     val choices: List<ChatCompletionChoice>,
