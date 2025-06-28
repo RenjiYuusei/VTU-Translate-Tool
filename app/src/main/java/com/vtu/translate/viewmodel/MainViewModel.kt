@@ -14,7 +14,8 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import com.vtu.translate.R
 import java.io.StringReader
-import kotlinx.serialization.json.* // Import for Kotlinx JSON
+import kotlinx.serialization.json.*
+import kotlinx.serialization.encodeToString
 import android.util.Log // Import for logging
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -107,6 +108,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
+            val json = Json { ignoreUnknownKeys = true; isLenient = true }
             try {
                 val originalContent = _selectedFileContent.value
                 val apiKey = _apiKey.value
@@ -169,7 +171,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 stringsToTranslate.entries.chunked(batchSize).forEach { batch ->
                     val batchMap = batch.associate { it.key to it.value }
-                    val jsonForTranslation = Json.encodeToString(batchMap)
+                    val jsonForTranslation = json.encodeToString(batchMap)
                     val prompt = """Translate the following JSON object to $targetLanguage. The keys are string names and the values are the texts to translate. Respond with a JSON object in the same format, with the translated values. Ensure the output is a valid JSON object, without any additional text or markdown formatting outside the JSON block:
 $jsonForTranslation"""
 
@@ -189,7 +191,6 @@ $jsonForTranslation"""
                     addLog("Cleaned JSON String: $cleanedJsonString")
 
                     try {
-                        val json = Json { ignoreUnknownKeys = true }
                         if(cleanedJsonString.isNotEmpty()) {
                             val translatedStringsJson = json.decodeFromString<Map<String, String>>(cleanedJsonString)
                             translatedStringsJson.forEach { (key, value) ->
