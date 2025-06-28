@@ -70,3 +70,8 @@ Dự án này được phân phối dưới giấy phép GNU GPL v3.0. Xem file 
 ## Liên hệ
 
 Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, vui lòng tạo issue trong repository này.
+
+## Thông tin
+
+- **Tác giả**: RenjiYuusei
+- **Discord**: [https://discord.gg/hVQm9fNV](https://discord.gg/hVQm9fNV)

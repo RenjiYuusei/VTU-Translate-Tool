@@ -116,6 +116,38 @@ fun SettingsScreen(
             selectedModel = selectedModel,
             onModelSelected = { viewModel.saveSelectedModel(it) }
         )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Credit section
+        Text(
+            text = stringResource(R.string.credit_title),
+            style = MaterialTheme.typography.titleLarge
+        )
+        
+        Text(
+            text = stringResource(R.string.credit_author),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        
+        // Discord link button
+        Button(
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/hVQm9fNV"))
+                context.startActivity(intent)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_discord),
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(stringResource(R.string.credit_discord))
+        }
     }
 }
 

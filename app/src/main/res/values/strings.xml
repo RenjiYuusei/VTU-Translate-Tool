@@ -39,4 +39,9 @@
     <string name="error_no_file_selected">Vui lòng chọn file strings.xml</string>
     <string name="error_invalid_file">File không hợp lệ. Vui lòng chọn file strings.xml</string>
     <string name="error_api_call">Lỗi khi gọi API: %1$s</string>
+    
+    <!-- Credit -->
+    <string name="credit_title">Thông tin tác giả</string>
+    <string name="credit_author">Tác giả: RenjiYuusei</string>
+    <string name="credit_discord">Discord</string>
 </resources>
