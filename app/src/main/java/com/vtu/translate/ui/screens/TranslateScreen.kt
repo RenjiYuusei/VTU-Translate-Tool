@@ -20,9 +20,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -82,6 +84,11 @@ fun TranslateScreen(
             onClick = { filePickerLauncher.launch("text/xml") },
             modifier = Modifier.fillMaxWidth()
         ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_file),
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
             Text(stringResource(R.string.select_file))
         }
         
@@ -138,6 +145,11 @@ fun TranslateScreen(
                 modifier = Modifier.weight(1f),
                 enabled = !isTranslating && stringResources.isNotEmpty()
             ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_start_translate),
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
                 Text(stringResource(if (isTranslating) R.string.translating else R.string.start_translate))
             }
             
@@ -168,6 +180,11 @@ fun TranslateScreen(
                 modifier = Modifier.weight(1f),
                 enabled = !isTranslating && stringResources.isNotEmpty()
             ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_save),
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
                 Text(stringResource(R.string.save_translated_file))
             }
         }

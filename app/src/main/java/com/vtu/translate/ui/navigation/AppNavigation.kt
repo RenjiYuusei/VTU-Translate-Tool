@@ -2,15 +2,12 @@ package com.vtu.translate.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.outlined.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -58,21 +55,21 @@ fun BottomNavigation(
 ) {
     NavigationBar {
         NavigationBarItem(
-            icon = { Icon(Icons.Filled.Translate, contentDescription = null) },
+            icon = { Icon(painterResource(R.drawable.ic_translate), contentDescription = null) },
             label = { Text(stringResource(R.string.tab_translate)) },
             selected = currentTab == NavigationTab.TRANSLATE,
             onClick = { onTabSelected(NavigationTab.TRANSLATE) }
         )
         
         NavigationBarItem(
-            icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+            icon = { Icon(painterResource(R.drawable.ic_settings), contentDescription = null) },
             label = { Text(stringResource(R.string.tab_settings)) },
             selected = currentTab == NavigationTab.SETTINGS,
             onClick = { onTabSelected(NavigationTab.SETTINGS) }
         )
         
         NavigationBarItem(
-            icon = { Icon(Icons.Outlined.List, contentDescription = null) },
+            icon = { Icon(painterResource(R.drawable.ic_log), contentDescription = null) },
             label = { Text(stringResource(R.string.tab_log)) },
             selected = currentTab == NavigationTab.LOG,
             onClick = { onTabSelected(NavigationTab.LOG) }

@@ -15,10 +15,12 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -77,6 +79,11 @@ fun SettingsScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_save),
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
             Text(stringResource(R.string.api_key_saved))
         }
         
@@ -88,6 +95,11 @@ fun SettingsScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_file),
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
             Text(stringResource(R.string.get_api_key))
         }
         
