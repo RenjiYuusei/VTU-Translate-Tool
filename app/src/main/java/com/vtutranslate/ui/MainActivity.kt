@@ -37,11 +37,19 @@ class MainActivity : AppCompatActivity() {
         
         // Connect TabLayout with ViewPager2
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = when (position) {
-                0 -> getString(R.string.tab_translate)
-                1 -> getString(R.string.tab_settings)
-                2 -> getString(R.string.tab_logs)
-                else -> null
+            when (position) {
+                0 -> {
+                    tab.text = getString(R.string.tab_translate)
+                    tab.setIcon(R.drawable.ic_translate)
+                }
+                1 -> {
+                    tab.text = getString(R.string.tab_settings)
+                    tab.setIcon(R.drawable.ic_settings)
+                }
+                2 -> {
+                    tab.text = getString(R.string.tab_logs)
+                    tab.setIcon(R.drawable.ic_logs)
+                }
             }
         }.attach()
         
@@ -49,4 +57,4 @@ class MainActivity : AppCompatActivity() {
         val logManager = VTUTranslateApp.instance.logManager
         logManager.log("Application started - VTU Translate Tool")
     }
-} 
+} *
