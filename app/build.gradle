@@ -43,8 +43,11 @@ android {
     androidComponents {
         beforeVariants { variantBuilder ->
             // Áp dụng cấu hình R8 cho tất cả các biến thể
-            variantBuilder.enableUnitTest = false
-            variantBuilder.enableAndroidTest = false
+            if (variantBuilder.buildType == "release") {
+                // Tắt unit test và android test cho biến thể release
+                variantBuilder.enableAndroidTest = false
+                variantBuilder.enableUnitTest = false
+            }
         }
     }
     
