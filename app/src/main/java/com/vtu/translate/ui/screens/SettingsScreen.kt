@@ -1,5 +1,6 @@
 package com.vtu.translate.ui.screens
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -296,6 +297,13 @@ fun LanguageSettingsSection(
                                 context.getString(R.string.language_saved),
                                 Toast.LENGTH_SHORT
                             ).show()
+                            
+                            // Restart activity to apply language change
+                            (context as? Activity)?.let { activity ->
+                                val intent = activity.intent
+                                activity.finish()
+                                activity.startActivity(intent)
+                            }
                         }
                     )
                     
@@ -322,6 +330,13 @@ fun LanguageSettingsSection(
                                 context.getString(R.string.language_saved),
                                 Toast.LENGTH_SHORT
                             ).show()
+                            
+                            // Restart activity to apply language change
+                            (context as? Activity)?.let { activity ->
+                                val intent = activity.intent
+                                activity.finish()
+                                activity.startActivity(intent)
+                            }
                         }
                     )
                 }
