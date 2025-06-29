@@ -32,20 +32,12 @@ android {
     }
 
     buildTypes {
-        // Chỉ giữ lại buildType release và tối ưu hóa
+        // Chỉ giữ lại buildType release
         release {
-            // Bật minification với R8
             minifyEnabled true
-            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
             debuggable false
-            // Cấu hình R8 để tối ưu hóa bộ nhớ
-            javaCompileOptions {
-                annotationProcessorOptions {
-                    arguments = ["room.incremental":"true"]
-                }
-            }
         }
     }
     compileOptions {
@@ -67,15 +59,6 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
-            excludes += '/META-INF/DEPENDENCIES'
-            excludes += '/META-INF/LICENSE*'
-            excludes += '/META-INF/NOTICE*'
-            excludes += '/META-INF/*.kotlin_module'
-            excludes += '/*.txt'
-            excludes += '/*.md'
-            excludes += '/kotlin/**'
-            excludes += '/*.properties'
-            excludes += '/META-INF/services/**'
         }
     }
 }
@@ -86,9 +69,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.activity:activity-compose:1.7.2'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    
-    // Giữ lại Error Prone Annotations vì nó là phụ thuộc cần thiết cho Tink (được sử dụng bởi EncryptedSharedPreferences)
-    implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
     
     // Compose
     implementation platform('androidx.compose:compose-bom:2023.08.00')
@@ -116,11 +96,5 @@ dependencies {
     
     // Security for EncryptedSharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
-    
-    // Google API Client HTTP dependencies for Tink
-    implementation 'com.google.http-client:google-http-client:1.42.3'
-    implementation 'com.google.http-client:google-http-client-gson:1.42.3'
-    implementation 'joda-time:joda-time:2.12.5'
-    
-    // Loại bỏ các thư viện testing và debug để giảm kích thước APK
+
 }

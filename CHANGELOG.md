@@ -1,17 +1,5 @@
 # Changelog
 
-## Phiên bản 1.1.1 (30-6-2025)
-
-### Cải tiến quy trình phát triển
-
-- Cấu hình GitHub Actions để tạo bản build có chữ ký (signed APK) cho phép cập nhật ứng dụng mà không cần cài đặt lại.
-- Tối ưu hóa bộ nhớ JVM trong quá trình build với cấu hình org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8.
-
-### Sửa lỗi
-
-- Sửa lỗi cài đặt ngôn ngữ không áp dụng ngay lập tức, giờ đây khi thay đổi ngôn ngữ, ứng dụng sẽ tự động khởi động lại để áp dụng ngay lập tức.
-- Cải thiện xử lý lỗi HTTP 503 và timeout khi dịch, giúp ứng dụng ổn định hơn khi gặp lỗi từ API.
-
 ## Phiên bản 1.1.0 (29-6-2025)
 
 ### Cải tiến giao diện người dùng

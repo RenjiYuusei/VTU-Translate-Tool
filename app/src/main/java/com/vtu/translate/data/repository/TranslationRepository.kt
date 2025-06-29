@@ -232,29 +232,15 @@ class TranslationRepository(
                         } else {
                             val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error"
                             
-                            // Check if rate limit error or service unavailable error
+                            // Check if rate limit error
                             if (errorMessage.contains("429") || errorMessage.contains("rate limit") || 
-                                errorMessage.contains("Rate limit") || errorMessage.contains("503") ||
-                                errorMessage.contains("Service unavailable") || errorMessage.contains("timeout") ||
-                                errorMessage.contains("connection")) {
+                                errorMessage.contains("Rate limit")) {
                                 rateLimitHit = true
                                 updatedResources[i] = resource.copy(
                                     isTranslating = false,
                                     hasError = true
                                 )
-                                
-                                val logMessage = when {
-                                    errorMessage.contains("429") || errorMessage.contains("rate limit") || errorMessage.contains("Rate limit") ->
-                                        "Đạt giới hạn tốc độ API (HTTP 429) khi dịch key '${resource.name}'. Sẽ thử lại sau."
-                                    errorMessage.contains("503") || errorMessage.contains("Service unavailable") ->
-                                        "Dịch vụ API không khả dụng (HTTP 503) khi dịch key '${resource.name}'. Sẽ thử lại sau."
-                                    errorMessage.contains("timeout") ->
-                                        "Hết thời gian chờ kết nối khi dịch key '${resource.name}'. Sẽ thử lại sau."
-                                    else ->
-                                        "Lỗi kết nối khi dịch key '${resource.name}'. Sẽ thử lại sau."
-                                }
-                                
-                                logRepository.logWarning(logMessage)
+                                logRepository.logWarning("Đạt giới hạn tốc độ API (HTTP 429) khi dịch key '${resource.name}'. Sẽ thử lại sau.")
                                 break // Break the inner loop to pause and retry
                             } else {
                                 updatedResources[i] = resource.copy(
@@ -278,10 +264,10 @@ class TranslationRepository(
                         break
                     }
                     
-                // If rate limit or other API error was hit, wait longer before continuing
+                // If rate limit was hit, wait longer before continuing
                     if (rateLimitHit) {
-                        logRepository.logInfo("Đợi 10 giây trước khi tiếp tục do gặp lỗi API...")
-                        delay(10000) // Wait 10 seconds before continuing
+                        logRepository.logInfo("Đợi 5 giây trước khi tiếp tục do đạt giới hạn tốc độ API...")
+                        delay(5000) // Wait 5 seconds before continuing
                     } else if (batchEnd < resources.size) {
                         // Only delay between batches if there are more batches to process
                         delay(delayBetweenBatchesMs)
