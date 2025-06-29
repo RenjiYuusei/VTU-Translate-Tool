@@ -98,6 +98,14 @@ dependencies {
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     
     // Error Prone Annotations (để giải quyết lỗi R8)
+    
+    // Google API Client (để giải quyết lỗi thiếu lớp)
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+    implementation 'com.google.http-client:google-http-client:1.43.3'
+    implementation 'com.google.http-client:google-http-client-gson:1.43.3'
+    
+    // Joda Time (để giải quyết lỗi thiếu lớp)
+    implementation 'joda-time:joda-time:2.12.5'
     implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
 
 }

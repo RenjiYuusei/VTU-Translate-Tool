@@ -15,6 +15,18 @@
 # Keep crypto.tink classes that use these annotations
 -keep class com.google.crypto.tink.** { *; }
 
+# Keep Google API Client classes
+-keep class com.google.api.client.** { *; }
+-dontwarn com.google.api.client.**
+
+# Keep Google HTTP Client classes
+-keep class com.google.http.client.** { *; }
+-dontwarn com.google.http.client.**
+
+# Keep Joda Time classes
+-keep class org.joda.time.** { *; }
+-dontwarn org.joda.time.**
+
 # General rules
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
