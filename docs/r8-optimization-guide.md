@@ -89,7 +89,7 @@ packagingOptions {
         excludes += '/META-INF/LICENSE*'
         excludes += '/META-INF/NOTICE*'
         excludes += '/META-INF/INDEX.LIST'
-        excludes += '/META-INF/DEPENDENCIES'
+        pickFirst 'META-INF/DEPENDENCIES'
     }
     jniLibs {
         useLegacyPackaging = false
@@ -99,6 +99,8 @@ packagingOptions {
     }
 }
 ```
+
+**Lưu ý**: Sử dụng `pickFirst` thay vì `excludes` cho file `META-INF/DEPENDENCIES` để tránh lỗi xung đột khi nhiều thư viện chứa cùng một file.
 
 ### 5. Tối ưu hóa quy tắc ProGuard
 
@@ -313,6 +315,47 @@ Nếu vẫn gặp lỗi OutOfMemoryError sau khi áp dụng các giải pháp tr
 6. **Tắt R8 full mode**: Nếu gặp lỗi với `android.enableR8.fullMode`, hãy thử đặt giá trị này thành `false`
 7. **Sử dụng máy tính có nhiều RAM hơn**: Nếu đang build trên máy tính có ít RAM, hãy thử build trên máy tính có nhiều RAM hơn hoặc sử dụng dịch vụ CI/CD như GitHub Actions
 8. **Tắt các ứng dụng khác**: Đóng các ứng dụng không cần thiết để giải phóng bộ nhớ cho quá trình build
+
+## Xử lý lỗi xung đột file trong mergeJavaResource
+
+Khi build bản release, bạn có thể gặp lỗi xung đột file trong quá trình mergeJavaResource như sau:
+
+```
+> Task :app:mergeReleaseJavaResource FAILED
+Execution failed for task ':app:mergeReleaseJavaResource'.
+> A failure occurred while executing com.android.build.gradle.internal.tasks.MergeJavaResWorkAction
+   > 2 files found with path 'META-INF/DEPENDENCIES' from inputs:
+      - /home/user/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.14/1194890e6f56ec29177673f2f12d0b8e627dec98/httpclient-4.5.14.jar
+      - /home/user/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.16/51cf043c87253c9f58b539c9f7e44c8894223850/httpcore-4.4.16.jar
+```
+
+Lỗi này xảy ra khi nhiều thư viện chứa cùng một file (trong trường hợp này là `META-INF/DEPENDENCIES`), và Gradle không biết nên sử dụng file từ thư viện nào.
+
+### Giải pháp
+
+Sử dụng `pickFirst` thay vì `excludes` trong cấu hình `packagingOptions` để chỉ định rằng Gradle nên sử dụng file đầu tiên mà nó tìm thấy:
+
+```gradle
+packagingOptions {
+    resources {
+        // Các excludes khác...
+        pickFirst 'META-INF/DEPENDENCIES'
+    }
+}
+```
+
+Nếu bạn gặp lỗi tương tự với các file khác, bạn có thể áp dụng cùng một giải pháp. Ví dụ:
+
+```gradle
+packagingOptions {
+    resources {
+        // Các excludes khác...
+        pickFirst 'META-INF/DEPENDENCIES'
+        pickFirst 'META-INF/LICENSE'
+        pickFirst 'META-INF/NOTICE'
+    }
+}
+```
 
 ## Kết luận
 
