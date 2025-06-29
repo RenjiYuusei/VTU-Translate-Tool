@@ -1,24 +1,5 @@
 # Changelog
 
-## Phiên bản 1.2.0 (Chưa phát hành)
-
-### Cải tiến bảo mật và hiệu suất
-
-- Tích hợp R8 để tối ưu hóa kích thước APK và mã hóa mã nguồn.
-- Cấu hình ký số tự động cho bản build release với keystore.
-- Cập nhật GitHub Actions để build bản release thay vì debug.
-- Thêm tài liệu hướng dẫn thiết lập keystore cho GitHub Actions.
-- Cải thiện quy tắc ProGuard để bảo vệ mã nguồn tốt hơn.
-- Tối ưu hóa cấu hình R8 để giảm thiểu việc sử dụng bộ nhớ và tránh lỗi OutOfMemoryError.
-- Tăng bộ nhớ heap cho Gradle từ 2GB lên 4GB và thêm cấu hình MaxMetaspaceSize.
-- Thêm tài liệu hướng dẫn tối ưu hóa R8 và xử lý lỗi OutOfMemoryError.
-- Bật các tùy chọn tối ưu hóa Gradle như parallel, caching, configureondemand và vfs.watch.
-- Sửa lỗi thiếu các lớp error-prone-annotations khi sử dụng R8 bằng cách thêm thư viện và quy tắc ProGuard.
-- Loại bỏ cấu hình android.enableD8.desugaring đã bị loại bỏ từ Android Gradle Plugin 7.0.
-- Sửa lỗi "java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType" khi sử dụng R8 bằng cách thêm quy tắc ProGuard để giữ lại thông tin reflection.
-- Sửa lỗi "Missing classes" liên quan đến Google API Client và Joda Time khi sử dụng R8 bằng cách thêm các thư viện phụ thuộc và quy tắc ProGuard tương ứng.
-- Sửa lỗi xung đột file META-INF/DEPENDENCIES trong quá trình mergeReleaseJavaResource bằng cách sử dụng pickFirst thay vì excludes trong cấu hình packagingOptions.
-
 ## Phiên bản 1.1.0 (29-6-2025)
 
 ### Cải tiến giao diện người dùng

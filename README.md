@@ -25,7 +25,7 @@ VTU Translate Tool là một ứng dụng Android giúp dịch các file strings
 
 ### Phương pháp 2: Sử dụng GitHub Actions
 
-Dự án này đã được cấu hình với GitHub Actions để tự động build APK release đã được ký và tối ưu hóa:
+Dự án này đã được cấu hình với GitHub Actions để tự động build APK:
 
 1. Truy cập tab "Actions" trong repository GitHub
 2. Chọn workflow "Android CI"
@@ -33,18 +33,7 @@ Dự án này đã được cấu hình với GitHub Actions để tự động 
 4. Sau khi workflow hoàn tất, tải xuống APK từ artifacts
 5. Cài đặt APK trên thiết bị Android của bạn
 
-Xem [Hướng dẫn sử dụng GitHub Actions](docs/github-actions-guide.md), [Hướng dẫn thiết lập Keystore](docs/keystore-setup.md) và [Hướng dẫn tối ưu hóa R8](docs/r8-optimization-guide.md) để biết thêm chi tiết.
-
-### Tối ưu hóa và Bảo mật
-
-Ứng dụng sử dụng R8 để tối ưu hóa kích thước APK và mã hóa mã nguồn:
-
-- **Minification**: Giảm kích thước APK bằng cách loại bỏ mã không sử dụng
-- **Obfuscation**: Mã hóa tên lớp, phương thức và biến để bảo vệ mã nguồn
-- **Resource Shrinking**: Loại bỏ tài nguyên không sử dụng
-- **Signing**: APK được ký tự động bằng keystore đã cấu hình
-- **Tối ưu hóa bộ nhớ**: Cấu hình tối ưu để tránh lỗi OutOfMemoryError khi build với R8
-- **Cấu hình Gradle**: Tăng bộ nhớ heap và bật các tùy chọn tối ưu hóa như parallel, caching
+Xem [Hướng dẫn sử dụng GitHub Actions](docs/github-actions-guide.md) để biết thêm chi tiết.
 
 ## Cách sử dụng
 
