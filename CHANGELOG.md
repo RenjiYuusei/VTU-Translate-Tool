@@ -1,5 +1,15 @@
 # Changelog
 
+## Phiên bản 1.2.0 (Chưa phát hành)
+
+### Cải tiến bảo mật và hiệu suất
+
+- Tích hợp R8 để tối ưu hóa kích thước APK và mã hóa mã nguồn.
+- Cấu hình ký số tự động cho bản build release với keystore.
+- Cập nhật GitHub Actions để build bản release thay vì debug.
+- Thêm tài liệu hướng dẫn thiết lập keystore cho GitHub Actions.
+- Cải thiện quy tắc ProGuard để bảo vệ mã nguồn tốt hơn.
+
 ## Phiên bản 1.1.0 (29-6-2025)
 
 ### Cải tiến giao diện người dùng

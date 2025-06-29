@@ -17,9 +17,13 @@ class PreferencesRepository(context: Context) {
         private const val PREFERENCES_FILE = "encrypted_prefs.xml"
         private const val KEY_API_KEY = "groq_api_key"
         private const val KEY_SELECTED_MODEL = "selected_model"
+        private const val KEY_APP_LANGUAGE = "app_language"
         
         // Default model
         private const val DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+        
+        // Default language (Vietnamese)
+        private const val DEFAULT_LANGUAGE = "vi"
     }
     
     private val _apiKey = MutableStateFlow<String>("")
@@ -27,6 +31,9 @@ class PreferencesRepository(context: Context) {
     
     private val _selectedModel = MutableStateFlow<String>(DEFAULT_MODEL)
     val selectedModel: StateFlow<String> = _selectedModel.asStateFlow()
+    
+    private val _appLanguage = MutableStateFlow<String>(DEFAULT_LANGUAGE)
+    val appLanguage: StateFlow<String> = _appLanguage.asStateFlow()
     
     private val encryptedPrefs: SharedPreferences
     
@@ -52,6 +59,7 @@ class PreferencesRepository(context: Context) {
     private fun loadSavedValues() {
         _apiKey.value = encryptedPrefs.getString(KEY_API_KEY, "") ?: ""
         _selectedModel.value = encryptedPrefs.getString(KEY_SELECTED_MODEL, DEFAULT_MODEL) ?: DEFAULT_MODEL
+        _appLanguage.value = encryptedPrefs.getString(KEY_APP_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE
     }
     
     /**
@@ -70,5 +78,11 @@ class PreferencesRepository(context: Context) {
         _selectedModel.value = model
     }
     
-
+    /**
+     * Save app language to preferences
+     */
+    fun saveAppLanguage(language: String) {
+        encryptedPrefs.edit().putString(KEY_APP_LANGUAGE, language).apply()
+        _appLanguage.value = language
+    }
 }

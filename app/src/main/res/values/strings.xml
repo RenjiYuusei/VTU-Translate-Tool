@@ -26,7 +26,11 @@
     <string name="select_model">Select AI Model</string>
     <string name="model_group_meta">Meta</string>
     <string name="model_group_deepseek_meta">Deepseek &amp; Meta</string>
-
+    <string name="language_settings">Language Settings</string>
+    <string name="app_language">App Language</string>
+    <string name="language_vietnamese">Vietnamese</string>
+    <string name="language_english">English</string>
+    <string name="language_saved">Language settings saved</string>
     
     <!-- Log Screen -->
     <string name="copy_log">Copy Log</string>
