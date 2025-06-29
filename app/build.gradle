@@ -40,6 +40,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
             debuggable false
+            // Cấu hình R8 để tối ưu hóa bộ nhớ
+            javaCompileOptions {
+                annotationProcessorOptions {
+                    arguments = ["room.incremental":"true"]
+                }
+            }
         }
     }
     compileOptions {

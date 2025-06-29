@@ -7,8 +7,13 @@
 
 # Tối ưu hóa chung
 -optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
--optimizationpasses 5
+-optimizationpasses 3
 -allowaccessmodification
+
+# Cấu hình để giảm bớt áp lực bộ nhớ khi chạy R8
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-verbose
 
 # Loại bỏ log
 -assumenosideeffects class android.util.Log {
