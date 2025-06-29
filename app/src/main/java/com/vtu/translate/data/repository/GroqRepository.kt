@@ -44,9 +44,6 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
         .retryOnConnectionFailure(true)
-        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         .build()
     
     private val retrofit = Retrofit.Builder()
@@ -112,12 +109,10 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
                         return Result.failure(Exception("No response from API"))
                     }
                 } catch (e: HttpException) {
-                    // Handle HTTP 429 Too Many Requests and HTTP 503 Service Unavailable
-                    if (e.code() == 429 || e.code() == 503) {
-                        val errorCode = e.code()
-                        val errorMessage = if (errorCode == 429) "Rate limit exceeded (HTTP 429)" else "Service unavailable (HTTP 503)"
-                        lastException = Exception("$errorMessage. Retrying...")
-                        Log.w("GroqRepository", "HTTP $errorCode received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
+                    // Handle HTTP 429 Too Many Requests
+                    if (e.code() == 429) {
+                        lastException = Exception("Rate limit exceeded (HTTP 429). Retrying...")
+                        Log.w("GroqRepository", "HTTP 429 received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
                         
                         // Exponential backoff: 1s, 2s, 4s
                         val delayMs = (1000L * Math.pow(2.0, retryCount.toDouble())).toLong()
@@ -127,19 +122,7 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
                         return Result.failure(e)
                     }
                 } catch (e: Exception) {
-                    // Handle timeout and other network errors
-                    if (e.message?.contains("timeout", ignoreCase = true) == true ||
-                        e.message?.contains("connection", ignoreCase = true) == true) {
-                        lastException = Exception("Network timeout or connection error. Retrying...")
-                        Log.w("GroqRepository", "Network error received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries: ${e.message}")
-                        
-                        // Exponential backoff: 1s, 2s, 4s
-                        val delayMs = (1000L * Math.pow(2.0, retryCount.toDouble())).toLong()
-                        delay(delayMs)
-                        retryCount++
-                    } else {
-                        return Result.failure(e)
-                    }
+                    return Result.failure(e)
                 }
             }
             
