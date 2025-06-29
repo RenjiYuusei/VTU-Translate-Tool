@@ -9,6 +9,10 @@
 - Cập nhật GitHub Actions để build bản release thay vì debug.
 - Thêm tài liệu hướng dẫn thiết lập keystore cho GitHub Actions.
 - Cải thiện quy tắc ProGuard để bảo vệ mã nguồn tốt hơn.
+- Tối ưu hóa cấu hình R8 để giảm thiểu việc sử dụng bộ nhớ và tránh lỗi OutOfMemoryError.
+- Tăng bộ nhớ heap cho Gradle từ 2GB lên 4GB và thêm cấu hình MaxMetaspaceSize.
+- Thêm tài liệu hướng dẫn tối ưu hóa R8 và xử lý lỗi OutOfMemoryError.
+- Bật các tùy chọn tối ưu hóa Gradle như parallel, caching, configureondemand và vfs.watch.
 
 ## Phiên bản 1.1.0 (29-6-2025)
 

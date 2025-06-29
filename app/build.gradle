@@ -38,6 +38,33 @@ android {
             signingConfig signingConfigs.release
         }
     }
+    
+    // Cấu hình R8
+    androidComponents {
+        beforeVariants { variantBuilder ->
+            // Áp dụng cấu hình R8 cho tất cả các biến thể
+            variantBuilder.enableUnitTest = false
+            variantBuilder.enableAndroidTest = false
+        }
+    }
+    
+    // Tối ưu hóa R8
+    project.tasks.withType(com.android.build.gradle.internal.tasks.R8Task).configureEach {
+        it.maxHeapSize = "2g"
+        it.jvmArgs = ["-Xmx2g", "-XX:MaxMetaspaceSize=512m", "-Dfile.encoding=UTF-8"]
+    }
+    
+    // Tối ưu hóa Dex
+    project.tasks.withType(com.android.build.gradle.tasks.DexArchiveBuilderTask).configureEach {
+        it.maxHeapSize = "2g"
+        it.jvmArgs = ["-Xmx2g", "-XX:MaxMetaspaceSize=512m", "-Dfile.encoding=UTF-8"]
+    }
+    
+    // Tối ưu hóa Desugar
+    project.tasks.withType(com.android.build.gradle.tasks.DexFileDependenciesTask).configureEach {
+        it.maxHeapSize = "2g"
+        it.jvmArgs = ["-Xmx2g", "-XX:MaxMetaspaceSize=512m", "-Dfile.encoding=UTF-8"]
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -57,6 +84,16 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            excludes += '/META-INF/LICENSE*'
+            excludes += '/META-INF/NOTICE*'
+            excludes += '/META-INF/INDEX.LIST'
+            excludes += '/META-INF/DEPENDENCIES'
+        }
+        jniLibs {
+            useLegacyPackaging = false
+        }
+        dex {
+            useLegacyPackaging = false
         }
     }
 }

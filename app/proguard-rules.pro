@@ -51,5 +51,23 @@
 -dontwarn javax.annotation.**
 -dontwarn org.conscrypt.**
 
-# Keep Compose
--keep class androidx.compose.** { *; }
+# Tối ưu hóa Compose
+-keep class androidx.compose.runtime.** { *; }
+-keep class androidx.compose.ui.** { *; }
+-keep class androidx.compose.material3.** { *; }
+-keep class androidx.compose.foundation.** { *; }
+
+# Tối ưu hóa R8
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-verbose
+
+# Tăng hiệu suất R8
+-dontpreverify
+-repackageclasses ''
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes Exceptions
