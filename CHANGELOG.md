@@ -13,6 +13,8 @@
 - Tăng bộ nhớ heap cho Gradle từ 2GB lên 4GB và thêm cấu hình MaxMetaspaceSize.
 - Thêm tài liệu hướng dẫn tối ưu hóa R8 và xử lý lỗi OutOfMemoryError.
 - Bật các tùy chọn tối ưu hóa Gradle như parallel, caching, configureondemand và vfs.watch.
+- Sửa lỗi thiếu các lớp error-prone-annotations khi sử dụng R8 bằng cách thêm thư viện và quy tắc ProGuard.
+- Loại bỏ cấu hình android.enableD8.desugaring đã bị loại bỏ từ Android Gradle Plugin 7.0.
 
 ## Phiên bản 1.1.0 (29-6-2025)
 

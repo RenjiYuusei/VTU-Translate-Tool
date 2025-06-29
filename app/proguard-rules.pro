@@ -71,3 +71,11 @@
 -keepattributes *Annotation*
 -keepattributes Signature
 -keepattributes Exceptions
+
+# Keep Error Prone Annotations
+-dontwarn com.google.errorprone.annotations.**
+-keep class com.google.errorprone.annotations.** { *; }
+-keep @com.google.errorprone.annotations.Immutable class * { *; }
+-keep @com.google.errorprone.annotations.CanIgnoreReturnValue class * { *; }
+-keep @com.google.errorprone.annotations.CheckReturnValue class * { *; }
+-keep @com.google.errorprone.annotations.RestrictedApi class * { *; }

@@ -153,17 +153,63 @@ buildTypes {
 }
 ```
 
-### Sử dụng incremental dexing và tối ưu hóa R8
+### Tối ưu hóa R8
 
 Thêm cấu hình sau vào file `gradle.properties`:
 
 ```properties
-android.enableD8.desugaring=true
 android.enableR8.fullMode=true
 android.enableR8.failOnMissingClasses=false
 ```
 
-## Xử lý sự cố
+**Lưu ý**: Cấu hình `android.enableD8.desugaring=true` đã bị loại bỏ từ Android Gradle Plugin 7.0 và không cần thiết nữa vì D8 desugaring được sử dụng mặc định.
+
+## Xử lý lỗi thiếu các lớp (Missing Classes)
+
+Khi sử dụng R8, bạn có thể gặp lỗi thiếu các lớp như sau:
+
+```
+> Task :app:minifyReleaseWithR8
+AGPBI: {"kind":"error","text":"Missing classes detected while running R8. Please add the missing classes or apply additional keep rules that are generated in /path/to/app/build/outputs/mapping/release/missing_rules.txt.","sources":[{}]}
+AGPBI: {"kind":"error","text":"Missing class com.google.errorprone.annotations.CanIgnoreReturnValue (referenced from: com.google.crypto.tink.KeysetManager com.google.crypto.tink.KeysetManager.add(com.google.crypto.tink.KeyTemplate) and 52 other contexts)\nMissing class com.google.errorprone.annotations.CheckReturnValue (referenced from: com.google.crypto.tink.InsecureSecretKeyAccess and 1 other context)\nMissing class com.google.errorprone.annotations.Immutable (referenced from: com.google.crypto.tink.InsecureSecretKeyAccess and 40 other contexts)\nMissing class com.google.errorprone.annotations.RestrictedApi (referenced from: com.google.crypto.tink.aead.AesEaxKey$Builder com.google.crypto.tink.aead.AesEaxKey.builder() and 6 other contexts)","sources":[{}],"tool":"R8"}
+
+> Task :app:minifyReleaseWithR8 FAILED
+```
+
+### Giải pháp
+
+#### 1. Thêm thư viện error-prone-annotations
+
+Thêm thư viện error-prone-annotations vào file `app/build.gradle`:
+
+```gradle
+dependencies {
+    // Các phụ thuộc khác...
+    
+    // Error Prone Annotations (cần thiết cho R8)
+    implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
+}
+```
+
+#### 2. Thêm quy tắc ProGuard cho error-prone-annotations
+
+Thêm các quy tắc sau vào file `app/proguard-rules.pro`:
+
+```proguard
+# Keep Error Prone Annotations
+-dontwarn com.google.errorprone.annotations.**
+-keep class com.google.errorprone.annotations.** { *; }
+-keep @com.google.errorprone.annotations.Immutable class * { *; }
+-keep @com.google.errorprone.annotations.CanIgnoreReturnValue class * { *; }
+-keep @com.google.errorprone.annotations.CheckReturnValue class * { *; }
+-keep @com.google.errorprone.annotations.RestrictedApi class * { *; }
+```
+
+#### 3. Sử dụng file missing_rules.txt
+
+Nếu vẫn gặp lỗi thiếu các lớp khác, bạn có thể sử dụng file `missing_rules.txt` được tạo ra trong thư mục `app/build/outputs/mapping/release/` để thêm các quy tắc ProGuard cần thiết.
+
+## Xử lý sự cố OutOfMemoryError
 
 Nếu vẫn gặp lỗi OutOfMemoryError sau khi áp dụng các giải pháp trên, hãy thử:
 

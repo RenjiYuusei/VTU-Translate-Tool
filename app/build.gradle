@@ -131,6 +131,9 @@ dependencies {
     // Security for EncryptedSharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     
+    // Error Prone Annotations (cần thiết cho R8)
+    implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
+    
     // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
