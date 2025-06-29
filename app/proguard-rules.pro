@@ -26,3 +26,11 @@
 # Keep rules for Joda Time
 -keep class org.joda.time.** { *; }
 -dontwarn org.joda.time.**
+
+# Keep rules for javax.naming
+-keep class javax.naming.** { *; }
+-dontwarn javax.naming.**
+
+# Keep rules for org.ietf.jgss
+-keep class org.ietf.jgss.** { *; }
+-dontwarn org.ietf.jgss.**
