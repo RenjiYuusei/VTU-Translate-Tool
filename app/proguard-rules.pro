@@ -45,8 +45,15 @@
     @com.google.crypto.tink.** *;
 }
 
-# Các quy tắc cho Google API Client, Google HTTP Client và Joda Time đã được loại bỏ
-# vì các thư viện này không còn được sử dụng trong ứng dụng
+# Keep rules for Google API Client and Google HTTP Client
+-keep class com.google.api.client.** { *; }
+-keep class com.google.api.client.http.** { *; }
+-keep class com.google.api.client.http.javanet.** { *; }
+-dontwarn com.google.api.client.**
+
+# Keep rules for Joda Time
+-keep class org.joda.time.** { *; }
+-dontwarn org.joda.time.**
 
 # Keep rules for javax.naming
 -keep class javax.naming.** { *; }

@@ -111,5 +111,10 @@ dependencies {
     // Security for EncryptedSharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     
+    // Google API Client HTTP dependencies for Tink
+    implementation 'com.google.http-client:google-http-client:1.42.3'
+    implementation 'com.google.http-client:google-http-client-gson:1.42.3'
+    implementation 'joda-time:joda-time:2.12.5'
+    
     // Loại bỏ các thư viện testing và debug để giảm kích thước APK
 }
