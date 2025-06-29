@@ -36,7 +36,6 @@ android {
         release {
             // Bật minification với ProGuard thay vì R8
             minifyEnabled true
-            useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
             debuggable false
