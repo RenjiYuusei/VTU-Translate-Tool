@@ -14,3 +14,15 @@
 -keepclassmembers class * {
     @com.google.crypto.tink.** *;
 }
+
+# Keep rules for Google API Client
+-keep class com.google.api.client.** { *; }
+-dontwarn com.google.api.client.**
+
+# Keep rules for Google HTTP Client
+-keep class com.google.http.client.** { *; }
+-dontwarn com.google.http.client.**
+
+# Keep rules for Joda Time
+-keep class org.joda.time.** { *; }
+-dontwarn org.joda.time.**

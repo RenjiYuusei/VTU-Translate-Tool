@@ -100,6 +100,14 @@ dependencies {
     // Security for EncryptedSharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     
+    // Google API Client - required by Google Crypto Tink
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+    implementation 'com.google.http-client:google-http-client:1.43.3'
+    implementation 'com.google.http-client:google-http-client-jackson2:1.43.3'
+    
+    // Joda Time - required by Google Crypto Tink
+    implementation 'joda-time:joda-time:2.12.5'
+    
     // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
