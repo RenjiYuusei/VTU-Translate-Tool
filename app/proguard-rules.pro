@@ -21,7 +21,7 @@
 #-renamesourcefileattribute SourceFile
 
 # Keep Kotlin Serialization
--keepattributes *Annotation*, InnerClasses
+-keepattributes *Annotation*, InnerClasses, Signature, Exceptions, EnclosingMethod
 -dontnote kotlinx.serialization.AnnotationsKt
 
 -keepclassmembers class kotlinx.serialization.json.** {
@@ -30,6 +30,11 @@
 -keepclasseswithmembers class kotlinx.serialization.json.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+# Keep Reflection information for ParameterizedType
+-keepattributes ParameterizedType, GenericSignature
+-keep class java.lang.reflect.** { *; }
+-keep class * implements java.lang.reflect.ParameterizedType
 
 # Keep Retrofit
 -keepattributes Signature, InnerClasses, EnclosingMethod
@@ -44,6 +49,18 @@
 -dontwarn retrofit2.KotlinExtensions$*
 -if interface * { @retrofit2.http.* <methods>; }
 -keep,allowobfuscation interface <1>
+
+# Keep Kotlinx Serialization classes
+-keepclassmembers class ** {
+    @kotlinx.serialization.Serializable <fields>;
+}
+-keepclasseswithmembers class ** {
+    @kotlinx.serialization.Serializable <methods>;
+}
+-keep class ** {
+    @kotlinx.serialization.Serializable *;
+}
+-keep @kotlinx.serialization.Serializable class *
 
 # OkHttp
 -dontwarn okhttp3.**
@@ -64,6 +81,10 @@
 -dontusemixedcaseclassnames
 -dontskipnonpubliclibraryclasses
 -verbose
+
+# Keep Model classes
+-keep class com.vtu.translate.data.model.** { *; }
+-keepclassmembers class com.vtu.translate.data.model.** { *; }
 
 # Tăng hiệu suất R8
 -dontpreverify

@@ -209,6 +209,51 @@ Thêm các quy tắc sau vào file `app/proguard-rules.pro`:
 
 Nếu vẫn gặp lỗi thiếu các lớp khác, bạn có thể sử dụng file `missing_rules.txt` được tạo ra trong thư mục `app/build/outputs/mapping/release/` để thêm các quy tắc ProGuard cần thiết.
 
+## Xử lý lỗi ParameterizedType với R8
+
+Khi sử dụng R8 để tối ưu hóa APK, bạn có thể gặp lỗi liên quan đến reflection và ParameterizedType như sau:
+
+```
+[ERROR] Dịch thất bại key 'api_key_hint'. Lỗi: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType.
+[ERROR] Dịch thất bại key 'app_name'. Lỗi: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType.
+```
+
+Lỗi này xảy ra khi R8 loại bỏ thông tin về generic types và reflection trong quá trình tối ưu hóa, đặc biệt là khi sử dụng Kotlin Serialization.
+
+### Giải pháp
+
+Thêm các quy tắc sau vào file `app/proguard-rules.pro` để giữ lại thông tin về reflection và ParameterizedType:
+
+```proguard
+# Keep Reflection information for ParameterizedType
+-keepattributes ParameterizedType, GenericSignature
+-keep class java.lang.reflect.** { *; }
+-keep class * implements java.lang.reflect.ParameterizedType
+
+# Keep Kotlinx Serialization classes
+-keepclassmembers class ** {
+    @kotlinx.serialization.Serializable <fields>;
+}
+-keepclasseswithmembers class ** {
+    @kotlinx.serialization.Serializable <methods>;
+}
+-keep class ** {
+    @kotlinx.serialization.Serializable *;
+}
+-keep @kotlinx.serialization.Serializable class *
+
+# Keep Model classes
+-keep class com.vtu.translate.data.model.** { *; }
+-keepclassmembers class com.vtu.translate.data.model.** { *; }
+```
+
+Đồng thời, cập nhật các thuộc tính trong phần Kotlin Serialization:
+
+```proguard
+# Keep Kotlin Serialization
+-keepattributes *Annotation*, InnerClasses, Signature, Exceptions, EnclosingMethod
+```
+
 ## Xử lý sự cố OutOfMemoryError
 
 Nếu vẫn gặp lỗi OutOfMemoryError sau khi áp dụng các giải pháp trên, hãy thử:
@@ -224,4 +269,4 @@ Nếu vẫn gặp lỗi OutOfMemoryError sau khi áp dụng các giải pháp tr
 
 ## Kết luận
 
-Việc tối ưu hóa R8 và xử lý lỗi OutOfMemoryError đòi hỏi sự cân bằng giữa hiệu suất build và chất lượng của APK đầu ra. Các giải pháp trên sẽ giúp bạn xử lý hầu hết các trường hợp gặp lỗi OutOfMemoryError khi sử dụng R8.
+Việc tối ưu hóa R8 và xử lý lỗi OutOfMemoryError đòi hỏi sự cân bằng giữa hiệu suất build và chất lượng của APK đầu ra. Các giải pháp trên sẽ giúp bạn xử lý hầu hết các trường hợp gặp lỗi OutOfMemoryError và các vấn đề liên quan đến reflection khi sử dụng R8.
