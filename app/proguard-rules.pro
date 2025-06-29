@@ -1,0 +1,29 @@
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+
+# Keep error-prone annotations
+-dontwarn com.google.errorprone.annotations.**
+-keep class com.google.errorprone.annotations.** { *; }
+
+# Keep specific error-prone annotations that are missing
+-keep class com.google.errorprone.annotations.CanIgnoreReturnValue { *; }
+-keep class com.google.errorprone.annotations.CheckReturnValue { *; }
+-keep class com.google.errorprone.annotations.Immutable { *; }
+-keep class com.google.errorprone.annotations.RestrictedApi { *; }
+
+# Keep crypto.tink classes that use these annotations
+-keep class com.google.crypto.tink.** { *; }
+
+# General rules
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-keep public class * extends java.lang.Exception
+
+# For native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# Keep the R class
+-keep class **.R$* {*;}

@@ -75,7 +75,6 @@ fun SettingsScreen(
 ) {
     val apiKey by viewModel.apiKey.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
-    val appLanguage by viewModel.appLanguage.collectAsState()
     val scrollState = rememberScrollState()
     
     Column(
@@ -97,9 +96,6 @@ fun SettingsScreen(
         
         // Model selection section
         ModelSelectionSection(viewModel, selectedModel)
-        
-        // Language settings section
-        LanguageSettingsSection(viewModel, appLanguage)
         
         // Credits section
         CreditsSection()
@@ -208,134 +204,7 @@ fun ModelSelectionSection(
     }
 }
 
-@Composable
-fun LanguageSettingsSection(
-    viewModel: MainViewModel,
-    currentLanguage: String,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
-    
-    SettingsSectionCard(
-        title = stringResource(R.string.language_settings),
-        icon = R.drawable.ic_translate,
-        modifier = modifier
-    ) {
-        // Language selection dropdown
-        Column {
-            Text(
-                text = stringResource(R.string.app_language),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            
-            // Dropdown for language selection
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { expanded = true },
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = when (currentLanguage) {
-                                "vi" -> stringResource(R.string.language_vietnamese)
-                                "en" -> stringResource(R.string.language_english)
-                                else -> stringResource(R.string.language_vietnamese)
-                            },
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Icon(
-                            imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    // Vietnamese option
-                    DropdownMenuItem(
-                        text = { 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(stringResource(R.string.language_vietnamese))
-                                if (currentLanguage == "vi") {
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        },
-                        onClick = {
-                            viewModel.saveAppLanguage("vi")
-                            expanded = false
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.language_saved),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
-                    
-                    // English option
-                    DropdownMenuItem(
-                        text = { 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(stringResource(R.string.language_english))
-                                if (currentLanguage == "en") {
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        },
-                        onClick = {
-                            viewModel.saveAppLanguage("en")
-                            expanded = false
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.language_saved),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
-                }
-            }
-            
-            Text(
-                text = "* " + stringResource(R.string.language_saved),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-    }
-}
+
 
 @Composable
 fun CreditsSection(modifier: Modifier = Modifier) {
