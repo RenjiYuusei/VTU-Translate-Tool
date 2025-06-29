@@ -204,8 +204,55 @@ Thêm các quy tắc sau vào file `app/proguard-rules.pro`:
 -keep @com.google.errorprone.annotations.CheckReturnValue class * { *; }
 -keep @com.google.errorprone.annotations.RestrictedApi class * { *; }
 ```
+`
+#### 3. Xử lý lỗi thiếu các lớp Google API Client và Joda Time
 
-#### 3. Sử dụng file missing_rules.txt
+Khi sử dụng R8, bạn có thể gặp lỗi thiếu các lớp liên quan đến Google API Client và Joda Time như sau:
+
+```
+> Task :app:minifyReleaseWithR8 
+AGPBI: {"kind":"error","text":"Missing classes detected while running R8. Please add the missing classes or apply additional keep rules that are generated in /home/user/VTU-Translate-Tool/app/build/outputs/mapping/release/missing_rules.txt.","sources":[{}]} 
+AGPBI: {"kind":"error","text":"Missing class com.google.api.client.http.GenericUrl (referenced from: java.lang.String com.google.crypto.tink.util.KeysDownloader.fetchAndCacheData())\nMissing class com.google.api.client.http.HttpHeaders (referenced from: java.lang.String com.google.crypto.tink.util.KeysDownloader.fetchAndCacheData() and 1 other context)\nMissing class com.google.api.client.http.HttpRequest (referenced from: java.lang.String com.google.crypto.tink.util.KeysDownloader.fetchAndCacheData())\nMissing class com.google.api.client.http.HttpRequestFactory (referenced from: java.lang.String com.google.crypto.tink.util.KeysDownloader.fetchAndCacheData())\nMissing class com.google.api.client.http.HttpResponse (referenced from: java.lang.String com.google.crypto.tink.util.KeysDownloader.fetchAndCacheData())\nMissing class com.google.api.client.http.HttpTransport (referenced from: com.google.api.client.http.HttpTransport com.google.crypto.tink.util.KeysDownloader.httpTransport and 1 other context)\nMissing class com.google.api.client.http.javanet.NetHttpTransport$Builder (referenced from: void com.google.crypto.tink.util.KeysDownloader.<clinit>())\nMissing class com.google.api.client.http.javanet.NetHttpTransport (referenced from: com.google.api.client.http.javanet.NetHttpTransport com.google.crypto.tink.util.KeysDownloader.DEFAULT_HTTP_TRANSPORT and 1 other context)\nMissing class org.joda.time.Instant (referenced from: long com.google.crypto.tink.util.KeysDownloader.getCurrentTimeInMillis())","sources":[{}],"tool":"R8"} 
+```
+
+##### Giải pháp
+
+1. **Thêm các thư viện cần thiết vào file `app/build.gradle`**:
+
+```gradle
+dependencies {
+    // Các phụ thuộc khác...
+    
+    // Google API Client (cần thiết cho com.google.crypto.tink)
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+    implementation 'com.google.http-client:google-http-client:1.43.3'
+    implementation 'com.google.http-client:google-http-client-gson:1.43.3'
+    
+    // Joda Time (cần thiết cho com.google.crypto.tink)
+    implementation 'joda-time:joda-time:2.12.5'
+}
+```
+
+2. **Thêm quy tắc ProGuard cho Google API Client và Joda Time vào file `app/proguard-rules.pro`**:
+
+```proguard
+# Keep Google API Client classes
+-dontwarn com.google.api.client.**
+-keep class com.google.api.client.** { *; }
+-keep class com.google.api.client.http.** { *; }
+-keep class com.google.api.client.http.javanet.** { *; }
+
+# Keep Joda Time
+-dontwarn org.joda.time.**
+-keep class org.joda.time.** { *; }
+
+# Keep Google Crypto Tink
+-dontwarn com.google.crypto.tink.**
+-keep class com.google.crypto.tink.** { *; }
+-keep class com.google.crypto.tink.util.KeysDownloader { *; }
+```
+
+#### 4. Sử dụng file missing_rules.txt
 
 Nếu vẫn gặp lỗi thiếu các lớp khác, bạn có thể sử dụng file `missing_rules.txt` được tạo ra trong thư mục `app/build/outputs/mapping/release/` để thêm các quy tắc ProGuard cần thiết.
 

@@ -16,6 +16,7 @@
 - Sửa lỗi thiếu các lớp error-prone-annotations khi sử dụng R8 bằng cách thêm thư viện và quy tắc ProGuard.
 - Loại bỏ cấu hình android.enableD8.desugaring đã bị loại bỏ từ Android Gradle Plugin 7.0.
 - Sửa lỗi "java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType" khi sử dụng R8 bằng cách thêm quy tắc ProGuard để giữ lại thông tin reflection.
+- Sửa lỗi "Missing classes" liên quan đến Google API Client và Joda Time khi sử dụng R8 bằng cách thêm các thư viện phụ thuộc và quy tắc ProGuard tương ứng.
 
 ## Phiên bản 1.1.0 (29-6-2025)
 

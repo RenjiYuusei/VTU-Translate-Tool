@@ -134,6 +134,14 @@ dependencies {
     // Error Prone Annotations (cần thiết cho R8)
     implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
     
+    // Google API Client (cần thiết cho com.google.crypto.tink)
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+    implementation 'com.google.http-client:google-http-client:1.43.3'
+    implementation 'com.google.http-client:google-http-client-gson:1.43.3'
+    
+    // Joda Time (cần thiết cho com.google.crypto.tink)
+    implementation 'joda-time:joda-time:2.12.5'
+    
     // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

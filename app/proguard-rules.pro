@@ -98,5 +98,20 @@
 -keep class com.google.errorprone.annotations.** { *; }
 -keep @com.google.errorprone.annotations.Immutable class * { *; }
 -keep @com.google.errorprone.annotations.CanIgnoreReturnValue class * { *; }
+
+# Keep Google API Client classes
+-dontwarn com.google.api.client.**
+-keep class com.google.api.client.** { *; }
+-keep class com.google.api.client.http.** { *; }
+-keep class com.google.api.client.http.javanet.** { *; }
+
+# Keep Joda Time
+-dontwarn org.joda.time.**
+-keep class org.joda.time.** { *; }
+
+# Keep Google Crypto Tink
+-dontwarn com.google.crypto.tink.**
+-keep class com.google.crypto.tink.** { *; }
+-keep class com.google.crypto.tink.util.KeysDownloader { *; }
 -keep @com.google.errorprone.annotations.CheckReturnValue class * { *; }
 -keep @com.google.errorprone.annotations.RestrictedApi class * { *; }
