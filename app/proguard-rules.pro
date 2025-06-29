@@ -27,6 +27,18 @@
 -keep class org.joda.time.** { *; }
 -dontwarn org.joda.time.**
 
+# Keep javax.naming classes
+-keep class javax.naming.** { *; }
+-dontwarn javax.naming.**
+
+# Keep org.ietf.jgss classes
+-keep class org.ietf.jgss.** { *; }
+-dontwarn org.ietf.jgss.**
+
+# Keep Apache HTTP classes
+-keep class org.apache.http.** { *; }
+-dontwarn org.apache.http.**
+
 # General rules
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable

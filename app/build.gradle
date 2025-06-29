@@ -109,5 +109,9 @@ dependencies {
     // Joda Time (để giải quyết lỗi thiếu lớp)
     implementation 'joda-time:joda-time:2.12.5'
     implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
+    
+    // Apache HttpClient (để giải quyết lỗi thiếu lớp)
+    implementation 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
+    implementation 'org.apache.httpcomponents:httpcore:4.4.16'
 
 }
