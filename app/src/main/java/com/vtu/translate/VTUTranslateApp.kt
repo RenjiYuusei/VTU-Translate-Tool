@@ -3,6 +3,7 @@ package com.vtu.translate
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.vtu.translate.data.repository.GroqRepository
 import com.vtu.translate.data.repository.LogRepository
@@ -47,7 +48,7 @@ class VtuTranslateApp : Application() {
     }
     
     /**
-     * Update the app locale based on the selected language
+     * Update the app locale based on the selected language using modern API
      */
     private fun updateLocale(languageCode: String) {
         val locale = when (languageCode) {
@@ -56,13 +57,9 @@ class VtuTranslateApp : Application() {
             else -> Locale("vi") // Default to Vietnamese
         }
         
-        Locale.setDefault(locale)
-        
-        val config = Configuration(resources.configuration)
-        config.setLocale(locale)
-        
-        createConfigurationContext(config)
-        resources.updateConfiguration(config, resources.displayMetrics)
+        // Tạo danh sách locale và áp dụng cho ứng dụng
+        val localeList = LocaleListCompat.create(locale)
+        AppCompatDelegate.setApplicationLocales(localeList)
     }
     
     /**

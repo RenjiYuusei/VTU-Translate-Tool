@@ -30,37 +30,18 @@ jobs:
         run: |
           echo "org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8" >> gradle.properties
 
-      # Tạo keystore cho việc ký APK
-      - name: Create keystore file
+      # Sử dụng keystore từ repository
+      - name: Set up keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
-        shell: bash
-
-      # Tạo file keystore.properties
-      - name: Create keystore properties
-        run: |
-          echo "storeFile=../keystore.jks" > keystore.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+          echo "Sử dụng Yuusei.jks từ repository"
 
       # Sử dụng Gradle từ môi trường GitHub Actions
       - name: Build with Gradle
         run: gradle build
 
-      # Build cả debug và release APK
-      - name: Build Debug APK
-        run: gradle assembleDebug
-
+      # Chỉ build bản release APK
       - name: Build Release APK
         run: gradle assembleRelease
-
-      # Upload debug APK
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
 
       # Upload release APK
       - name: Upload Release APK
