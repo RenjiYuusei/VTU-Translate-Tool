@@ -41,10 +41,13 @@ jobs:
     - name: Verify Yuusei.jks exists
       run: |
         if [ -f "Yuusei.jks" ]; then
-          echo "✅ Yuusei.jks found"
+          echo "✅ Yuusei.jks found in project root"
           ls -la Yuusei.jks
         else
-          echo "❌ Yuusei.jks not found!"
+          echo "❌ Yuusei.jks not found in project root!"
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
           exit 1
         fi
         

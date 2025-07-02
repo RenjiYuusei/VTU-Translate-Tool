@@ -44,12 +44,21 @@ android {
                     keyPassword 'Yuusei123@'
                 } else {
                     // Try from root directory for CI
-                    def rootStoreFile = file("Yuusei.jks")
+                    def rootStoreFile = file("../Yuusei.jks")
                     if (rootStoreFile.exists()) {
                         storeFile rootStoreFile
                         storePassword 'Yuusei123@'
                         keyAlias 'key0'
                         keyPassword 'Yuusei123@'
+                    } else {
+                        // Last fallback - check from project root (for CI)
+                        def ciStoreFile = rootProject.file("Yuusei.jks")
+                        if (ciStoreFile.exists()) {
+                            storeFile ciStoreFile
+                            storePassword 'Yuusei123@'
+                            keyAlias 'key0'
+                            keyPassword 'Yuusei123@'
+                        }
                     }
                 }
             }
