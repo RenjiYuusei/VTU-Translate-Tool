@@ -1,0 +1,226 @@
+name: Smart Android CI with JDK Fallback
+
+on:
+  push:
+    branches-ignore: 
+      - 'gh-pages'
+  pull_request: ~
+
+jobs:
+  detect-and-build:
+    name: "Build on ${{ github.ref_name }}"
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.continue-on-error }}
+    strategy:
+      matrix:
+        java-version: [17, 21]
+        include:
+          - java-version: 17
+            continue-on-error: true
+            jdk-id: jdk17
+          - java-version: 21
+            continue-on-error: false
+            jdk-id: jdk21
+        exclude: 
+          - java-version: 21
+            when: steps.detect-project.outputs.build-success == 'true'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Auto-detect project setup
+      id: detect-project
+      run: |
+        # Phát hiện cấu trúc dự án
+        if [ -f "app/build.gradle" ]; then
+          echo "ANDROID_ROOT=app" >> $GITHUB_OUTPUT
+        elif [ -f "android/app/build.gradle" ]; then
+          echo "ANDROID_ROOT=android/app" >> $GITHUB_OUTPUT
+        else
+          echo "::error::No Android project detected!"
+          exit 1
+        fi
+
+        # Phát hiện build type từ commit message
+        if [[ "$(git log -1 --pretty=%B)" == *"[release]"* ]]; then
+          echo "BUILD_TYPE=release" >> $GITHUB_OUTPUT
+        else
+          echo "BUILD_TYPE=debug" >> $GITHUB_OUTPUT
+        fi
+
+        # Phát hiện JDK ưu tiên từ gradle.properties
+        if [ -f "gradle.properties" ]; then
+          if grep -q "javaToolchainVersion=21" gradle.properties; then
+            echo "PREFERRED_JDK=21" >> $GITHUB_OUTPUT
+          elif grep -q "javaToolchainVersion=17" gradle.properties; then
+            echo "PREFERRED_JDK=17" >> $GITHUB_OUTPUT
+          fi
+        fi
+
+        # Đánh dấu build chưa thành công
+        echo "build-success=false" >> $GITHUB_OUTPUT
+
+    - name: Detect preferred JDK
+      id: detect-jdk
+      run: |
+        if [ "${{ matrix.jdk-id }}" == "jdk17" ] && [ "${{ steps.detect-project.outputs.PREFERRED_JDK }}" == "21" ]; then
+          echo "skip-build=true" >> $GITHUB_OUTPUT
+          echo "Skipping JDK 17 build because preferred JDK is 21"
+        elif [ "${{ matrix.jdk-id }}" == "jdk21" ] && [ "${{ steps.detect-project.outputs.PREFERRED_JDK }}" == "17" ]; then
+          echo "skip-build=true" >> $GITHUB_OUTPUT
+          echo "Skipping JDK 21 build because preferred JDK is 17"
+        else
+          echo "skip-build=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Setup JDK ${{ matrix.java-version }}
+      if: steps.detect-jdk.outputs.skip-build == 'false'
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Cache Gradle dependencies
+      if: steps.detect-jdk.outputs.skip-build == 'false'
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ matrix.java-version }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-${{ matrix.java-version }}-
+          ${{ runner.os }}-gradle-
+
+    - name: Setup Android SDK
+      if: steps.detect-jdk.outputs.skip-build == 'false'
+      uses: android-actions/setup-android@v3
+
+    - name: Accept SDK licenses
+      if: steps.detect-jdk.outputs.skip-build == 'false'
+      run: |
+        yes | sdkmanager --licenses || true
+        sdkmanager "platform-tools" "platforms;android-34"
+
+    - name: Grant gradlew permissions
+      if: steps.detect-jdk.outputs.skip-build == 'false'
+      run: chmod +x ./gradlew
+
+    - name: Build with JDK ${{ matrix.java-version }}
+      if: steps.detect-jdk.outputs.skip-build == 'false'
+      run: |
+        ./gradlew assemble${{ steps.detect-project.outputs.BUILD_TYPE }}
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+
+    - name: Mark build success
+      if: success() && steps.detect-jdk.outputs.skip-build == 'false'
+      run: |
+        echo "build-success=true" >> $GITHUB_OUTPUT
+      id: build-result
+
+    - name: Upload APK (JDK ${{ matrix.java-version }})
+      if: success() && steps.detect-jdk.outputs.skip-build == 'false'
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-${{ steps.detect-project.outputs.BUILD_TYPE }}-jdk${{ matrix.java-version }}
+        path: ${{ steps.detect-project.outputs.ANDROID_ROOT }}/build/outputs/apk/${{ steps.detect-project.outputs.BUILD_TYPE }}/*.apk
+        retention-days: 7
+
+    - name: Auto JDK Fallback Notification
+      if: ${{ failure() && matrix.jdk-id == 'jdk17' && steps.detect-jdk.outputs.skip-build == 'false' }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `⚠️ Build with JDK 17 failed! Trying JDK 21 as fallback...`
+          })
+
+  final-result:
+    name: Build Summary
+    needs: detect-and-build
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Collect build results
+      id: collect-results
+      run: |
+        # Lấy kết quả từ các job
+        success_jdk=""
+        build_type=""
+        
+        # Kiểm tra kết quả từng job matrix
+        for result in ${{ toJSON(needs.detect-and-build.outputs) }}; do
+          if [[ "$result" == *"build-success=true"* ]]; then
+            # Lấy JDK version từ job name
+            jdk_version=$(echo "$result" | grep -oP 'jdk\d+')
+            success_jdk=${jdk_version//jdk/}
+            build_type=$(echo "$result" | grep -oP 'BUILD_TYPE=\K\w+')
+          fi
+        done
+        
+        if [ -n "$success_jdk" ]; then
+          echo "final-success=true" >> $GITHUB_OUTPUT
+          echo "success-jdk=$success_jdk" >> $GITHUB_OUTPUT
+          echo "build-type=$build_type" >> $GITHUB_OUTPUT
+        else
+          echo "final-success=false" >> $GITHUB_OUTPUT
+          echo "::error::All build attempts failed!"
+          exit 1
+        fi
+
+    - name: Download successful artifact
+      if: steps.collect-results.outputs.final-success == 'true'
+      uses: actions/download-artifact@v3
+      with:
+        name: app-${{ steps.collect-results.outputs.build-type }}-jdk${{ steps.collect-results.outputs.success-jdk }}
+
+    - name: Rename final APK
+      if: steps.collect-results.outputs.final-success == 'true'
+      run: |
+        # Đổi tên file APK
+        mv *.apk final-app-${{ steps.collect-results.outputs.build-type }}.apk
+
+    - name: Upload final APK
+      if: steps.collect-results.outputs.final-success == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: final-app
+        path: final-app-${{ steps.collect-results.outputs.build-type }}.apk
+        retention-days: 14
+
+    - name: Build Success Notification
+      if: steps.collect-results.outputs.final-success == 'true'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `✅ Build succeeded with JDK ${{ steps.collect-results.outputs.success-jdk }}! 
+            Download: [final-app-${{ steps.collect-results.outputs.build-type }}.apk](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            Build type: ${{ steps.collect-results.outputs.build-type }}`
+          })
+
+    - name: Build Failure Notification
+      if: steps.collect-results.outputs.final-success == 'false'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `❌ All build attempts failed! 
+            Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+          })
