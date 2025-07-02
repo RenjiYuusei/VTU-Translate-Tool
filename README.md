@@ -1,5 +1,5 @@
 # VTU Translate Tool
-[![Build APK](https://github.com/segeyy/VTUProject1/actions/workflows/android.yml/badge.svg)](https://github.com/segeyy/VTUProject1/actions/workflows/android.yml)
+
 ## Giới thiệu
 
 VTU Translate Tool là một ứng dụng Android giúp dịch các file strings.xml trong các dự án Android từ tiếng Anh sang tiếng Việt. Ứng dụng sử dụng API của Groq để thực hiện việc dịch tự động với model Meta Llama 4 Scout 17B mặc định, đồng thời cung cấp giao diện người dùng thân thiện để xem và chỉnh sửa các bản dịch. Ứng dụng có khả năng nhận diện thông minh các chuỗi không cần dịch như tên package, class, URL và format specifiers, đồng thời cho phép người dùng kiểm soát quá trình dịch với nút "Dừng Dịch".
