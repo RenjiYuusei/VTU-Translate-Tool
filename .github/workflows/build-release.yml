@@ -38,17 +38,17 @@ jobs:
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
         
-    - name: Verify Yuusei.jks exists
+    - name: Setup keystore (if secrets available)
       run: |
-        if [ -f "Yuusei.jks" ]; then
-          echo "✅ Yuusei.jks found in project root"
-          ls -la Yuusei.jks
+        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > Yuusei.jks
+          echo "storeFile=Yuusei.jks" > keystore.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+          echo "✅ Release keystore configured"
         else
-          echo "❌ Yuusei.jks not found in project root!"
-          echo "Current directory: $(pwd)"
-          echo "Files in current directory:"
-          ls -la
-          exit 1
+          echo "⚠️ No keystore secrets found, will use debug signing"
         fi
         
     - name: Build release APK
