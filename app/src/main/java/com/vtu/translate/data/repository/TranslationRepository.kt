@@ -122,20 +122,43 @@ class TranslationRepository(
      * @return True if the string is a special non-translatable string
      */
     private fun isSpecialNonTranslatableString(value: String): Boolean {
-        // Improved checks to avoid false positives
-        val techRegexPatterns = listOf(
+        val trimmedValue = value.trim()
+        
+        // Empty strings should not be translated
+        if (trimmedValue.isEmpty()) {
+            return true
+        }
+        
+        // Check if the entire string is purely technical (no natural language)
+        val purelyTechnicalPatterns = listOf(
             "^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$", // Package names like androidx.startup
-            "^[A-Z][a-zA-Z0-9]*$", // Class names like MainActivity
-            "^[a-zA-Z0-9_]+$", // Simple technical identifiers
-            "^(http|https)://[a-zA-Z0-9./?_=-]+$", // URLs
-            "^[a-zA-Z_][a-zA-Z0-9_]*$", // Variable or method names
-            "^[0-9]+$" // Pure numbers
+            "^[A-Z][a-zA-Z0-9]*$", // Class names like MainActivity (but only if it's the entire string)
+            "^[a-zA-Z0-9_-]+$", // Simple technical identifiers (underscore/hyphen only)
+            "^(http|https)://[a-zA-Z0-9./?_=-]+$", // Complete URLs
+            "^[0-9]+$", // Pure numbers
+            "^[0-9]+\\.[0-9]+(\\.[0-9]+)*$", // Version numbers like 1.0.0
+            "^#[0-9a-fA-F]{6}$", // Hex color codes
+            "^[a-zA-Z_][a-zA-Z0-9_]*$" // Variable names (but only if short and no spaces)
         )
-
-        return techRegexPatterns.any { value.matches(Regex(it)) } ||
-               value.contains(Regex("\\{\\w*\\}")) || // Placeholders in curly braces like {0}
-               value.contains(Regex("%[sdfx]")) || // Format specifiers like %s, %d
-               value.trim().isEmpty() // Empty strings
+        
+        // Check if the string matches purely technical patterns AND is relatively short
+        // This prevents longer descriptive text from being marked as non-translatable
+        val isPurelyTechnical = purelyTechnicalPatterns.any { trimmedValue.matches(Regex(it)) } && 
+                                trimmedValue.length <= 50 && 
+                                !trimmedValue.contains(" ") // No spaces in purely technical strings
+        
+        // Check for strings that are only placeholders or format specifiers
+        val isOnlyPlaceholders = trimmedValue.matches(Regex("^[%{}\\s\\d\\w]*$")) &&
+                                (trimmedValue.contains(Regex("\\{\\w*\\}")) || 
+                                 trimmedValue.contains(Regex("%[sdfx]")))
+        
+        // Special case: if string contains both natural language AND placeholders/format specifiers,
+        // it should be translatable (like the canta_description example)
+        val hasNaturalLanguage = trimmedValue.split("\\s+").size >= 3 || // Has at least 3 words
+                                trimmedValue.contains(Regex("[.!?]")) || // Contains sentence punctuation
+                                trimmedValue.length > 50 // Long strings are likely descriptive
+        
+        return isPurelyTechnical || (isOnlyPlaceholders && !hasNaturalLanguage)
     }
     
     /**
