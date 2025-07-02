@@ -118,7 +118,8 @@ class MainViewModel(
     fun startTranslation() {
         viewModelScope.launch {
             val targetLang = targetLanguage.value
-            translationRepository.translateAll(targetLang)
+            val speed = translationSpeed.value
+            translationRepository.translateAll(targetLang, 0, speed)
         }
     }
     

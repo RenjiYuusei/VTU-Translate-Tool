@@ -1,26 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.VTUTranslateTool" parent="android:Theme.Material.NoActionBar">
-        <!-- Primary colors -->
-        <item name="android:colorPrimary">#6200EE</item>
-        <item name="android:colorPrimaryVariant">#3700B3</item>
-        <item name="android:colorOnPrimary">#FFFFFF</item>
-        
-        <!-- Secondary colors -->
-        <item name="android:colorSecondary">#03DAC6</item>
-        <item name="android:colorSecondaryVariant">#018786</item>
-        <item name="android:colorOnSecondary">#000000</item>
-        
-        <!-- Background colors -->
-        <item name="android:colorBackground">#FFFFFF</item>
-        <item name="android:colorOnBackground">#000000</item>
-        
-        <!-- Surface colors -->
-        <item name="android:colorSurface">#FFFFFF</item>
-        <item name="android:colorOnSurface">#000000</item>
-        
-        <!-- Status bar -->
-        <item name="android:statusBarColor">#6200EE</item>
-        <item name="android:windowLightStatusBar">false</item>
-    </style>
+    <style name="Theme.VTUTranslateTool" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

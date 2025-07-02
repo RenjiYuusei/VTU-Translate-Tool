@@ -26,6 +26,13 @@ class IconManager(private val context: Context) {
         val targetIcon = when (themeMode) {
             ThemeMode.LIGHT -> ICON_LIGHT
             ThemeMode.DARK -> ICON_DARK
+            ThemeMode.SYSTEM -> {
+                // For system mode, check current system theme and use appropriate icon
+                val isSystemDark = android.content.res.Configuration().uiMode and 
+                    android.content.res.Configuration.UI_MODE_NIGHT_MASK == 
+                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+                if (isSystemDark) ICON_DARK else ICON_LIGHT
+            }
         }
         
         // Disable all icons first

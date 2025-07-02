@@ -77,8 +77,10 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
     suspend fun translateText(text: String, targetLanguage: String = "vi"): Result<String> {
         return try {
             val apiKey = preferencesRepository.apiKey.first()
+            Log.d("GroqRepository", "API Key length: ${apiKey.length}")
             if (apiKey.isBlank()) {
-                return Result.failure(Exception("API Key is not set"))
+                Log.e("GroqRepository", "API Key is blank or empty")
+                return Result.failure(Exception("API Key không được thiết lập. Vui lòng nhập API key trong Settings."))
             }
             
             val model = preferencesRepository.selectedModel.first()
@@ -124,17 +126,35 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) {
                         return Result.failure(Exception("No response from API"))
                     }
                 } catch (e: HttpException) {
-                    // Handle HTTP 429 Too Many Requests
-                    if (e.code() == 429) {
-                        lastException = Exception("Rate limit exceeded (HTTP 429). Retrying...")
-                        Log.w("GroqRepository", "HTTP 429 received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
-                        
-                        // Exponential backoff: 1s, 2s, 4s
-                        val delayMs = (1000L * Math.pow(2.0, retryCount.toDouble())).toLong()
-                        delay(delayMs)
-                        retryCount++
-                    } else {
-                        return Result.failure(e)
+                    val errorBody = e.response()?.errorBody()?.string()
+                    Log.e("GroqRepository", "HTTP ${e.code()}: $errorBody")
+                    
+                    // Handle specific HTTP errors
+                    when (e.code()) {
+                        401 -> {
+                            return Result.failure(Exception("API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key trong Settings."))
+                        }
+                        429 -> {
+                            lastException = Exception("Đạt giới hạn tốc độ API (HTTP 429). Đang thử lại...")
+                            Log.w("GroqRepository", "HTTP 429 received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
+                            
+                            // Exponential backoff: 1s, 2s, 4s
+                            val delayMs = (1000L * Math.pow(2.0, retryCount.toDouble())).toLong()
+                            delay(delayMs)
+                            retryCount++
+                        }
+                        403 -> {
+                            return Result.failure(Exception("Không có quyền truy cập API. Vui lòng kiểm tra API key."))
+                        }
+                        404 -> {
+                            return Result.failure(Exception("Model không tồn tại hoặc không khả dụng."))
+                        }
+                        500, 502, 503, 504 -> {
+                            return Result.failure(Exception("Lỗi máy chủ Groq (HTTP ${e.code()}). Vui lòng thử lại sau."))
+                        }
+                        else -> {
+                            return Result.failure(Exception("Lỗi HTTP ${e.code()}: ${errorBody ?: e.message()}"))
+                        }
                     }
                 } catch (e: Exception) {
                     return Result.failure(e)

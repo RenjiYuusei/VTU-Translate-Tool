@@ -122,19 +122,19 @@ class TranslationRepository(
      * @return True if the string is a special non-translatable string
      */
     private fun isSpecialNonTranslatableString(value: String): Boolean {
-        // Check for package names, class names, or other technical strings
-        return value.matches(Regex("^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$")) || // Package names like androidx.startup
-               value.matches(Regex("^[A-Z][a-zA-Z0-9]*$")) || // Class names like MainActivity
-               value.matches(Regex("^[a-zA-Z0-9_]+$")) || // Simple technical identifiers
-               value.startsWith("http://") || value.startsWith("https://") || // URLs
-               value.startsWith("androidx.") || // Specific package prefixes
-               value.startsWith("android.") ||
-               value.startsWith("java.") ||
-               value.startsWith("kotlin.") ||
-               value.contains("@") || // Email addresses or resource references
-               value.matches(Regex(".*\\{.*\\}.*")) || // Strings with placeholders like {0}
-               value.matches(Regex(".*%[sdfx].*")) || // Format specifiers like %s, %d
-               value.matches(Regex("^[0-9]+$")) || // Pure numbers
+        // Improved checks to avoid false positives
+        val techRegexPatterns = listOf(
+            "^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$", // Package names like androidx.startup
+            "^[A-Z][a-zA-Z0-9]*$", // Class names like MainActivity
+            "^[a-zA-Z0-9_]+$", // Simple technical identifiers
+            "^(http|https)://[a-zA-Z0-9./?_=-]+$", // URLs
+            "^[a-zA-Z_][a-zA-Z0-9_]*$", // Variable or method names
+            "^[0-9]+$" // Pure numbers
+        )
+
+        return techRegexPatterns.any { value.matches(Regex(it)) } ||
+               value.contains(Regex("\\{\\w*\\}")) || // Placeholders in curly braces like {0}
+               value.contains(Regex("%[sdfx]")) || // Format specifiers like %s, %d
                value.trim().isEmpty() // Empty strings
     }
     
@@ -187,7 +187,7 @@ class TranslationRepository(
     /**
      * Translate all string resources
      */
-    suspend fun translateAll(targetLanguage: String = "vi", continueFromIndex: Int = 0): Result<Unit> {
+    suspend fun translateAll(targetLanguage: String = "vi", continueFromIndex: Int = 0, translationSpeed: Int = 3): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
                 _isTranslating.value = true
@@ -202,14 +202,25 @@ class TranslationRepository(
                 val startIndex = maxOf(0, continueFromIndex)
                 val remainingCount = resources.size - startIndex
                 
-                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [${groqRepository.getSelectedModel()}] sang ngôn ngữ '$targetLanguage'.")
+                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [${groqRepository.getSelectedModel()}] sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
                 
                 // Create a mutable copy of the resources
                 val updatedResources = resources.toMutableList()
                 
-                // Batch size and delay to avoid rate limiting
-                val batchSize = 5
-                val delayBetweenBatchesMs = 1000L // 1 second delay between batches
+                // Calculate batch size and delay based on translation speed
+                // Speed 1 (Slow): batch=2, delay=3000ms
+                // Speed 2 (Medium-slow): batch=3, delay=2000ms  
+                // Speed 3 (Normal): batch=5, delay=1000ms
+                // Speed 4 (Fast): batch=7, delay=500ms
+                // Speed 5 (Very fast): batch=10, delay=200ms
+                val (batchSize, delayBetweenBatchesMs) = when (translationSpeed) {
+                    1 -> Pair(2, 3000L) // Slow
+                    2 -> Pair(3, 2000L) // Medium-slow
+                    3 -> Pair(5, 1000L) // Normal (default)
+                    4 -> Pair(7, 500L)  // Fast
+                    5 -> Pair(10, 200L) // Very fast
+                    else -> Pair(5, 1000L) // Default to normal
+                }
                 
                 // Process in batches, starting from the specified index
                 for (batchStart in startIndex until resources.size step batchSize) {
@@ -328,10 +339,9 @@ class TranslationRepository(
                 
                 val folderName = languageFolderMap[targetLanguage] ?: "values-$targetLanguage"
                 
-                // Save to Downloads folder
-                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val vtuDir = File(downloadsDir, "VTU-Translate")
-                val resDir = File(vtuDir, "res")
+                // Create directory structure in app's external files directory
+                val appExternalDir = context.getExternalFilesDir(null)
+                val resDir = File(appExternalDir, "res")
                 val valuesDir = File(resDir, folderName)
                 
                 if (!valuesDir.exists()) {
@@ -459,17 +469,11 @@ class TranslationRepository(
     }
     
     /**
-     * Translate text to specified target language
+     * Translate text to specified target language using selected API provider
      */
     private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result<String> {
-        // Use the existing translateText method from GroqRepository with target language
-        return groqRepository.translateText(text, targetLanguage)
+        // Use the selected API provider from preferences
+return groqRepository.translateText(text, targetLanguage)
     }
     
-    /**
-     * Get the currently selected model
-     */
-    private suspend fun getSelectedModel(): String {
-        return groqRepository.getSelectedModel()
-    }
 }

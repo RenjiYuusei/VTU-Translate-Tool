@@ -31,19 +31,27 @@ class MainActivity : ComponentActivity() {
         MainViewModel.Factory(application as VtuTranslateApp)
     }
     
+    private var currentLanguage: String = ""
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         try {
-            // Apply saved language setting
+            // Apply saved language setting on startup only
             lifecycleScope.launch {
                 try {
                     val savedLanguage = viewModel.appLanguage.first()
-                    applyLanguage(savedLanguage)
+                    if (currentLanguage != savedLanguage) {
+                        currentLanguage = savedLanguage
+                        applyLanguageConfiguration(savedLanguage)
+                    }
                 } catch (e: Exception) {
                     android.util.Log.e("MainActivity", "Error applying saved language", e)
                     // Apply default language if error occurs
-                    applyLanguage("vi")
+                    if (currentLanguage != "vi") {
+                        currentLanguage = "vi"
+                        applyLanguageConfiguration("vi")
+                    }
                 }
             }
             
@@ -51,7 +59,10 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 try {
                     viewModel.appLanguage.collect { languageCode ->
-                        applyLanguage(languageCode)
+                        if (currentLanguage != languageCode) {
+                            currentLanguage = languageCode
+                            applyLanguage(languageCode)
+                        }
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("MainActivity", "Error listening for language changes", e)
@@ -96,7 +107,36 @@ class MainActivity : ComponentActivity() {
     }
     
     /**
-     * Apply language setting to the app
+     * Apply language configuration without recreating activity
+     */
+    private fun applyLanguageConfiguration(languageCode: String) {
+        val locale = when (languageCode) {
+            "system" -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    resources.configuration.locales.get(0)
+                } else {
+                    @Suppress("DEPRECATION")
+                    resources.configuration.locale
+                }
+            }
+            "vi" -> Locale("vi")
+            "en" -> Locale("en")
+            else -> Locale("en") // Default to English
+        }
+        
+        // Set default locale
+        Locale.setDefault(locale)
+        
+        // Update configuration without recreating
+        val config = Configuration(resources.configuration)
+        config.setLocale(locale)
+        
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(config, resources.displayMetrics)
+    }
+    
+    /**
+     * Apply language setting to the app with recreation
      */
     private fun applyLanguage(languageCode: String) {
         val locale = when (languageCode) {
@@ -113,16 +153,25 @@ class MainActivity : ComponentActivity() {
             else -> Locale("en") // Default to English
         }
         
+        // Set default locale
         Locale.setDefault(locale)
+        
+        // Update configuration
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             createConfigurationContext(config)
+            // Update resources
+            @Suppress("DEPRECATION")
+            resources.updateConfiguration(config, resources.displayMetrics)
         } else {
             @Suppress("DEPRECATION")
             resources.updateConfiguration(config, resources.displayMetrics)
         }
+        
+        // Recreate activity to apply language changes
+        recreate()
     }
 }
 

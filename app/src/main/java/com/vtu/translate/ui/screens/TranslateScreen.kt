@@ -81,20 +81,22 @@ import kotlinx.coroutines.launch
  * @return True nếu chuỗi là chuỗi đặc biệt không cần dịch
  */
 private fun isSpecialNonTranslatableString(value: String): Boolean {
-    // Kiểm tra tên gói, tên lớp, hoặc các chuỗi kỹ thuật khác
-    return value.matches(Regex("^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$")) || // Tên gói như androidx.startup
-           value.matches(Regex("^[A-Z][a-zA-Z0-9]*$")) || // Tên lớp như MainActivity
-           value.matches(Regex("^[a-zA-Z0-9_]+$")) || // Định danh kỹ thuật đơn giản
-           value.startsWith("http://") || value.startsWith("https://") || // URL
-           value.startsWith("androidx.") || // Tiền tố gói cụ thể
-           value.startsWith("android.") ||
-           value.startsWith("java.") ||
-           value.startsWith("kotlin.") ||
-           value.contains("@") || // Địa chỉ email hoặc tham chiếu tài nguyên
-           value.matches(Regex(".*\\{.*\\}.*")) || // Chuỗi có placeholder như {0}
-           value.matches(Regex(".*%[sdfx].*")) || // Định dạng như %s, %d
-           value.matches(Regex("^[0-9]+$")) || // Số thuần túy
-           value.trim().isEmpty() // Chuỗi rỗng
+    // Cải tiến quy tắc để tránh false positive
+    return when {
+        value.trim().isEmpty() -> true // Chuỗi rỗng
+        value.matches(Regex("^[0-9]+$")) -> true // Số thuần túy
+        value.matches(Regex("^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+){2,}$")) -> true // Package names có ít nhất 3 phần như androidx.startup.provider
+        value.matches(Regex("^(http|https)://[a-zA-Z0-9./?_=-]+$")) -> true // URLs hoàn chỉnh
+        value.startsWith("androidx.") && value.indexOf(".", 9) != -1 -> true // Androidx packages cụ thể
+        value.startsWith("android.") && value.indexOf(".", 8) != -1 -> true // Android packages cụ thể
+        value.startsWith("java.") && value.indexOf(".", 5) != -1 -> true // Java packages cụ thể
+        value.startsWith("kotlin.") && value.indexOf(".", 7) != -1 -> true // Kotlin packages cụ thể
+        value.contains(Regex("\\{\\w*\\}")) -> true // Placeholders như {0}, {name}
+        value.contains(Regex("%[sdfx]")) -> true // Format specifiers như %s, %d
+        value.matches(Regex("^[A-Z][A-Z_0-9]*$")) -> true // Constants như ACTION_MAIN
+        value.matches(Regex("^[a-z][a-z0-9_]*$")) && value.length <= 6 -> true // Short technical identifiers
+        else -> false
+    }
 }
 
 @Composable
@@ -104,233 +106,13 @@ fun TranslateScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
+    
     val stringResources by viewModel.stringResources.collectAsState()
     val isTranslating by viewModel.isTranslating.collectAsState()
     val selectedFileName by viewModel.selectedFileName.collectAsState()
     val apiKey by viewModel.apiKey.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val targetLanguage by viewModel.targetLanguage.collectAsState()
-
-    // File picker launcher
-    val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            coroutineScope.launch {
-                val app = context.applicationContext as com.vtu.translate.VtuTranslateApp
-                val result = app.translationRepository.parseStringsXml(context, uri)
-
-                if (result.isFailure) {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.error_invalid_file),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // File selection button
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            ElevatedButton(
-                onClick = { filePickerLauncher.launch("text/xml") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                elevation = ButtonDefaults.elevatedButtonElevation(
-                    defaultElevation = 4.dp,
-                    pressedElevation = 8.dp
-                )
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_file),
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = stringResource(R.string.select_file),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-
-        if (selectedFileName != null) {
-            Text(
-                text = selectedFileName ?: "",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.no_file_selected),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
-        // Translation actions
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Row with main buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                // Start translation button
-                Button(
-                    onClick = { viewModel.startTranslation() },
-                    enabled = !isTranslating && stringResources.isNotEmpty(),
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_start_translate),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Dịch", fontSize = 14.sp)
-                }
-
-                // Pause/Resume button
-                Button(
-                    onClick = { viewModel.pauseResumeTranslation() },
-                    enabled = isTranslating,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isTranslating) MaterialTheme.colorScheme.secondary
-                                       else MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (isTranslating) R.drawable.ic_stop_translate
-                            else R.drawable.ic_start_translate
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (isTranslating) "Dừng" else "Tiếp tục", fontSize = 14.sp)
-                }
-            }
-
-            // Row with additional buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { viewModel.saveTranslatedFile() },
-                    enabled = stringResources.any { it.translatedValue.isNotBlank() },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_save),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Lưu", fontSize = 13.sp)
-                }
-
-                // Clear button
-                OutlinedButton(
-                    onClick = { viewModel.clearAll() },
-                    enabled = stringResources.isNotEmpty(),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_clear),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Dọn sạch", fontSize = 13.sp)
-                }
-            }
-        }
-
-        // Progress indicator
-        val translationProgress = stringResources.count { it.translatedValue.isNotBlank() } / stringResources.size.toFloat()
-        LinearProgressIndicator(
-            progress = translationProgress,
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // LazyColumn for string resources
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
-            items(stringResources) { stringResource ->
-                StringResourceItem(
-                    resource = stringResource,
-                    onTranslatedValueChange = { viewModel.updateStringResource(it) },
-                    targetLanguage = targetLanguage
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun StringResourceItem(
-    resource: StringResource,
-    onTranslatedValueChange: (StringResource) -> Unit,
-    targetLanguage: String = "en"
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (resource.translatedValue.isNotBlank()) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Text(resource.name, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = resource.translatedValue,
-                onValueChange = {
-                    val updatedResource = resource.copy(translatedValue = it)
-                    onTranslatedValueChange(updatedResource)
-                },
-                label = { Text("Dịch sang $targetLanguage") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                )
-            )
-        }
-    }
-}
     
     // File picker launcher
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -358,39 +140,26 @@ fun StringResourceItem(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // File selection button with gradient background
-        ElevatedCard(
+        // Compact file selection button
+        Button(
+            onClick = { filePickerLauncher.launch("text/xml") },
             modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            ElevatedButton(
-                onClick = { filePickerLauncher.launch("text/xml") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                elevation = ButtonDefaults.elevatedButtonElevation(
-                    defaultElevation = 4.dp,
-                    pressedElevation = 8.dp
-                )
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_file),
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 12.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = stringResource(R.string.select_file),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            Icon(
+                painter = painterResource(id = R.drawable.ic_file),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+            Text(
+                text = stringResource(R.string.select_file),
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
         
         // Show selected file name
