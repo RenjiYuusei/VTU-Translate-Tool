@@ -38,20 +38,31 @@ jobs:
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
         
-    - name: Verify Yuusei.jks exists
+    - name: Setup keystore from secrets
       run: |
-        if [ -f "Yuusei.jks" ]; then
-          echo "✅ Yuusei.jks found in project root"
-          ls -la Yuusei.jks
+        echo "Setting up keystore from GitHub secrets..."
+        
+        # Decode base64 keystore
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > Yuusei.jks
+        
+        # Verify keystore was created successfully
+        if [ -f "Yuusei.jks" ] && [ -s "Yuusei.jks" ]; then
+          echo "✅ Keystore file created successfully"
+          echo "Keystore size: $(stat -c%s Yuusei.jks) bytes"
         else
-          echo "❌ Yuusei.jks not found in project root!"
-          echo "Current directory: $(pwd)"
-          echo "Files in current directory:"
-          ls -la
+          echo "❌ Failed to create keystore file or file is empty"
           exit 1
         fi
         
+        echo "✅ Release signing configured with secrets"
+        echo "Keystore setup completed successfully"
+        
     - name: Build release APK
+      env:
+        KEYSTORE_FILE: Yuusei.jks
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: ./gradlew assembleRelease --stacktrace
       
     - name: Get commit info

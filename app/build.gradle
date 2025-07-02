@@ -28,39 +28,18 @@ android {
             
             if (keystorePropsFile.exists()) {
                 keystoreProps.load(new FileInputStream(keystorePropsFile))
-                storeFile file(keystoreProps['storeFile'])
+                // Resolve storeFile path relative to root project
+                storeFile rootProject.file(keystoreProps['storeFile'])
                 storePassword keystoreProps['storePassword']
                 keyAlias keystoreProps['keyAlias']
                 keyPassword keystoreProps['keyPassword']
             } else {
-                // Use Yuusei.jks directly
-                def storeFilePath = "../Yuusei.jks"
-                def storeFileObj = file(storeFilePath)
-                
-                if (storeFileObj.exists()) {
-                    storeFile storeFileObj
-                    storePassword 'Yuusei123@'
-                    keyAlias 'key0'
-                    keyPassword 'Yuusei123@'
-                } else {
-                    // Try from root directory for CI
-                    def rootStoreFile = file("../Yuusei.jks")
-                    if (rootStoreFile.exists()) {
-                        storeFile rootStoreFile
-                        storePassword 'Yuusei123@'
-                        keyAlias 'key0'
-                        keyPassword 'Yuusei123@'
-                    } else {
-                        // Last fallback - check from project root (for CI)
-                        def ciStoreFile = rootProject.file("Yuusei.jks")
-                        if (ciStoreFile.exists()) {
-                            storeFile ciStoreFile
-                            storePassword 'Yuusei123@'
-                            keyAlias 'key0'
-                            keyPassword 'Yuusei123@'
-                        }
-                    }
-                }
+                // Use local keystore
+                def rootStoreFile = rootProject.file("Yuusei.jks")
+                storeFile rootStoreFile
+                storePassword 'Yuusei123@'
+                keyAlias 'key0'
+                keyPassword 'Yuusei123@'
             }
         }
     }
@@ -74,15 +53,7 @@ android {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            
-            // Only apply signing config if it's properly configured
-            def releaseSigningConfig = signingConfigs.release
-            if (releaseSigningConfig.storeFile != null) {
-                signingConfig releaseSigningConfig
-            } else {
-                // In CI environment without keystore, use debug signing
-                signingConfig signingConfigs.debug
-            }
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
