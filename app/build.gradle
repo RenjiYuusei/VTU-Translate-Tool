@@ -23,10 +23,38 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('../Yuusei.jks')
-            storePassword 'Yuusei123@'
-            keyAlias 'key0'
-            keyPassword 'Yuusei123@'
+            def keystorePropsFile = rootProject.file("keystore.properties")
+            def keystoreProps = new Properties()
+            
+            if (keystorePropsFile.exists()) {
+                keystoreProps.load(new FileInputStream(keystorePropsFile))
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            } else {
+                // Check if we're in CI environment
+                def isCI = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
+                
+                if (isCI) {
+                    // For CI, we'll use null values and handle this in buildTypes
+                    storeFile null
+                    storePassword null
+                    keyAlias null
+                    keyPassword null
+                } else {
+                    // Local fallback
+                    def storeFilePath = "../Yuusei.jks"
+                    def storeFileObj = file(storeFilePath)
+                    
+                    if (storeFileObj.exists()) {
+                        storeFile storeFileObj
+                        storePassword 'Yuusei123@'
+                        keyAlias 'key0'
+                        keyPassword 'Yuusei123@'
+                    }
+                }
+            }
         }
     }
 
@@ -39,7 +67,15 @@ android {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            
+            // Only apply signing config if it's properly configured
+            def releaseSigningConfig = signingConfigs.release
+            if (releaseSigningConfig.storeFile != null) {
+                signingConfig releaseSigningConfig
+            } else {
+                // In CI environment without keystore, use debug signing
+                signingConfig signingConfigs.debug
+            }
         }
     }
     compileOptions {

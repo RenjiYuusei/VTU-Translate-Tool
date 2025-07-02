@@ -11,6 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
+    env:
+      CI: true
+      GITHUB_ACTIONS: true
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
