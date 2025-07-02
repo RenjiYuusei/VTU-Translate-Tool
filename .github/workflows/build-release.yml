@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Release APK
 
 on:
   push:
@@ -10,10 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    env:
-      CI: true
-      GITHUB_ACTIONS: true
     
     steps:
     - name: Checkout repository
@@ -42,9 +38,16 @@ jobs:
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
         
-    - name: Build debug APK
-      run: ./gradlew assembleDebug --stacktrace
-      
+    - name: Verify Yuusei.jks exists
+      run: |
+        if [ -f "Yuusei.jks" ]; then
+          echo "✅ Yuusei.jks found"
+          ls -la Yuusei.jks
+        else
+          echo "❌ Yuusei.jks not found!"
+          exit 1
+        fi
+        
     - name: Build release APK
       run: ./gradlew assembleRelease --stacktrace
       
@@ -55,17 +58,9 @@ jobs:
         echo "commit_msg=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
         echo "build_date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
         
-    - name: Rename APK files
+    - name: Rename APK file
       run: |
-        mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/VTU-Translate-debug-${{ steps.commit.outputs.short_sha }}.apk
         mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
-        
-    - name: Upload debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: VTU-Translate-debug-${{ steps.commit.outputs.build_date }}
-        path: app/build/outputs/apk/debug/VTU-Translate-debug-${{ steps.commit.outputs.short_sha }}.apk
-        retention-days: 30
         
     - name: Upload release APK
       uses: actions/upload-artifact@v4
@@ -76,14 +71,14 @@ jobs:
         
     - name: Build summary
       run: |
-        echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "## 🚀 Release Build Summary" >> $GITHUB_STEP_SUMMARY
         echo "- **Commit**: ${{ steps.commit.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Message**: ${{ steps.commit.outputs.commit_msg }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Build Date**: ${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Signed**: ✅ Yes (using Yuusei.jks)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Download APK" >> $GITHUB_STEP_SUMMARY
-        echo "APK files are available in the **Artifacts** section of this workflow run." >> $GITHUB_STEP_SUMMARY
+        echo "### 📱 Download Release APK" >> $GITHUB_STEP_SUMMARY
+        echo "The signed release APK is available in the **Artifacts** section." >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- Debug APK: VTU-Translate-debug-${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Release APK: VTU-Translate-release-${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Release APK**: VTU-Translate-release-${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY

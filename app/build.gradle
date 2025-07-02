@@ -33,22 +33,20 @@ android {
                 keyAlias keystoreProps['keyAlias']
                 keyPassword keystoreProps['keyPassword']
             } else {
-                // Check if we're in CI environment
-                def isCI = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
+                // Use Yuusei.jks directly
+                def storeFilePath = "../Yuusei.jks"
+                def storeFileObj = file(storeFilePath)
                 
-                if (isCI) {
-                    // For CI, we'll use null values and handle this in buildTypes
-                    storeFile null
-                    storePassword null
-                    keyAlias null
-                    keyPassword null
+                if (storeFileObj.exists()) {
+                    storeFile storeFileObj
+                    storePassword 'Yuusei123@'
+                    keyAlias 'key0'
+                    keyPassword 'Yuusei123@'
                 } else {
-                    // Local fallback
-                    def storeFilePath = "../Yuusei.jks"
-                    def storeFileObj = file(storeFilePath)
-                    
-                    if (storeFileObj.exists()) {
-                        storeFile storeFileObj
+                    // Try from root directory for CI
+                    def rootStoreFile = file("Yuusei.jks")
+                    if (rootStoreFile.exists()) {
+                        storeFile rootStoreFile
                         storePassword 'Yuusei123@'
                         keyAlias 'key0'
                         keyPassword 'Yuusei123@'
