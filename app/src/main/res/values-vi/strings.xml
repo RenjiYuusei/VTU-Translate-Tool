@@ -36,7 +36,7 @@
     <string name="api_settings_subtitle">Groq API Key, Model AI</string>
     <string name="api_key_title">Groq API Key</string>
     <string name="get_api_key">Lấy API Key</string>
-    <string name="api_key_saved">Đã lưu API Key</string>
+    <string name="api_key_saved">Lưu API Key</string>
     <string name="select_model">Chọn Model AI</string>
     <string name="model_group_meta">Meta</string>
     <string name="model_group_deepseek_meta">Deepseek &amp; Meta</string>
@@ -48,12 +48,20 @@
     <string name="theme_mode">Chế độ giao diện</string>
     <string name="theme_light">Sáng</string>
     <string name="theme_dark">Tối</string>
+    <string name="theme_system">Hệ thống</string>
     <string name="language_settings">Cài đặt ngôn ngữ</string>
     <string name="app_language">Ngôn ngữ ứng dụng</string>
     <string name="app_language_en">Ngôn ngữ ứng dụng</string>
     <string name="language_vietnamese">Tiếng Việt</string>
     <string name="language_english">Tiếng Anh</string>
     <string name="language_saved">Đã lưu cài đặt ngôn ngữ</string>
+    
+    <!-- Additional missing strings for better Vietnamese support -->
+    <string name="enabled">Đã bật</string>
+    <string name="disabled">Đã tắt</string>
+    <string name="speed">Tốc độ</string>
+    <string name="save">Lưu</string>
+    <string name="system_language">Theo hệ thống</string>
     
     <!-- Log Screen -->
     <string name="copy_log">Sao chép Log</string>

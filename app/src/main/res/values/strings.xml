@@ -48,6 +48,7 @@
     <string name="theme_mode">Theme Mode</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
     <string name="app_language">App Language</string>
     
     <!-- Translation Settings -->
@@ -69,6 +70,13 @@
     <string name="language_vietnamese">Vietnamese</string>
     <string name="language_english">English</string>
     <string name="language_saved">Language settings saved</string>
+    
+    <!-- Additional missing strings for better UI support -->
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="speed">Speed</string>
+    <string name="save">Save</string>
+    <string name="system_language">System</string>
     
     <!-- Log Screen -->
     <string name="copy_log">Copy Log</string>

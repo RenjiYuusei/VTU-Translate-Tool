@@ -76,9 +76,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import com.vtu.translate.R
 import com.vtu.translate.ui.viewmodel.MainViewModel
 import com.vtu.translate.data.model.ThemeMode
+
+/**
+ * Validate if the API key is a valid Groq API key format
+ */
+fun isValidGroqApiKey(apiKey: String): Boolean {
+    // Groq API keys start with "gsk_" and have a specific length
+    return apiKey.startsWith("gsk_") && apiKey.length >= 20
+}
 
 @Composable
 fun SettingsScreen(
@@ -119,16 +129,16 @@ fun SettingsScreen(
             onClick = { expandedApiSettings = !expandedApiSettings }
         )
         
-        AnimatedVisibility(
-            visible = expandedApiSettings,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ApiKeySection(viewModel, apiKey)
-                ModelSelectionSection(viewModel, selectedModel)
+            AnimatedVisibility(
+                visible = expandedApiSettings,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ApiKeySection(viewModel, apiKey)
+                    ModelSelectionSection(viewModel, selectedModel)
+                }
             }
-        }
         
         // Interface Settings
         SettingsCategoryItem(
@@ -219,13 +229,6 @@ fun SettingsHeader() {
             modifier = Modifier.weight(1f)
         )
         
-        // Search icon
-        Icon(
-            painter = painterResource(id = R.drawable.ic_log),
-            contentDescription = "Search",
-            tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(24.dp)
-        )
     }
 }
 
@@ -240,25 +243,32 @@ fun SettingsCategoryItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable { onClick() }
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon container
+            // Icon container with gradient background
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(8.dp)
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -266,7 +276,7 @@ fun SettingsCategoryItem(
                     painter = painterResource(id = icon),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
             
@@ -278,8 +288,8 @@ fun SettingsCategoryItem(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Medium
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
@@ -289,8 +299,8 @@ fun SettingsCategoryItem(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
@@ -299,7 +309,7 @@ fun SettingsCategoryItem(
             Icon(
                 imageVector = Icons.Default.ArrowForward,
                 contentDescription = "Navigate",
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -338,6 +348,24 @@ fun ApiKeySection(
             // Save API Key button
             ElevatedButton(
                 onClick = {
+                    if (apiKeyInput.isBlank()) {
+                        Toast.makeText(
+                            context,
+                            "Vui lòng nhập API key",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@ElevatedButton
+                    }
+                    
+                    if (!isValidGroqApiKey(apiKeyInput)) {
+                        Toast.makeText(
+                            context,
+                            "API key không đúng định dạng Groq (phải bắt đầu với gsk_)",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@ElevatedButton
+                    }
+                    
                     viewModel.saveApiKey(apiKeyInput)
                     Toast.makeText(
                         context,
@@ -371,11 +399,11 @@ fun ApiKeySection(
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_file),
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
+            Icon(
+                painter = painterResource(id = R.drawable.ic_key),
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
                 Text(stringResource(R.string.get_api_key))
             }
         }
@@ -399,7 +427,7 @@ fun ModelSelectionSection(
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + slideOutVertically()
         ) {
-            // Model dropdown
+            // Model dropdown for Groq API
             ModelSelectionDropdown(
                 selectedModel = selectedModel,
                 onModelSelected = { viewModel.saveSelectedModel(it) }
@@ -435,7 +463,7 @@ fun InterfaceSettingsSection(
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = if (isDarkTheme) "Enabled" else "Disabled",
+                    text = stringResource(if (isDarkTheme) R.string.enabled else R.string.disabled),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
@@ -522,6 +550,28 @@ fun CreditsSection(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(top = 8.dp)
         )
+        
+        // GitHub link button
+        ElevatedButton(
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/RenjiYuusei/VTU-Translate-Tool"))
+                context.startActivity(intent)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.elevatedButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_github),
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text("GitHub Repository")
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
         
         // Discord link button
         ElevatedButton(
@@ -1012,3 +1062,4 @@ fun ModelSelectionDropdown(
         }
     }
 }
+

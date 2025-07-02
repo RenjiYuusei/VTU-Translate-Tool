@@ -3,13 +3,13 @@ package com.vtu.translate.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Modern Color Palette - Dark Theme
-val Primary80 = Color(0xFF4F46E5) // Indigo 600
-val PrimaryContainer80 = Color(0xFF312E81) // Indigo 800
+val Primary80 = Color(0xFF8B5CF6) // Violet 500 - Better contrast for dark theme
+val PrimaryContainer80 = Color(0xFF3730A3) // Indigo 800
 val Secondary80 = Color(0xFF06B6D4) // Cyan 500
-val SecondaryContainer80 = Color(0xFF164E63) // Cyan 800
-val Tertiary80 = Color(0xFF10B981) // Emerald 500
-val TertiaryContainer80 = Color(0xFF065F46) // Emerald 800
-val Error80 = Color(0xFFEF4444) // Red 500
+val SecondaryContainer80 = Color(0xFF155E75) // Cyan 800
+val Tertiary80 = Color(0xFFF59E0B) // Amber 500
+val TertiaryContainer80 = Color(0xFFB45309) // Amber 700
+val Error80 = Color(0xFFF87171) // Red 400
 val Background80 = Color(0xFF0F172A) // Slate 900
 val Surface80 = Color(0xFF1E293B) // Slate 800
 val SurfaceVariant80 = Color(0xFF334155) // Slate 700
