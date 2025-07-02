@@ -16,133 +16,130 @@ jobs:
       android-root: ${{ steps.detect-project.outputs.ANDROID_ROOT }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Auto-detect project setup
-      id: detect-project
-      run: |
-        # Phát hiện cấu trúc dự án
-        if [ -f "app/build.gradle" ]; then
-          echo "ANDROID_ROOT=app" >> $GITHUB_OUTPUT
-          echo "APK_PATH=app/build/outputs/apk" >> $GITHUB_OUTPUT
-        elif [ -f "android/app/build.gradle" ]; then
-          echo "ANDROID_ROOT=android/app" >> $GITHUB_OUTPUT
-          echo "APK_PATH=android/app/build/outputs/apk" >> $GITHUB_OUTPUT
-        else
-          echo "::error::No Android project detected!"
-          exit 1
-        fi
+      - name: Auto-detect project setup
+        id: detect-project
+        run: |
+          # Phát hiện cấu trúc dự án
+          if [ -f "app/build.gradle" ]; then
+            echo "ANDROID_ROOT=app" >> $GITHUB_OUTPUT
+            echo "APK_PATH=app/build/outputs/apk" >> $GITHUB_OUTPUT
+          elif [ -f "android/app/build.gradle" ]; then
+            echo "ANDROID_ROOT=android/app" >> $GITHUB_OUTPUT
+            echo "APK_PATH=android/app/build/outputs/apk" >> $GITHUB_OUTPUT
+          else
+            echo "::error::No Android project detected!"
+            exit 1
+          fi
 
-        # Phát hiện build type từ commit message
-        BUILD_TYPE="debug"
-        COMMIT_MSG="$(git log -1 --pretty=%B)"
-        if [[ "$COMMIT_MSG" == *"[release]"* ]]; then
-          BUILD_TYPE="release"
-        fi
-        echo "BUILD_TYPE=$BUILD_TYPE" >> $GITHUB_OUTPUT
-        echo "Detected build type: $BUILD_TYPE"
+          # Phát hiện build type từ commit message
+          BUILD_TYPE="debug"
+          COMMIT_MSG="$(git log -1 --pretty=%B)"
+          if [[ "$COMMIT_MSG" == *"[release]"* ]]; then
+            BUILD_TYPE="release"
+          fi
+          echo "BUILD_TYPE=$BUILD_TYPE" >> $GITHUB_OUTPUT
+          echo "Detected build type: $BUILD_TYPE"
 
-        # Kiểm tra xem có Gradle Wrapper không
-        if [ -f "gradlew" ]; then
-          echo "HAS_WRAPPER=true" >> $GITHUB_OUTPUT
-          echo "Gradle Wrapper detected"
-        else
-          echo "HAS_WRAPPER=false" >> $GITHUB_OUTPUT
-          echo "No Gradle Wrapper found"
-        fi
+          # Kiểm tra xem có Gradle Wrapper không
+          if [ -f "gradlew" ]; then
+            echo "HAS_WRAPPER=true" >> $GITHUB_OUTPUT
+            echo "Gradle Wrapper detected"
+          else
+            echo "HAS_WRAPPER=false" >> $GITHUB_OUTPUT
+            echo "No Gradle Wrapper found"
+          fi
 
-    - name: Setup JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: 17
-        distribution: 'temurin'
-        cache: 'gradle'
+      - name: Setup JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: 'gradle'
 
-    # Cài đặt Gradle 8.14.2 cố định
-    - name: Install Gradle 8.14.2
-      id: install-gradle
-      run: |
-        GRADLE_VERSION="8.14.2"
-        echo "Using Gradle version: $GRADLE_VERSION"
-        
-        # Tải và cài đặt Gradle
-        wget -q https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip
-        sudo unzip -d /opt/gradle gradle-$GRADLE_VERSION-bin.zip
-        echo "GRADLE_HOME=/opt/gradle/gradle-$GRADLE_VERSION" >> $GITHUB_ENV
-        echo "/opt/gradle/gradle-$GRADLE_VERSION/bin" >> $GITHUB_PATH
-        
-        # Xuất phiên bản để sử dụng sau này
-        echo "GRADLE_VERSION=$GRADLE_VERSION" >> $GITHUB_ENV
-        echo "GRADLE_VERSION=$GRADLE_VERSION" >> $GITHUB_OUTPUT
+      - name: Install Gradle 8.14.2
+        id: install-gradle
+        run: |
+          GRADLE_VERSION="8.14.2"
+          echo "Using Gradle version: $GRADLE_VERSION"
+          
+          # Tải và cài đặt Gradle
+          wget -q https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip
+          sudo unzip -d /opt/gradle gradle-$GRADLE_VERSION-bin.zip
+          echo "GRADLE_HOME=/opt/gradle/gradle-$GRADLE_VERSION" >> $GITHUB_ENV
+          echo "/opt/gradle/gradle-$GRADLE_VERSION/bin" >> $GITHUB_PATH
+          
+          # Xuất phiên bản để sử dụng sau này
+          echo "GRADLE_VERSION=$GRADLE_VERSION" >> $GITHUB_ENV
+          echo "GRADLE_VERSION=$GRADLE_VERSION" >> $GITHUB_OUTPUT
 
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-17-${{ steps.install-gradle.outputs.GRADLE_VERSION }}-${{ hashFiles('**/*.gradle*') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-17-${{ steps.install-gradle.outputs.GRADLE_VERSION }}-
-          ${{ runner.os }}-gradle-17-
-          ${{ runner.os }}-gradle-
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-17-${{ steps.install-gradle.outputs.GRADLE_VERSION }}-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-17-${{ steps.install-gradle.outputs.GRADLE_VERSION }}-
+            ${{ runner.os }}-gradle-17-
+            ${{ runner.os }}-gradle-
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-    - name: Accept SDK licenses
-      run: |
-        yes | sdkmanager --licenses || true
-        sdkmanager "platform-tools" "platforms;android-34"
+      - name: Accept SDK licenses
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-34"
 
-    # Build song song cả Gradle toàn cục và Wrapper
-    - name: Build with Global Gradle
-      id: build-global
-      run: |
-        echo "Building with Global Gradle $GRADLE_VERSION"
-        gradle assemble${{ steps.detect-project.outputs.BUILD_TYPE }} --stacktrace --info
-        
-        # Đổi tên thư mục kết quả
-        ORIG_PATH="${{ steps.detect-project.outputs.APK_PATH }}"
-        NEW_PATH="${ORIG_PATH}-global"
-        mv "$ORIG_PATH" "$NEW_PATH"
-        echo "Global APK path: $NEW_PATH"
-        echo "GLOBAL_APK_PATH=$NEW_PATH" >> $GITHUB_ENV
+      - name: Build with Global Gradle
+        id: build-global
+        run: |
+          echo "Building with Global Gradle $GRADLE_VERSION"
+          gradle assemble${{ steps.detect-project.outputs.BUILD_TYPE }} --stacktrace --info
+          
+          # Đổi tên thư mục kết quả
+          ORIG_PATH="${{ steps.detect-project.outputs.APK_PATH }}"
+          NEW_PATH="${ORIG_PATH}-global"
+          mv "$ORIG_PATH" "$NEW_PATH"
+          echo "Global APK path: $NEW_PATH"
+          echo "GLOBAL_APK_PATH=$NEW_PATH" >> $GITHUB_ENV
 
-    - name: Build with Gradle Wrapper
-      id: build-wrapper
-      if: steps.detect-project.outputs.HAS_WRAPPER == 'true'
-      run: |
-        echo "Building with Gradle Wrapper"
-        chmod +x ./gradlew
-        ./gradlew assemble${{ steps.detect-project.outputs.BUILD_TYPE }} --stacktrace --info
-        
-        # Đổi tên thư mục kết quả
-        ORIG_PATH="${{ steps.detect-project.outputs.APK_PATH }}"
-        NEW_PATH="${ORIG_PATH}-wrapper"
-        mv "$ORIG_PATH" "$NEW_PATH"
-        echo "Wrapper APK path: $NEW_PATH"
-        echo "WRAPPER_APK_PATH=$NEW_PATH" >> $GITHUB_ENV
+      - name: Build with Gradle Wrapper
+        id: build-wrapper
+        if: steps.detect-project.outputs.HAS_WRAPPER == 'true'
+        run: |
+          echo "Building with Gradle Wrapper"
+          chmod +x ./gradlew
+          ./gradlew assemble${{ steps.detect-project.outputs.BUILD_TYPE }} --stacktrace --info
+          
+          # Đổi tên thư mục kết quả
+          ORIG_PATH="${{ steps.detect-project.outputs.APK_PATH }}"
+          NEW_PATH="${ORIG_PATH}-wrapper"
+          mv "$ORIG_PATH" "$NEW_PATH"
+          echo "Wrapper APK path: $NEW_PATH"
+          echo "WRAPPER_APK_PATH=$NEW_PATH" >> $GITHUB_ENV
 
-    # Tải lên APK từ cả hai phương pháp build
-    - name: Upload Global APK
-      if: success() && steps.build-global.outcome == 'success'
-      uses: actions/upload-artifact@v4
-      with:
-        name: global-apk
-        path: "${{ env.GLOBAL_APK_PATH }}/${{ steps.detect-project.outputs.BUILD_TYPE }}/*.apk"
-        retention-days: 7
+      - name: Upload Global APK
+        if: success() && steps.build-global.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: global-apk
+          path: "${{ env.GLOBAL_APK_PATH }}/${{ steps.detect-project.outputs.BUILD_TYPE }}/*.apk"
+          retention-days: 7
 
-    - name: Upload Wrapper APK
-      if: success() && steps.detect-project.outputs.HAS_WRAPPER == 'true' && steps.build-wrapper.outcome == 'success'
-      uses: actions/upload-artifact@v4
-      with:
-        name: wrapper-apk
-        path: "${{ env.WRAPPER_APK_PATH }}/${{ steps.detect-project.outputs.BUILD_TYPE }}/*.apk"
-        retention-days: 7
+      - name: Upload Wrapper APK
+        if: success() && steps.detect-project.outputs.HAS_WRAPPER == 'true' && steps.build-wrapper.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wrapper-apk
+          path: "${{ env.WRAPPER_APK_PATH }}/${{ steps.detect-project.outputs.BUILD_TYPE }}/*.apk"
+          retention-days: 7
 
   final-result:
     name: Build Summary
@@ -151,83 +148,65 @@ jobs:
     if: always()
     
     steps:
-    - name: Check build status
-      id: check-success
-      run: |
-        if [[ '${{ needs.detect-and-build.result }}' == 'success' ]]; then
-          echo "final-success=true" >> $GITHUB_OUTPUT
-          echo "build-type=${{ needs.detect-and-build.outputs.build-type }}" >> $GITHUB_OUTPUT
-          echo "has-wrapper=${{ needs.detect-and-build.outputs.has-wrapper }}" >> $GITHUB_OUTPUT
-        else
-          echo "final-success=false" >> $GITHUB_OUTPUT
-          echo "::error::Build failed!"
+      - name: Check build status
+        id: check-success
+        run: |
+          if [[ '${{ needs.detect-and-build.result }}' == 'success' ]]; then
+            echo "final-success=true" >> $GITHUB_OUTPUT
+            echo "build-type=${{ needs.detect-and-build.outputs.build-type }}" >> $GITHUB_OUTPUT
+            echo "has-wrapper=${{ needs.detect-and-build.outputs.has-wrapper }}" >> $GITHUB_OUTPUT
+          else
+            echo "final-success=false" >> $GITHUB_OUTPUT
+            echo "::error::Build failed!"
+            exit 1
+          fi
+
+      - name: Download global artifact
+        if: steps.check-success.outputs.final-success == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: global-apk
+          path: downloaded-global
+
+      - name: Download wrapper artifact
+        if: steps.check-success.outputs.final-success == 'true' && steps.check-success.outputs.has-wrapper == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: wrapper-apk
+          path: downloaded-wrapper
+
+      - name: Prepare final APKs
+        if: steps.check-success.outputs.final-success == 'true'
+        run: |
+          mkdir -p final-apks
+          mv downloaded-global/*.apk final-apks/final-app-global.apk
+          
+          if [ "${{ steps.check-success.outputs.has-wrapper }}" == 'true' ]; then
+            mv downloaded-wrapper/*.apk final-apks/final-app-wrapper.apk
+          fi
+          
+          echo "Final APKs prepared:"
+          ls -lh final-apks/
+
+      - name: Upload final APKs
+        if: steps.check-success.outputs.final-success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-apps
+          path: final-apks
+          retention-days: 14
+
+      - name: Build Success Notification
+        if: steps.check-success.outputs.final-success == 'true'
+        run: |
+          echo "✅ Dual build succeeded using Gradle ${{ env.GRADLE_VERSION }}!"
+          echo "Global Gradle Build: Available at final-apks/final-app-global.apk"
+          if [ "${{ steps.check-success.outputs.has-wrapper }}" == 'true' ]; then
+            echo "Gradle Wrapper Build: Available at final-apks/final-app-wrapper.apk"
+          fi
+
+      - name: Build Failure Notification
+        if: steps.check-success.outputs.final-success == 'false'
+        run: |
+          echo "❌ Dual build failed! Check logs for details."
           exit 1
-        fi
-
-    - name: Download global artifact
-      if: steps.check-success.outputs.final-success == 'true'
-      uses: actions/download-artifact@v4
-      with:
-        name: global-apk
-        path: downloaded-global
-
-    - name: Download wrapper artifact
-      if: steps.check-success.outputs.final-success == 'true' && steps.check-success.outputs.has-wrapper == 'true'
-      uses: actions/download-artifact@v4
-      with:
-        name: wrapper-apk
-        path: downloaded-wrapper
-
-    - name: Prepare final APKs
-      if: steps.check-success.outputs.final-success == 'true'
-      run: |
-        mkdir -p final-apks
-        mv downloaded-global/*.apk final-apks/final-app-global.apk
-        
-        if [ "${{ steps.check-success.outputs.has-wrapper }}" == 'true' ]; then
-          mv downloaded-wrapper/*.apk final-apks/final-app-wrapper.apk
-        fi
-        
-        echo "Final APKs prepared:"
-        ls -lh final-apks/
-
-    - name: Upload final APKs
-      if: steps.check-success.outputs.final-success == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: final-apps
-        path: final-apks
-        retention-days: 14
-
-    - name: Build Success Notification
-      if: steps.check-success.outputs.final-success == 'true'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const globalLink = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/final-apps/final-app-global.apk`;
-          let comment = `✅ Dual build succeeded using Gradle ${{ env.GRADLE_VERSION }}!\n\n`;
-          comment += `**Global Gradle Build:** [Download APK](${globalLink})\n`;
-          
-          if ('${{ steps.check-success.outputs.has-wrapper }}' === 'true') {
-            const wrapperLink = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/final-apps/final-app-wrapper.apk`;
-            comment += `**Gradle Wrapper Build:** [Download APK](${wrapperLink})\n`;
-          }
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          })
-
-    - name: Build Failure Notification
-      if: steps.check-success.outputs.final-success == 'false'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `❌ Dual build failed! Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
-          })
