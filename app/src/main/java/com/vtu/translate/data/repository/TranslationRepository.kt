@@ -362,9 +362,10 @@ class TranslationRepository(
                 
                 val folderName = languageFolderMap[targetLanguage] ?: "values-$targetLanguage"
                 
-                // Create directory structure in app's external files directory
-                val appExternalDir = context.getExternalFilesDir(null)
-                val resDir = File(appExternalDir, "res")
+                // Create directory structure in Downloads/VTU-Translate
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val vtuTranslateDir = File(downloadsDir, "VTU-Translate")
+                val resDir = File(vtuTranslateDir, "res")
                 val valuesDir = File(resDir, folderName)
                 
                 if (!valuesDir.exists()) {
