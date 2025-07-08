@@ -20,7 +20,7 @@ class TranslationService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
     private var translationJob: Job? = null
     private lateinit var notificationBuilder: NotificationCompat.Builder
-    private lateinit var notificationManager: NotificationManager
+    private var notificationManager: NotificationManager? = null
     
     companion object {
         const val ACTION_STOP = "com.vtu.translate.ACTION_STOP"
@@ -123,7 +123,7 @@ class TranslationService : Service() {
                     // Translation completed or stopped
                     notificationBuilder.setContentText(getString(R.string.translation_complete))
                         .setProgress(0, 0, false)
-                    notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+                    notificationManager?.notify(NOTIFICATION_ID, notificationBuilder.build())
                     delay(2000) // Show completion for 2 seconds
                     stopSelf()
                     return@collect
@@ -156,6 +156,10 @@ class TranslationService : Service() {
         val app = application as VtuTranslateApp
         app.translationRepository.stopTranslation()
         translationJob?.cancel()
+        
+        // Ensure notification is removed
+        notificationManager?.cancel(NOTIFICATION_ID)
+        
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
@@ -173,7 +177,7 @@ class TranslationService : Service() {
             .setProgress(total, current, false)
         
         // Update notification
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+        notificationManager?.notify(NOTIFICATION_ID, notificationBuilder.build())
     }
     
     override fun onDestroy() {

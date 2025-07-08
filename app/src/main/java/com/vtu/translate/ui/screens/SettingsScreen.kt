@@ -99,7 +99,6 @@ fun SettingsScreen(
 ) {
     val apiKey by viewModel.apiKey.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
-    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
     val translationSpeed by viewModel.translationSpeed.collectAsState()
     val context = LocalContext.current
@@ -155,7 +154,7 @@ fun SettingsScreen(
             enter = expandVertically() + fadeIn(),
             exit = shrinkVertically() + fadeOut()
         ) {
-            InterfaceSettingsSection(viewModel, isDarkTheme, themeMode)
+            InterfaceSettingsSection(viewModel, themeMode)
         }
         
         // Translation Settings
@@ -487,7 +486,6 @@ fun ModelSelectionSection(
 @Composable
 fun InterfaceSettingsSection(
     viewModel: MainViewModel,
-    isDarkTheme: Boolean,
     themeMode: ThemeMode,
     modifier: Modifier = Modifier
 ) {
@@ -498,31 +496,6 @@ fun InterfaceSettingsSection(
         icon = R.drawable.ic_interface,
         modifier = modifier
     ) {
-        // Dark theme switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = stringResource(R.string.dark_theme),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    text = stringResource(if (isDarkTheme) R.string.enabled else R.string.disabled),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            }
-            Switch(
-                checked = isDarkTheme,
-                onCheckedChange = { viewModel.saveDarkTheme(it) }
-            )
-        }
-        
-        Divider(modifier = Modifier.padding(vertical = 16.dp))
-        
         // Theme mode dropdown
         ThemeModeDropdown(
             selectedThemeMode = themeMode,

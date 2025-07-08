@@ -12,13 +12,19 @@ android {
         applicationId "com.vtu.translate"
         minSdk = 24
         targetSdk = 34
-        versionCode 7
-        versionName "1.2.1"
+        versionCode 8
+        versionName "1.2.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+        
+        // Reduce APK size by excluding unnecessary resources
+        resConfigs "en", "vi"
+        
+        // Enable multidex for better performance
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -50,10 +56,14 @@ android {
             debuggable true
         }
         release {
-            minifyEnabled false
-            shrinkResources = false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro', 'r8-config.pro'
             signingConfig = signingConfigs.release
+            // Optimize APK size
+            crunchPngs false
+            // Enable more aggressive optimizations
+            zipAlignEnabled true
         }
     }
     compileOptions {
@@ -75,11 +85,27 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            excludes += '/META-INF/DEPENDENCIES'
+            excludes += '/META-INF/LICENSE'
+            excludes += '/META-INF/LICENSE.txt'
+            excludes += '/META-INF/NOTICE'
+            excludes += '/META-INF/NOTICE.txt'
+            excludes += '/META-INF/versions/**'
+            excludes += '/kotlin/**'
+            excludes += '/META-INF/com.android.tools/**'
+            excludes += '/META-INF/proguard/**'
+        }
+        // Giảm dung lượng APK
+        jniLibs {
+            useLegacyPackaging = false
         }
     }
 }
 
 dependencies {
+    // Multidex support
+    implementation 'androidx.multidex:multidex:2.0.1'
+    
     // Core Android
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
