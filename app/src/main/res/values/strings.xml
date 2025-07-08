@@ -1,0 +1,116 @@
+<resources>
+    <string name="app_name">VTU Translate</string>
+    
+    <!-- Main Navigation Tabs -->
+    <string name="tab_translate">Translate</string>
+    <string name="tab_settings">Settings</string>
+    <string name="tab_log">Log</string>
+    
+    <!-- Translate Screen -->
+    <string name="select_file">Select strings.xml file</string>
+    <string name="start_translate">Start Translation</string>
+    <string name="stop_translation">Stop Translation</string>
+    <string name="save_translated_file">Save translated file</string>
+    <string name="original_value">Value (original)</string>
+    <string name="translated_value_vi">Value-vi (translated)</string>
+    <string name="translated_value_en">Value-en (translated)</string>
+    <string name="translated_value_zh">Value-zh (translated)</string>
+    <string name="translated_value_ru">Value-ru (translated)</string>
+    <string name="translated_value_ko">Value-ko (translated)</string>
+    <string name="translated_value_es">Value-es (translated)</string>
+    <string name="translated_value_fr">Value-fr (translated)</string>
+    <string name="translated_value_de">Value-de (translated)</string>
+    <string name="translated_value_ja">Value-ja (translated)</string>
+    <string name="translated_value_default">Value-translated</string>
+    <string name="no_file_selected">No file selected</string>
+    <string name="translating">Translating…</string>
+    <string name="file_saved">File saved to Downloads/VTU-Translate: %1$s</string>
+    <string name="error_saving_file">Error saving file: %1$s</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    
+    <!-- API Settings -->
+    <string name="api_settings_title">API Settings</string>
+    <string name="api_settings_subtitle">Groq API Key, AI Model</string>
+    <string name="api_key_title">Groq API Key</string>
+    <string name="get_api_key">Get API Key</string>
+    <string name="api_key_saved">API Key saved</string>
+    <string name="select_model">Select AI Model</string>
+    <string name="model_group_meta">Meta</string>
+    <string name="model_group_deepseek_meta">Deepseek &amp; Meta</string>
+    
+    <!-- Interface Settings -->
+    <string name="interface_title">Interface</string>
+    <string name="interface_subtitle">Theme Mode, App Language</string>
+    <string name="theme_mode">Theme Mode</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <string name="app_language">App Language</string>
+    <string name="dark_theme">Dark Mode</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    
+    <!-- Translation Settings -->
+    <string name="translation_settings_title">Translation Settings</string>
+    <string name="translation_settings_subtitle">Translation Speed, Target Language</string>
+    <string name="translation_speed">Translation Speed</string>
+    <string name="batch_size">Batch Size</string>
+    <string name="batch_translation_size">Batch Translation Size</string>
+    <string name="batch_size_description">Translate %1$d strings at a time</string>
+    <string name="batch_size_note">Higher batch size = faster translation but more API usage</string>
+    <string name="refresh_models">Refresh Models</string>
+    <string name="refreshing_models">Refreshing models...</string>
+    <string name="models_refreshed">Models refreshed</string>
+    <string name="error_fetching_models">Error fetching models</string>
+    <string name="available_models">Available Models</string>
+    <string name="target_language">Target Language</string>
+    <string name="continue_translation">Continue Translation</string>
+    
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_subtitle">App Information</string>
+    <string name="app_version">Version</string>
+    
+    <!-- Language Settings -->
+    <string name="language_vietnamese">Vietnamese</string>
+    <string name="language_english">English</string>
+    <string name="language_saved">Language settings saved</string>
+    
+    <!-- Additional missing strings for better UI support -->
+    
+    <!-- Log Screen -->
+    <string name="copy_log">Copy Log</string>
+    <string name="clear_log">Clear Log</string>
+    <string name="log_copied">Log copied</string>
+    <string name="log_cleared">Log cleared</string>
+    <string name="log_yet">No logs yet</string>
+    
+    <!-- Log Message Types -->
+    <string name="log_type_info">INFO</string>
+    <string name="log_type_success">SUCCESS</string>
+    <string name="log_type_error">ERROR</string>
+    <string name="log_type_warning">WARNING</string>
+    
+    <!-- Error Messages -->
+    <string name="error_no_api_key">Please enter API Key in Settings</string>
+    <string name="error_no_model_selected">Please select AI Model in Settings</string>
+    <string name="error_no_file_selected">Please select strings.xml file</string>
+    <string name="error_invalid_file">Invalid file. Please select strings.xml file</string>
+    
+    <!-- Credit -->
+    <string name="credit_title">Author Information</string>
+    <string name="credit_author">Author: RenjiYuusei</string>
+    <string name="credit_discord">Discord</string>
+    
+    <!-- Background Translation -->
+    <string name="translation_service_toggle">Enable Background Translation</string>
+    <string name="translation_in_progress">Translation in progress</string>
+    <string name="translation_complete">Translation complete</string>
+    <string name="translation_notification_channel_name">Translation</string>
+    <string name="translation_notification_channel_description">Shows translation progress in background</string>
+    <string name="preparing_translation">Preparing translation...</string>
+    <string name="notification_permission_required">Notification permission required for background translation</string>
+    <string name="translation_progress_detail">%1$d/%2$d strings being translated</string>
+</resources>
