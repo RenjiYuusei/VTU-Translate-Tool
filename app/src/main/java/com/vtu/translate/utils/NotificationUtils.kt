@@ -26,10 +26,11 @@ object NotificationUtils {
     }
 
     fun showProgressNotification(context: Context, progress: Int, maxProgress: Int) {
+        val percentage = if (maxProgress > 0) (progress * 100 / maxProgress) else 0
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_translate)
             .setContentTitle(context.getString(R.string.translation_in_progress))
-            .setContentText("$progress/$maxProgress")
+            .setContentText("$progress/$maxProgress ($percentage%)")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setProgress(maxProgress, progress, false)
 

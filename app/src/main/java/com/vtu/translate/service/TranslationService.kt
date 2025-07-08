@@ -70,7 +70,8 @@ class TranslationService : Service() {
 
         // Check current translation state
         val resources = translationRepository.stringResources.value
-        val translatedCount = resources.count { it.translatedValue.isNotBlank() }
+        // Count translated (including errors) for consistency with app UI
+        val translatedCount = resources.count { it.translatedValue.isNotBlank() || it.hasError }
         val totalCount = resources.size
         val contentText = if (totalCount > 0) {
             "$translatedCount/$totalCount"
@@ -109,8 +110,9 @@ class TranslationService : Service() {
             if (!translationRepository.isTranslating.value) {
                 // If not translating but service is started, just monitor the state
                 // This happens when app is reopened
+                // Count both translated and error items for consistency
                 notifyProgress(
-                    initialResources.count { it.translatedValue.isNotBlank() },
+                    initialResources.count { it.translatedValue.isNotBlank() || it.hasError },
                     total
                 )
             }
@@ -127,13 +129,17 @@ class TranslationService : Service() {
                     return@collect
                 }
                 
-                // Count translated items
+                // Count translated items (including both successful and error)
                 val currentTranslatedCount = updatedResources.count { it.translatedValue.isNotBlank() || it.hasError }
                 
                 // Update notification with progress
                 notifyProgress(currentTranslatedCount, total)
                 
-                // Keep showing progress even when errors occur
+                // If all items are processed (translated or errored), prepare to stop
+                if (currentTranslatedCount >= total && translationRepository.isTranslating.value) {
+                    // Double check if translation is actually complete
+                    delay(500) // Small delay to ensure state is updated
+                }
             }
         }
 
@@ -160,14 +166,14 @@ class TranslationService : Service() {
     }
     
     private fun notifyProgress(current: Int, total: Int) {
-        val contentText = getString(R.string.translation_progress_detail, current, total)
+        val percentage = if (total > 0) (current * 100 / total) else 0
+        val contentText = "$current/$total ($percentage%)"
         
         notificationBuilder.setContentText(contentText)
             .setProgress(total, current, false)
         
-        with(NotificationManagerCompat.from(this)) {
-            notify(NOTIFICATION_ID, notificationBuilder.build())
-        }
+        // Update notification
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
     }
     
     override fun onDestroy() {

@@ -345,8 +345,10 @@ fun TranslateScreen(
             }
             
             // Continue translation button (only show if there's partially translated content)
-            val currentIndex = viewModel.getCurrentTranslationIndex()
-            if (currentIndex > 0 && currentIndex < stringResources.size && !isTranslating) {
+            val translatedOrErrorCount = stringResources.count { it.translatedValue.isNotBlank() || it.hasError }
+            val hasUntranslatedItems = stringResources.any { it.translatedValue.isBlank() && !it.hasError }
+            
+            if (hasUntranslatedItems && translatedOrErrorCount > 0 && !isTranslating) {
                 Button(
                     onClick = {
                         if (apiKey.isBlank()) {
@@ -381,7 +383,7 @@ fun TranslateScreen(
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
-                        text = "${stringResource(R.string.continue_translation)} ($currentIndex/${stringResources.size})",
+                        text = "${stringResource(R.string.continue_translation)} ($translatedOrErrorCount/${stringResources.size})",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -424,8 +426,9 @@ fun TranslateScreen(
         }
         
         // Show translation progress
-        if (isTranslating || stringResources.any { it.translatedValue.isNotBlank() }) {
-            val translatedCount = stringResources.count { it.translatedValue.isNotBlank() }
+        if (isTranslating || stringResources.any { it.translatedValue.isNotBlank() || it.hasError }) {
+            // Count both translated and error items for consistency with notification
+            val translatedCount = stringResources.count { it.translatedValue.isNotBlank() || it.hasError }
             val totalCount = stringResources.size
             val progressPercent = if (totalCount > 0) (translatedCount * 100 / totalCount) else 0
             
@@ -440,7 +443,7 @@ fun TranslateScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Đã dịch: $translatedCount/$totalCount chuỗi ($progressPercent%)",
+                        text = "$translatedCount/$totalCount ($progressPercent%)",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     
