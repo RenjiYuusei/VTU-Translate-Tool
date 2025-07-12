@@ -41,7 +41,7 @@ android {
                 keyPassword keystoreProps['keyPassword']
             } else {
                 // Use local keystore
-                def rootStreFile = rootProject.file("Yuusei.jks")
+                def rootStoreFile = rootProject.file("Yuusei.jks")
                 storeFile rootStoreFile
                 storePassword 'Yuusei123@'
                 keyAlias 'key0'
