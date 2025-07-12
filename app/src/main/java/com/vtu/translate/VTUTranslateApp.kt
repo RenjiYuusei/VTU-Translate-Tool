@@ -5,11 +5,6 @@ import com.vtu.translate.data.repository.GroqRepository
 import com.vtu.translate.data.repository.LogRepository
 import com.vtu.translate.data.repository.PreferencesRepository
 import com.vtu.translate.data.repository.TranslationRepository
-import com.vtu.translate.data.util.IconManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 class VtuTranslateApp : Application() {
     
@@ -26,11 +21,6 @@ class VtuTranslateApp : Application() {
     lateinit var logRepository: LogRepository
         private set
     
-    lateinit var iconManager: IconManager
-        private set
-    
-    // Coroutine scope for background operations
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     override fun onCreate() {
         super.onCreate()
@@ -40,13 +30,5 @@ class VtuTranslateApp : Application() {
         groqRepository = GroqRepository(preferencesRepository)
         logRepository = LogRepository()
         translationRepository = TranslationRepository(groqRepository, logRepository, this)
-        iconManager = IconManager(this)
-        
-        // Initialize icon based on current theme
-        applicationScope.launch {
-            preferencesRepository.themeMode.collect { themeMode ->
-                iconManager.changeIcon(themeMode)
-            }
-        }
     }
 }
