@@ -83,6 +83,7 @@ import androidx.compose.runtime.LaunchedEffect
 import com.vtu.translate.R
 import com.vtu.translate.ui.viewmodel.MainViewModel
 import com.vtu.translate.data.model.ThemeMode
+import com.vtu.translate.data.model.AiProvider
 
 /**
  * Validate if the API key is a valid Groq API key format
@@ -92,12 +93,448 @@ fun isValidGroqApiKey(apiKey: String): Boolean {
     return apiKey.startsWith("gsk_") && apiKey.length >= 20
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GeminiModelSelectionSection(
+    viewModel: MainViewModel,
+    selectedGeminiModel: String,
+    @Suppress("UNUSED_PARAMETER") geminiApiKey: String,
+    @Suppress("UNUSED_PARAMETER") context: android.content.Context
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    // Define available Gemini models
+    val geminiModels = listOf(
+        "models/gemini-2.5-flash",
+        "models/gemini-2.5-pro"
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Gemini Model",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TextField(
+                value = selectedGeminiModel,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    Icon(
+                        imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                geminiModels.forEach { model ->
+                    val isSelected = model == selectedGeminiModel
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = model,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        onClick = {
+                            viewModel.saveSelectedGeminiModel(model)
+                            expanded = false
+                        },
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else null
+                    )
+                }
+            }
+        }
+        
+        // Note about Gemini API
+        Text(
+            text = stringResource(R.string.gemini_models_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+}
+/**
+ * Validate if the API key is a valid Gemini API key format
+ */
+fun isValidGeminiApiKey(apiKey: String): Boolean {
+    // Gemini API keys typically start with "AIza" and have a specific length
+    return apiKey.startsWith("AIza") && apiKey.length >= 20
+}
+
+@Composable
+fun AiProviderSection(
+    viewModel: MainViewModel,
+    modifier: Modifier = Modifier
+) {
+    val aiProvider by viewModel.aiProvider.collectAsState()
+    val groqApiKey by viewModel.apiKey.collectAsState()
+    val geminiApiKey by viewModel.geminiApiKey.collectAsState()
+    val context = LocalContext.current
+    
+    var groqApiKeyInput by remember { mutableStateOf(groqApiKey) }
+    var geminiApiKeyInput by remember { mutableStateOf(geminiApiKey) }
+    
+    LaunchedEffect(groqApiKey) {
+        groqApiKeyInput = groqApiKey
+    }
+    
+    LaunchedEffect(geminiApiKey) {
+        geminiApiKeyInput = geminiApiKey
+    }
+    
+    SettingsSectionCard(
+        title = stringResource(R.string.ai_provider_title),
+        icon = R.drawable.ic_key,
+        modifier = modifier
+    ) {
+        // AI Provider selection dropdown
+        AiProviderDropdown(
+            selectedProvider = aiProvider,
+            onProviderSelected = { viewModel.saveAiProvider(it) }
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Show API Key section based on selected provider
+        when (aiProvider) {
+            AiProvider.GROQ -> {
+                GroqApiKeySection(
+                    viewModel = viewModel,
+                    apiKeyInput = groqApiKeyInput,
+                    onApiKeyInputChange = { groqApiKeyInput = it },
+                    context = context
+                )
+            }
+            AiProvider.GEMINI -> {
+                GeminiApiKeySection(
+                    viewModel = viewModel,
+                    apiKeyInput = geminiApiKeyInput,
+                    onApiKeyInputChange = { geminiApiKeyInput = it },
+                    context = context
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AiProviderDropdown(
+    selectedProvider: AiProvider,
+    onProviderSelected: (AiProvider) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    Column(modifier = modifier) {
+        Text(
+            text = "AI Provider",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TextField(
+                value = selectedProvider.displayName,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    Icon(
+                        imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                AiProvider.values().forEach { provider ->
+                    val isSelected = provider == selectedProvider
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    text = provider.displayName,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = provider.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        onClick = {
+                            onProviderSelected(provider)
+                            expanded = false
+                        },
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else null
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GroqApiKeySection(
+    viewModel: MainViewModel,
+    apiKeyInput: String,
+    onApiKeyInputChange: (String) -> Unit,
+    context: android.content.Context
+) {
+    Column {
+        Text(
+            text = "Groq API Key",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        // API Key input field
+        OutlinedTextField(
+            value = apiKeyInput,
+            onValueChange = onApiKeyInputChange,
+            label = { Text("Groq API Key") },
+            placeholder = { Text("gsk_...") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // Buttons row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Save API Key button
+            ElevatedButton(
+                onClick = {
+                    if (apiKeyInput.isBlank()) {
+                        Toast.makeText(
+                            context,
+                            "Vui lòng nhập Groq API key",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@ElevatedButton
+                    }
+                    
+                    if (!isValidGroqApiKey(apiKeyInput)) {
+                        Toast.makeText(
+                            context,
+                            "API key không đúng định dạng Groq (phải bắt đầu với gsk_)",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@ElevatedButton
+                    }
+                    
+                    viewModel.saveApiKey(apiKeyInput)
+                    Toast.makeText(
+                        context,
+                        "Groq API key đã được lưu",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_save),
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Lưu")
+            }
+            
+            // Get API Key button
+            ElevatedButton(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://console.groq.com/keys"))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_key),
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Lấy API Key")
+            }
+        }
+    }
+}
+
+@Composable
+fun GeminiApiKeySection(
+    viewModel: MainViewModel,
+    apiKeyInput: String,
+    onApiKeyInputChange: (String) -> Unit,
+    context: android.content.Context
+) {
+    Column {
+        Text(
+            text = "Google Gemini API Key",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        // API Key input field
+        OutlinedTextField(
+            value = apiKeyInput,
+            onValueChange = onApiKeyInputChange,
+            label = { Text("Gemini API Key") },
+            placeholder = { Text("AIza...") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // Buttons row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Save API Key button
+            ElevatedButton(
+                onClick = {
+                    if (apiKeyInput.isBlank()) {
+                        Toast.makeText(
+                            context,
+                            "Vui lòng nhập Gemini API key",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@ElevatedButton
+                    }
+                    
+                    if (!isValidGeminiApiKey(apiKeyInput)) {
+                        Toast.makeText(
+                            context,
+                            "API key không đúng định dạng Gemini (phải bắt đầu với AIza)",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@ElevatedButton
+                    }
+                    
+                    viewModel.saveGeminiApiKey(apiKeyInput)
+                    Toast.makeText(
+                        context,
+                        "Gemini API key đã được lưu",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_save),
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Lưu")
+            }
+            
+            // Get API Key button
+            ElevatedButton(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://aistudio.google.com/app/apikey"))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_key),
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Lấy API Key")
+            }
+        }
+    }
+}
+
 @Composable
 fun SettingsScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
-    val apiKey by viewModel.apiKey.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
     val translationSpeed by viewModel.translationSpeed.collectAsState()
@@ -136,7 +573,7 @@ fun SettingsScreen(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ApiKeySection(viewModel, apiKey)
+                    AiProviderSection(viewModel)
                     ModelSelectionSection(viewModel, selectedModel)
                 }
             }
@@ -417,7 +854,10 @@ fun ModelSelectionSection(
     selectedModel: String,
     modifier: Modifier = Modifier
 ) {
-    val apiKey by viewModel.apiKey.collectAsState()
+    val aiProvider by viewModel.aiProvider.collectAsState()
+    val groqApiKey by viewModel.apiKey.collectAsState()
+    val geminiApiKey by viewModel.geminiApiKey.collectAsState()
+    val selectedGeminiModel by viewModel.selectedGeminiModel.collectAsState()
     val context = LocalContext.current
     
     SettingsSectionCard(
@@ -425,58 +865,63 @@ fun ModelSelectionSection(
         icon = R.drawable.ic_model,
         modifier = modifier
     ) {
-        // Auto-fetch models when API key changes
-        LaunchedEffect(apiKey) {
-            if (apiKey.isNotBlank()) {
-                viewModel.fetchAvailableModels()
-            }
-        }
-        
-        // Model selection dropdown with animation
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + slideOutVertically()
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Model dropdown for Groq API
-                ModelSelectionDropdown(
-                    viewModel = viewModel,
-                    selectedModel = selectedModel,
-                    onModelSelected = { viewModel.saveSelectedModel(it) }
-                )
-                
-                // Refresh models button
-                ElevatedButton(
-                    onClick = {
-                        if (apiKey.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                "Please enter API Key first",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            viewModel.fetchAvailableModels()
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.refreshing_models),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_refresh),
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(stringResource(R.string.refresh_models))
+        when (aiProvider) {
+            AiProvider.GROQ -> {
+                // Auto-fetch models when Groq API key changes
+                LaunchedEffect(groqApiKey) {
+                    if (groqApiKey.isNotBlank()) {
+                        viewModel.fetchAvailableModels()
+                    }
                 }
+                
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Model dropdown for Groq API
+                    ModelSelectionDropdown(
+                        viewModel = viewModel,
+                        selectedModel = selectedModel,
+                        onModelSelected = { viewModel.saveSelectedModel(it) }
+                    )
+                    
+                    // Refresh models button
+                    ElevatedButton(
+                        onClick = {
+                            if (groqApiKey.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please enter Groq API Key first",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                viewModel.fetchAvailableModels()
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.refreshing_models),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_refresh),
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(stringResource(R.string.refresh_models))
+                    }
+                }
+            }
+            AiProvider.GEMINI -> {
+                GeminiModelSelectionSection(
+                    viewModel = viewModel,
+                    selectedGeminiModel = selectedGeminiModel,
+                    geminiApiKey = geminiApiKey,
+                    context = context
+                )
             }
         }
     }

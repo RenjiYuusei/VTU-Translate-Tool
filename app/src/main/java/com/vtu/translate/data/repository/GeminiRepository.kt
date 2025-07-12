@@ -2,10 +2,7 @@ package com.vtu.translate.data.repository
 
 import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.vtu.translate.data.model.GroqChatCompletionRequest
-import com.vtu.translate.data.model.GroqChatCompletionResponse
-import com.vtu.translate.data.model.ChatMessage
-import com.vtu.translate.data.model.GroqModelsResponse
+import com.vtu.translate.data.model.*
 import com.vtu.translate.data.model.AiApiService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -18,17 +15,18 @@ import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
- * Repository for interacting with the Groq API
+ * Repository for interacting with the Gemini API
  */
 @OptIn(ExperimentalSerializationApi::class)
-class GroqRepository(private val preferencesRepository: PreferencesRepository) : AiApiService {
+class GeminiRepository(private val preferencesRepository: PreferencesRepository) : AiApiService {
     
     companion object {
-        private const val BASE_URL = "https://api.groq.com/openai/v1/"
+        private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/"
     }
     
     private val json = Json {
@@ -39,7 +37,7 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
     private val contentType = "application/json".toMediaType()
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = HttpLoggingInterceptor.Level.BODY // Enable full logging to debug 400 errors
     }
     
     private val okHttpClient = OkHttpClient.Builder()
@@ -53,19 +51,19 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
         .addConverterFactory(json.asConverterFactory(contentType))
         .build()
     
-    private val groqService = retrofit.create(GroqService::class.java)
+    private val geminiService = retrofit.create(GeminiService::class.java)
     
     /**
-     * Get available models from Groq API
+     * Get available models from Gemini API
      */
-    suspend fun getModels(): Result<GroqModelsResponse> {
+    suspend fun getModels(): Result<GeminiModelsResponse> {
         return try {
-            val apiKey = preferencesRepository.apiKey.first()
+            val apiKey = preferencesRepository.geminiApiKey.first()
             if (apiKey.isBlank()) {
-                return Result.failure(Exception("API Key is not set"))
+                return Result.failure(Exception("Gemini API Key is not set"))
             }
             
-            val response = groqService.getModels("Bearer $apiKey")
+            val response = geminiService.getModels(apiKey)
             Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
@@ -73,27 +71,35 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
     }
     
     /**
-     * Translate text using Groq API with target language
+     * Translate text using Gemini API with target language
      */
     override suspend fun translateText(text: String, targetLanguage: String): Result<String> {
         return translateBatch(listOf(text), targetLanguage).map { it.first() }
     }
     
     /**
-     * Translate multiple texts in batch using Groq API
+     * Translate multiple texts in batch using Gemini API
      */
     override suspend fun translateBatch(texts: List<String>, targetLanguage: String): Result<List<String>> {
         return try {
-            val apiKey = preferencesRepository.apiKey.first()
-            Log.d("GroqRepository", "API Key length: ${apiKey.length}")
+            val apiKey = preferencesRepository.geminiApiKey.first()
+            Log.d("GeminiRepository", "API Key length: ${apiKey.length}")
             if (apiKey.isBlank()) {
-                Log.e("GroqRepository", "API Key is blank or empty")
-                return Result.failure(Exception("API Key không được thiết lập. Vui lòng nhập API key trong Settings."))
+                Log.e("GeminiRepository", "API Key is blank or empty")
+                return Result.failure(Exception("Gemini API Key không được thiết lập. Vui lòng nhập API key trong Settings."))
             }
             
-            val model = preferencesRepository.selectedModel.first()
-            if (model.isBlank()) {
-                return Result.failure(Exception("Model is not selected"))
+            val rawModel = preferencesRepository.selectedGeminiModel.first()
+            if (rawModel.isBlank()) {
+                return Result.failure(Exception("Gemini model is not selected"))
+            }
+            
+            // For Gemini API, we need to pass the model name without 'models/' prefix in the path
+            // The 'models/' is already part of the URL path structure
+            val model = if (rawModel.startsWith("models/")) {
+                rawModel.removePrefix("models/")
+            } else {
+                rawModel
             }
             
             // Map language codes to language names
@@ -111,7 +117,11 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
             
             val targetLanguageName = languageNames[targetLanguage] ?: "Vietnamese"
             
-            // Build batch prompt
+            Log.d("GeminiRepository", "Using model: $model (original: $rawModel)")
+            Log.d("GeminiRepository", "Target language: $targetLanguageName")
+            Log.d("GeminiRepository", "Texts to translate: ${texts.size} items")
+            
+            // Build simpler prompt similar to GroqRepository
             val batchPrompt = if (texts.size == 1) {
                 "Translate the following Android string resource value into $targetLanguageName. Return ONLY the translated text without any quotes, explanations, or additional formatting. IMPORTANT: Do NOT translate technical identifiers, package names (like androidx.startup), class names, URLs, placeholders, or format specifiers (like %s, %d). Keep those exactly as they are in the original text.\n\nOriginal text: ${texts[0]}"
             } else {
@@ -120,19 +130,24 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
                 }.joinToString("\n")
                 
                 """Translate the following Android string resource values into $targetLanguageName. 
-                |Return ONLY the translated texts, one per line, in the same order.
-                |Format: [number]. [translated text]
-                |Do not add quotes around the translated text.
-                |IMPORTANT: Do NOT translate technical identifiers, package names (like androidx.startup), class names, URLs, placeholders, or format specifiers (like %s, %d).
-                |
-                |Original texts:
-                |$numberedTexts""".trimMargin()
+Return ONLY the translated texts, one per line, in the same order.
+Format: [number]. [translated text]
+Do not add quotes around the translated text.
+IMPORTANT: Do NOT translate technical identifiers, package names (like androidx.startup), class names, URLs, placeholders, or format specifiers (like %s, %d).
+
+Original texts:
+$numberedTexts""".trimIndent()
             }
             
-            val request = GroqChatCompletionRequest(
-                model = model,
-                messages = listOf(ChatMessage(role = "user", content = batchPrompt)),
-                temperature = 1.0
+            val request = GeminiGenerateContentRequest(
+                contents = listOf(
+                    GeminiContent(
+                        parts = listOf(GeminiPart(text = batchPrompt))
+                    )
+                ),
+                generationConfig = GeminiGenerationConfig(
+                    temperature = 1.0
+                )
             )
             
             // Implement retry with exponential backoff for HTTP 429 errors
@@ -142,10 +157,11 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
             
             while (retryCount < maxRetries) {
                 try {
-                    val response = groqService.createChatCompletion("Bearer $apiKey", request)
+                    val response = geminiService.generateContent(model, apiKey, request)
                     
-                    if (response.choices.isNotEmpty()) {
-                        val content = response.choices[0].message.content.trim()
+                    if (!response.candidates.isNullOrEmpty() && 
+                        !response.candidates[0].content.parts.isNullOrEmpty()) {
+                        val content = response.candidates[0].content.parts[0].text.trim()
                         
                         return if (texts.size == 1) {
                             // Remove surrounding quotes if present
@@ -169,34 +185,40 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
                             }
                         }
                     } else {
-                        return Result.failure(Exception("No response from API"))
+                        return Result.failure(Exception("No response from Gemini API"))
                     }
                 } catch (e: HttpException) {
                     val errorBody = e.response()?.errorBody()?.string()
-                    Log.e("GroqRepository", "HTTP ${e.code()}: $errorBody")
+                    Log.e("GeminiRepository", "HTTP ${e.code()}: $errorBody")
                     
                     // Handle specific HTTP errors
                     when (e.code()) {
+                        400 -> {
+                            Log.e("GeminiRepository", "HTTP 400 error body: $errorBody")
+                            Log.e("GeminiRepository", "Request model: $model")
+                            Log.e("GeminiRepository", "Request prompt length: ${batchPrompt.length}")
+                            return Result.failure(Exception("Yêu cầu không hợp lệ (HTTP 400). Chi tiết: ${errorBody ?: "Không có thông tin lỗi"}"))
+                        }
                         401 -> {
-                            return Result.failure(Exception("API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key trong Settings."))
+                            return Result.failure(Exception("Gemini API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key trong Settings."))
+                        }
+                        403 -> {
+                            return Result.failure(Exception("Không có quyền truy cập Gemini API. Vui lòng kiểm tra API key."))
                         }
                         429 -> {
-                            lastException = Exception("Đạt giới hạn tốc độ API (HTTP 429). Đang thử lại...")
-                            Log.w("GroqRepository", "HTTP 429 received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
+                            lastException = Exception("Đạt giới hạn tốc độ Gemini API (HTTP 429). Đang thử lại...")
+                            Log.w("GeminiRepository", "HTTP 429 received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
                             
                             // Exponential backoff: 1s, 2s, 4s
                             val delayMs = (1000L * Math.pow(2.0, retryCount.toDouble())).toLong()
                             delay(delayMs)
                             retryCount++
                         }
-                        403 -> {
-                            return Result.failure(Exception("Không có quyền truy cập API. Vui lòng kiểm tra API key."))
-                        }
                         404 -> {
-                            return Result.failure(Exception("Model không tồn tại hoặc không khả dụng."))
+                            return Result.failure(Exception("Gemini model không tồn tại hoặc không khả dụng."))
                         }
                         500, 502, 503, 504 -> {
-                            return Result.failure(Exception("Lỗi máy chủ Groq (HTTP ${e.code()}). Vui lòng thử lại sau."))
+                            return Result.failure(Exception("Lỗi máy chủ Gemini (HTTP ${e.code()}). Vui lòng thử lại sau."))
                         }
                         else -> {
                             return Result.failure(Exception("Lỗi HTTP ${e.code()}: ${errorBody ?: e.message()}"))
@@ -215,63 +237,64 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
     }
     
     /**
-     * Get the currently selected model
+     * Get the currently selected Gemini model
      */
     override suspend fun getSelectedModel(): String {
-        return preferencesRepository.selectedModel.first()
+        return preferencesRepository.selectedGeminiModel.first()
     }
     
     /**
-     * Fetch available text generation models from Groq API
+     * Fetch available models from Gemini API
      */
     override suspend fun fetchAvailableModels(): Result<List<String>> {
         return try {
-            val apiKey = preferencesRepository.apiKey.first()
+            val apiKey = preferencesRepository.geminiApiKey.first()
             if (apiKey.isBlank()) {
-                return Result.failure(Exception("API Key không được thiết lập"))
+                return Result.failure(Exception("Gemini API Key không được thiết lập"))
             }
             
-            val response = groqService.getModels("Bearer $apiKey")
+            val response = geminiService.getModels(apiKey)
             
-            // Filter only text generation models
-            val textModels = response.data
+            // Filter only generative models
+            val textModels = response.models
                 .filter { model ->
-                    val modelId = model.id.lowercase()
-                    // Exclude whisper, TTS, and guard models
-                    !modelId.contains("whisper") && 
-                    !modelId.contains("tts") && 
-                    !modelId.contains("guard")
+                    val modelName = model.name.lowercase()
+                    // Filter for text generation models
+                    model.supportedGenerationMethods?.contains("generateContent") == true &&
+                    (modelName.contains("gemini") || modelName.contains("text"))
                 }
-                .map { it.id }
+                .map { it.name }
                 .sorted()
             
             Result.success(textModels)
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            Log.e("GroqRepository", "Error fetching models - HTTP ${e.code()}: $errorBody")
+            Log.e("GeminiRepository", "Error fetching models - HTTP ${e.code()}: $errorBody")
             when (e.code()) {
-                401 -> Result.failure(Exception("API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key (phải bắt đầu với gsk_)"))
-                403 -> Result.failure(Exception("Không có quyền truy cập API models. Vui lòng kiểm tra API key"))
+                400 -> Result.failure(Exception("Yêu cầu không hợp lệ khi tải danh sách model"))
+                401 -> Result.failure(Exception("Gemini API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key"))
+                403 -> Result.failure(Exception("Không có quyền truy cập Gemini API models. Vui lòng kiểm tra API key"))
                 429 -> Result.failure(Exception("Đã vượt quá giới hạn request. Vui lòng thử lại sau"))
-                else -> Result.failure(Exception("Lỗi khi tải danh sách model (HTTP ${e.code()}): ${errorBody ?: e.message()}"))
+                else -> Result.failure(Exception("Lỗi khi tải danh sách Gemini model (HTTP ${e.code()}): ${errorBody ?: e.message()}"))
             }
         } catch (e: Exception) {
-            Log.e("GroqRepository", "Error fetching models: ${e.message}", e)
-            Result.failure(Exception("Lỗi kết nối: ${e.message}"))
+            Log.e("GeminiRepository", "Error fetching models: ${e.message}", e)
+            Result.failure(Exception("Lỗi kết nối Gemini API: ${e.message}"))
         }
     }
     
     /**
-     * Groq API service interface
+     * Gemini API service interface
      */
-    private interface GroqService {
+    private interface GeminiService {
         @GET("models")
-        suspend fun getModels(@Header("Authorization") authorization: String): GroqModelsResponse
+        suspend fun getModels(@Query("key") apiKey: String): GeminiModelsResponse
         
-        @POST("chat/completions")
-        suspend fun createChatCompletion(
-            @Header("Authorization") authorization: String,
-            @Body request: GroqChatCompletionRequest
-        ): GroqChatCompletionResponse
+        @POST("models/{model}:generateContent")
+        suspend fun generateContent(
+            @Path("model") model: String,
+            @Query("key") apiKey: String,
+            @Body request: GeminiGenerateContentRequest
+        ): GeminiGenerateContentResponse
     }
 }

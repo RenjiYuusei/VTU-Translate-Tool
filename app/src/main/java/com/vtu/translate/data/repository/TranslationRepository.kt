@@ -23,6 +23,8 @@ import java.io.OutputStreamWriter
  */
 class TranslationRepository(
     private val groqRepository: GroqRepository,
+    private val geminiRepository: GeminiRepository,
+    private val preferencesRepository: PreferencesRepository,
     private val logRepository: LogRepository,
     private val context: Context
 ) {
@@ -225,7 +227,14 @@ class TranslationRepository(
                 val startIndex = maxOf(0, continueFromIndex)
                 val remainingCount = resources.size - startIndex
                 
-                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [${groqRepository.getSelectedModel()}] sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
+                // Get the current provider and model for logging
+                val aiProvider = preferencesRepository.aiProvider.value
+                val modelName = when (aiProvider) {
+                    com.vtu.translate.data.model.AiProvider.GROQ -> groqRepository.getSelectedModel()
+                    com.vtu.translate.data.model.AiProvider.GEMINI -> geminiRepository.getSelectedModel()
+                }
+                
+                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với ${aiProvider.displayName} model [$modelName] sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
                 
                 // Create a mutable copy of the resources
                 val updatedResources = resources.toMutableList()
@@ -270,14 +279,22 @@ class TranslationRepository(
                         // Extract texts for batch translation
                         val textsToTranslate = batchResources.map { it.second.value }
                         
-                        // Translate batch
+                        // Translate batch using selected AI provider
                         val result = if (textsToTranslate.size == 1) {
                             // Single text, use regular translation
                             translateTextWithLanguages(textsToTranslate[0], targetLanguage)
                                 .map { listOf(it) }
                         } else {
-                            // Multiple texts, use batch translation
-                            groqRepository.translateBatch(textsToTranslate, targetLanguage)
+                            // Multiple texts, use batch translation based on selected provider
+                            val currentProvider = preferencesRepository.aiProvider.value
+                            when (currentProvider) {
+                                com.vtu.translate.data.model.AiProvider.GROQ -> {
+                                    groqRepository.translateBatch(textsToTranslate, targetLanguage)
+                                }
+                                com.vtu.translate.data.model.AiProvider.GEMINI -> {
+                                    geminiRepository.translateBatch(textsToTranslate, targetLanguage)
+                                }
+                            }
                         }
                         
                         if (result.isSuccess) {
@@ -510,8 +527,17 @@ class TranslationRepository(
      * Translate text to specified target language using selected API provider
      */
     private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result<String> {
-        // Use the selected API provider from preferences
-return groqRepository.translateText(text, targetLanguage)
+        return withContext(Dispatchers.IO) {
+            val aiProvider = preferencesRepository.aiProvider.value
+            when (aiProvider) {
+                com.vtu.translate.data.model.AiProvider.GROQ -> {
+                    groqRepository.translateText(text, targetLanguage)
+                }
+                com.vtu.translate.data.model.AiProvider.GEMINI -> {
+                    geminiRepository.translateText(text, targetLanguage)
+                }
+            }
+        }
     }
     
 }

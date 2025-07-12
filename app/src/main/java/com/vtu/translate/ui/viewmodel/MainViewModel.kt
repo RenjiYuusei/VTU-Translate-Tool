@@ -8,6 +8,7 @@ import com.vtu.translate.data.repository.LogRepository
 import com.vtu.translate.data.repository.PreferencesRepository
 import com.vtu.translate.data.repository.TranslationRepository
 import com.vtu.translate.data.repository.GroqRepository
+import com.vtu.translate.data.repository.GeminiRepository
 import com.vtu.translate.data.model.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,7 @@ class MainViewModel(
     private val translationRepository: TranslationRepository,
     private val logRepository: LogRepository,
     private val groqRepository: GroqRepository,
+    private val geminiRepository: GeminiRepository,
     private val application: VtuTranslateApp
 ) : ViewModel() {
     
@@ -31,7 +33,10 @@ class MainViewModel(
     
     // Expose repository flows
     val apiKey = preferencesRepository.apiKey
+    val geminiApiKey = preferencesRepository.geminiApiKey
+    val aiProvider = preferencesRepository.aiProvider
     val selectedModel = preferencesRepository.selectedModel
+    val selectedGeminiModel = preferencesRepository.selectedGeminiModel
     val appLanguage = preferencesRepository.appLanguage
     val isDarkTheme = preferencesRepository.isDarkTheme
     val themeMode = preferencesRepository.themeMode
@@ -206,19 +211,48 @@ class MainViewModel(
     }
     
     /**
-     * Fetch available models from Groq API
+     * Save Gemini API key
+     */
+    fun saveGeminiApiKey(apiKey: String) {
+        preferencesRepository.saveGeminiApiKey(apiKey)
+    }
+    
+    /**
+     * Save selected Gemini model
+     */
+    fun saveSelectedGeminiModel(model: String) {
+        preferencesRepository.saveSelectedGeminiModel(model)
+    }
+    
+    /**
+     * Save AI provider preference
+     */
+    fun saveAiProvider(provider: com.vtu.translate.data.model.AiProvider) {
+        preferencesRepository.saveAiProvider(provider)
+    }
+    
+    /**
+     * Fetch available models from current AI provider
      */
     fun fetchAvailableModels() {
         viewModelScope.launch {
             _isLoadingModels.value = true
-            groqRepository.fetchAvailableModels()
-                .onSuccess { models ->
-                    _availableModels.value = models
+            val provider = aiProvider.value
+            val result = when (provider) {
+                com.vtu.translate.data.model.AiProvider.GROQ -> {
+                    groqRepository.fetchAvailableModels()
                 }
-                .onFailure { _ ->
-                    // Keep empty list on error
-                    _availableModels.value = emptyList()
+                com.vtu.translate.data.model.AiProvider.GEMINI -> {
+                    geminiRepository.fetchAvailableModels()
                 }
+            }
+            
+            result.onSuccess { models ->
+                _availableModels.value = models
+            }.onFailure { _ ->
+                // Keep empty list on error
+                _availableModels.value = emptyList()
+            }
             _isLoadingModels.value = false
         }
     }
@@ -235,6 +269,7 @@ class MainViewModel(
                     application.translationRepository,
                     application.logRepository,
                     application.groqRepository,
+                    application.geminiRepository,
                     application
                 ) as T
             }
