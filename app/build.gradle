@@ -13,7 +13,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode 8
-        versionName "1.2.2"
+        versionName "1.2.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -41,7 +41,7 @@ android {
                 keyPassword keystoreProps['keyPassword']
             } else {
                 // Use local keystore
-                def rootStoreFile = rootProject.file("Yuusei.jks")
+                def rootStreFile = rootProject.file("Yuusei.jks")
                 storeFile rootStoreFile
                 storePassword 'Yuusei123@'
                 keyAlias 'key0'
