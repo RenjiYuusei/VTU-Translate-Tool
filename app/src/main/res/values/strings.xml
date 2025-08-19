@@ -32,8 +32,8 @@
     
     <!-- API Settings -->
     <string name="api_settings_title">API Settings</string>
-    <string name="api_settings_subtitle">Groq API Key, AI Model</string>
-    <string name="api_key_title">Groq API Key</string>
+    <string name="api_settings_subtitle">Provider, Groq/Gemini API Key, AI Model</string>
+    <string name="api_key_title">API Key</string>
     <string name="get_api_key">Get API Key</string>
     <string name="api_key_saved">API Key saved</string>
     <string name="select_model">Select AI Model</string>

@@ -31,7 +31,7 @@ class PreferencesRepository(context: Context) {
         
         // Default selections
         private const val DEFAULT_PROVIDER = "groq"
-        private const val DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+        private const val DEFAULT_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct"
         
         // Default language (Vietnamese)
         private const val DEFAULT_LANGUAGE = "vi"

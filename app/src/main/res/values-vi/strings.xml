@@ -32,8 +32,8 @@
     
     <!-- API Settings -->
     <string name="api_settings_title">Cài đặt API</string>
-    <string name="api_settings_subtitle">Groq API Key, Model AI</string>
-    <string name="api_key_title">Groq API Key</string>
+    <string name="api_settings_subtitle">Nhà cung cấp, Groq/Gemini API Key, Model AI</string>
+    <string name="api_key_title">API Key</string>
     <string name="get_api_key">Lấy API Key</string>
     <string name="api_key_saved">Lưu API Key</string>
     <string name="select_model">Chọn Model AI</string>
