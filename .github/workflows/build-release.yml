@@ -72,6 +72,9 @@ jobs:
           exit 1
         fi
 
+        # Normalize file (strip UTF-8 BOM if present) to ensure grep works
+        sed -i '1s/^\xEF\xBB\xBF//' ci/keystore/keystore.properties || true
+
         # Validate keystore.properties has required keys
         required=(storeFile storePassword keyAlias keyPassword)
         for k in "${required[@]}"; do
