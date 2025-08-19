@@ -66,9 +66,6 @@ jobs:
           echo "✅ Generated ci/keystore/keystore.properties from secrets"
         else
           echo "❌ No keystore provided. Add ci/keystore/keystore.properties to repo or set secrets."
-          echo "## 🔐 Keystore Configuration" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Status: ❌ No keystore provided" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Hint: Commit ci/keystore/keystore.properties and Yuusei.jks or set secrets" >> "$GITHUB_STEP_SUMMARY"
           exit 1
         fi
 
@@ -79,35 +76,25 @@ jobs:
         required=(storeFile storePassword keyAlias keyPassword)
         for k in "${required[@]}"; do
           if ! grep -q "^${k}=" ci/keystore/keystore.properties; then
-            echo "❌ Missing '${k}' in ci/keystore/keystore.properties" | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "❌ Missing '${k}' in ci/keystore/keystore.properties"
             exit 1
           fi
         done
 
-        # Append keystore summary (masking secrets)
-        echo "## 🔐 Keystore Configuration" >> "$GITHUB_STEP_SUMMARY"
-        echo "- storeFile: $(grep '^storeFile=' ci/keystore/keystore.properties | cut -d'=' -f2-)" >> "$GITHUB_STEP_SUMMARY"
-        echo "- keyAlias: $(grep '^keyAlias=' ci/keystore/keystore.properties | cut -d'=' -f2-)" >> "$GITHUB_STEP_SUMMARY"
-        echo "- storePassword: ✅ (hidden)" >> "$GITHUB_STEP_SUMMARY"
-        echo "- keyPassword: ✅ (hidden)" >> "$GITHUB_STEP_SUMMARY"
+        # Keystore details validated above; proceeding without writing step summary
 
-    - name: Build release APK (logs in summary)
+    - name: Build release APK
       id: build_apk
       shell: bash
       continue-on-error: true
       run: |
         set -o pipefail
-        echo "" >> "$GITHUB_STEP_SUMMARY"
-        echo "## 🧾 Build Result" >> "$GITHUB_STEP_SUMMARY"
-        echo "### Gradle Output" >> "$GITHUB_STEP_SUMMARY"
-        ./gradlew --no-daemon assembleRelease --stacktrace 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-        STATUS=${PIPESTATUS[0]}
+        ./gradlew --no-daemon assembleRelease --stacktrace
+        STATUS=$?
         if [ $STATUS -eq 0 ]; then
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Status: ✅ Success" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Status: ✅ Success"
         else
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Status: ❌ Failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Status: ❌ Failed"
         fi
         exit $STATUS
 
@@ -131,17 +118,3 @@ jobs:
         path: app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
         retention-days: 90
         
-    - name: Build summary
-      if: always()
-      run: |
-        echo "## 🚀 Release Build Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- **Commit**: ${{ steps.commit.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Message**: ${{ steps.commit.outputs.commit_msg }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Build Date**: ${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📱 Download Release APK" >> $GITHUB_STEP_SUMMARY
-        echo "The signed release APK is available in the **Artifacts** section." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Release APK**: VTU-Translate-release-${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
-      

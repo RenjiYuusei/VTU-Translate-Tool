@@ -23,15 +23,6 @@ misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
 
-# Keystore files
-*.jks
-*.keystore
-keystore.properties
-
-# Allow CI-specific keystore to be committed
-!ci/keystore/
-!ci/keystore/Yuusei.jks
-!ci/keystore/keystore.properties
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json

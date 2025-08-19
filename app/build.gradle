@@ -12,8 +12,8 @@ android {
         applicationId "com.vtu.translate"
         minSdk = 24
         targetSdk = 34
-        versionCode 9
-        versionName "1.2.4"
+        versionCode 8
+        versionName "1.2.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -29,41 +29,23 @@ android {
 
     signingConfigs {
         release {
-            // Preferred: repository-kept config in ci/keystore/keystore.properties (if present)
-            def ciKeystorePropsFile = rootProject.file("ci/keystore/keystore.properties")
-            if (ciKeystorePropsFile.exists()) {
-                def ksProps = new Properties()
-                ksProps.load(new FileInputStream(ciKeystorePropsFile))
-                storeFile rootProject.file(ksProps['storeFile'])
-                storePassword ksProps['storePassword']
-                keyAlias ksProps['keyAlias']
-                keyPassword ksProps['keyPassword']
+            def keystorePropsFile = rootProject.file("keystore.properties")
+            def keystoreProps = new Properties()
+            
+            if (keystorePropsFile.exists()) {
+                keystoreProps.load(new FileInputStream(keystorePropsFile))
+                // Resolve storeFile path relative to root project
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
             } else {
-                // Next: root keystore.properties (local dev)
-                def rootKeystorePropsFile = rootProject.file("keystore.properties")
-                if (rootKeystorePropsFile.exists()) {
-                    def ksProps = new Properties()
-                    ksProps.load(new FileInputStream(rootKeystorePropsFile))
-                    storeFile rootProject.file(ksProps['storeFile'])
-                    storePassword ksProps['storePassword']
-                    keyAlias ksProps['keyAlias']
-                    keyPassword ksProps['keyPassword']
-                } else {
-                    // Finally: environment variables (e.g., from CI)
-                    def env = System.getenv()
-                    def ksFileEnv = env['KEYSTORE_FILE']
-                    def ksPassEnv = env['KEYSTORE_PASSWORD']
-                    def keyAliasEnv = env['KEY_ALIAS']
-                    def keyPassEnv = env['KEY_PASSWORD']
-                    if (ksFileEnv && ksPassEnv && keyAliasEnv && keyPassEnv) {
-                        storeFile rootProject.file(ksFileEnv)
-                        storePassword ksPassEnv
-                        keyAlias keyAliasEnv
-                        keyPassword keyPassEnv
-                    } else {
-                        throw new GradleException("Release signing is not configured. Provide ci/keystore/keystore.properties or keystore.properties, or set env vars.")
-                    }
-                }
+                // Use local keystore
+                def rootStoreFile = rootProject.file("Yuusei.jks")
+                storeFile rootStoreFile
+                storePassword 'Yuusei123@'
+                keyAlias 'key0'
+                keyPassword 'Yuusei123@'
             }
         }
     }
@@ -98,8 +80,7 @@ android {
         compose = true
     }
     composeOptions {
-        // Updated to support newer Compose Material3 APIs used in code (HorizontalDivider, ElevatedCard, etc.)
-        kotlinCompilerExtensionVersion = '1.5.10'
+        kotlinCompilerExtensionVersion = '1.4.3'
     }
     packagingOptions {
         resources {
@@ -130,18 +111,14 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.activity:activity-compose:1.7.2'
     
-    // Compose (bump BOM to access newer Material3 APIs referenced in code)
-    implementation platform('androidx.compose:compose-bom:2024.04.01')
+    // Compose
+    implementation platform('androidx.compose:compose-bom:2023.08.00')
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.ui:ui-tooling-preview'
-    implementation 'androidx.compose.foundation:foundation'
-    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material3:material3:1.1.2'
     implementation 'androidx.compose.material:material-icons-extended'
     implementation 'androidx.navigation:navigation-compose:2.7.0'
-
-    // Material Components (for XML attrs like ?attr/colorOnSurface)
-    implementation 'com.google.android.material:material:1.11.0'
     
     // ViewModel
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1'

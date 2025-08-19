@@ -2,11 +2,10 @@ package com.vtu.translate.data.repository
 
 import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.vtu.translate.data.model.GroqChatCompletionRequest
-import com.vtu.translate.data.model.GroqChatCompletionResponse
+import com.vtu.translate.data.model.ChatCompletionRequest
+import com.vtu.translate.data.model.ChatCompletionResponse
 import com.vtu.translate.data.model.ChatMessage
 import com.vtu.translate.data.model.GroqModelsResponse
-import com.vtu.translate.data.model.AiApiService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -25,7 +24,7 @@ import retrofit2.http.POST
  * Repository for interacting with the Groq API
  */
 @OptIn(ExperimentalSerializationApi::class)
-class GroqRepository(private val preferencesRepository: PreferencesRepository) : AiApiService {
+class GroqRepository(private val preferencesRepository: PreferencesRepository) {
     
     companion object {
         private const val BASE_URL = "https://api.groq.com/openai/v1/"
@@ -75,14 +74,14 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
     /**
      * Translate text using Groq API with target language
      */
-    override suspend fun translateText(text: String, targetLanguage: String): Result<String> {
+    suspend fun translateText(text: String, targetLanguage: String = "vi"): Result<String> {
         return translateBatch(listOf(text), targetLanguage).map { it.first() }
     }
     
     /**
      * Translate multiple texts in batch using Groq API
      */
-    override suspend fun translateBatch(texts: List<String>, targetLanguage: String): Result<List<String>> {
+    suspend fun translateBatch(texts: List<String>, targetLanguage: String = "vi"): Result<List<String>> {
         return try {
             val apiKey = preferencesRepository.apiKey.first()
             Log.d("GroqRepository", "API Key length: ${apiKey.length}")
@@ -129,10 +128,10 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
                 |$numberedTexts""".trimMargin()
             }
             
-            val request = GroqChatCompletionRequest(
+            val request = ChatCompletionRequest(
                 model = model,
                 messages = listOf(ChatMessage(role = "user", content = batchPrompt)),
-                temperature = 1.0
+                temperature = 0.7
             )
             
             // Implement retry with exponential backoff for HTTP 429 errors
@@ -217,14 +216,14 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
     /**
      * Get the currently selected model
      */
-    override suspend fun getSelectedModel(): String {
+    suspend fun getSelectedModel(): String {
         return preferencesRepository.selectedModel.first()
     }
     
     /**
      * Fetch available text generation models from Groq API
      */
-    override suspend fun fetchAvailableModels(): Result<List<String>> {
+    suspend fun fetchAvailableModels(): Result<List<String>> {
         return try {
             val apiKey = preferencesRepository.apiKey.first()
             if (apiKey.isBlank()) {
@@ -271,7 +270,7 @@ class GroqRepository(private val preferencesRepository: PreferencesRepository) :
         @POST("chat/completions")
         suspend fun createChatCompletion(
             @Header("Authorization") authorization: String,
-            @Body request: GroqChatCompletionRequest
-        ): GroqChatCompletionResponse
+            @Body request: ChatCompletionRequest
+        ): ChatCompletionResponse
     }
 }

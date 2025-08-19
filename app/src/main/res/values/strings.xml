@@ -31,18 +31,14 @@
     <string name="settings_title">Settings</string>
     
     <!-- API Settings -->
-    <string name="api_settings_title">AI Provider Settings</string>
-    <string name="api_settings_subtitle">AI Provider, API Keys, Models</string>
-    <string name="ai_provider">AI Provider</string>
-    <string name="ai_provider_title">AI Provider Settings</string>
-    <string name="groq_api_key">Groq API Key</string>
-    <string name="gemini_api_key">Gemini API Key</string>
-    <string name="api_key_title">API Key</string>
+    <string name="api_settings_title">API Settings</string>
+    <string name="api_settings_subtitle">Groq API Key, AI Model</string>
+    <string name="api_key_title">Groq API Key</string>
     <string name="get_api_key">Get API Key</string>
-    <string name="get_groq_api_key">Get Groq API Key</string>
-    <string name="get_gemini_api_key">Get Gemini API Key</string>
     <string name="api_key_saved">API Key saved</string>
     <string name="select_model">Select AI Model</string>
+    <string name="model_group_meta">Meta</string>
+    <string name="model_group_deepseek_meta">Deepseek &amp; Meta</string>
     
     <!-- Interface Settings -->
     <string name="interface_title">Interface</string>
@@ -117,8 +113,4 @@
     <string name="preparing_translation">Preparing translation...</string>
     <string name="notification_permission_required">Notification permission required for background translation</string>
     <string name="translation_progress_detail">%1$d/%2$d strings being translated</string>
-    
-    <!-- Additional strings -->
-    <string name="github">GitHub</string>
-    <string name="gemini_models_note">Note: Using predefined Gemini models. No need to fetch from API.</string>
 </resources>

@@ -1,47 +1,45 @@
 <resources>
     <string name="app_name">VTU Translate</string>
-
+    
     <!-- Main Navigation Tabs -->
     <string name="tab_translate">Dịch</string>
     <string name="tab_settings">Cài đặt</string>
     <string name="tab_log">Nhật ký</string>
-
+    
     <!-- Translate Screen -->
-    <string name="select_file">Chọn tệp strings.xml</string>
-    <string name="start_translate">Bắt đầu dịch</string>
-    <string name="stop_translation">Dừng dịch</string>
-    <string name="save_translated_file">Lưu tệp đã dịch</string>
+    <string name="select_file">Chọn file strings.xml</string>
+    <string name="start_translate">Bắt đầu Dịch</string>
+    <string name="stop_translation">Dừng Dịch</string>
+    <string name="save_translated_file">Lưu file đã dịch</string>
     <string name="original_value">Value (gốc)</string>
-    <string name="translated_value_vi">Value-vi (dịch)</string>
-    <string name="translated_value_en">Value-en (dịch)</string>
-    <string name="translated_value_zh">Value-zh (dịch)</string>
-    <string name="translated_value_ru">Value-ru (dịch)</string>
-    <string name="translated_value_ko">Value-ko (dịch)</string>
-    <string name="translated_value_es">Value-es (dịch)</string>
-    <string name="translated_value_fr">Value-fr (dịch)</string>
-    <string name="translated_value_de">Value-de (dịch)</string>
-    <string name="translated_value_ja">Value-ja (dịch)</string>
+    <string name="translated_value_vi">Value-vi (đã dịch)</string>
+    <string name="translated_value_en">Value-en (đã dịch)</string>
+    <string name="translated_value_zh">Value-zh (đã dịch)</string>
+    <string name="translated_value_ru">Value-ru (đã dịch)</string>
+    <string name="translated_value_ko">Value-ko (đã dịch)</string>
+    <string name="translated_value_es">Value-es (đã dịch)</string>
+    <string name="translated_value_fr">Value-fr (đã dịch)</string>
+    <string name="translated_value_de">Value-de (đã dịch)</string>
+    <string name="translated_value_ja">Value-ja (đã dịch)</string>
+    <string name="translated_value_default">Value-đã dịch</string>
+    <string name="no_file_selected">Chưa chọn file</string>
     <string name="translating">Đang dịch…</string>
-    <string name="file_saved">Tệp đã được lưu vào Downloads/VTU-Translate: %1$s</string>
-    <string name="error_saving_file">Lỗi khi lưu tệp: %1$s</string>
-
+    <string name="file_saved">Đã lưu file vào Downloads/VTU-Translate: %1$s</string>
+    <string name="error_saving_file">Lỗi khi lưu file: %1$s</string>
+    
     <!-- Settings Screen -->
     <string name="settings_title">Cài đặt</string>
-
+    
     <!-- API Settings -->
-    <string name="api_settings_title">Cài đặt nhà cung cấp AI</string>
-    <string name="api_settings_subtitle">Nhà cung cấp AI, Khóa API, Mô hình</string>
-    <string name="ai_provider">Nhà cung cấp AI</string>
-    <string name="ai_provider_title">Cài đặt nhà cung cấp AI</string>
-    <string name="groq_api_key">Khóa API Groq</string>
-    <string name="gemini_api_key">Khóa API Gemini</string>
-    <string name="api_key_title">Khóa API</string>
-    <string name="get_api_key">Nhận khóa API</string>
-    <string name="get_groq_api_key">Nhận khóa API Groq</string>
-    <string name="get_gemini_api_key">Nhận khóa API Gemini</string>
-    <string name="api_key_saved">Đã lưu khóa API</string>
-    <string name="select_model">Chọn mô hình AI</string>
-
+    <string name="api_settings_title">Cài đặt API</string>
+    <string name="api_settings_subtitle">Groq API Key, Model AI</string>
+    <string name="api_key_title">Groq API Key</string>
+    <string name="get_api_key">Lấy API Key</string>
+    <string name="api_key_saved">Lưu API Key</string>
+    <string name="select_model">Chọn Model AI</string>
+    <string name="model_group_meta">Meta</string>
+    <string name="model_group_deepseek_meta">Deepseek &amp; Meta</string>
+    
     <!-- Interface Settings -->
     <string name="interface_title">Giao diện</string>
     <string name="interface_subtitle">Chế độ giao diện, Ngôn ngữ ứng dụng</string>
@@ -53,68 +51,64 @@
     <string name="dark_theme">Chế độ tối</string>
     <string name="enabled">Đã bật</string>
     <string name="disabled">Đã tắt</string>
-
-    <!-- Translation Settings -->
-    <string name="translation_settings_title">Cài đặt dịch</string>
-    <string name="translation_settings_subtitle">Tốc độ dịch, Ngôn ngữ đích</string>
-    <string name="translation_speed">Tốc độ dịch</string>
-    <string name="batch_size">Kích thước lô</string>
-    <string name="batch_translation_size">Kích thước lô dịch</string>
-    <string name="batch_size_description">Dịch %1$d chuỗi mỗi lần</string>
-    <string name="batch_size_note">Kích thước lô lớn hơn = dịch nhanh hơn nhưng tốn nhiều API hơn</string>
-    <string name="refresh_models">Làm mới mô hình</string>
-    <string name="refreshing_models">Đang làm mới mô hình...</string>
-    <string name="models_refreshed">Đã làm mới mô hình</string>
-    <string name="error_fetching_models">Lỗi khi tải mô hình</string>
-    <string name="available_models">Các mô hình có sẵn</string>
-    <string name="target_language">Ngôn ngữ đích</string>
-    <string name="continue_translation">Tiếp tục dịch</string>
-
-    <!-- About -->
-    <string name="about_title">Giới thiệu</string>
-    <string name="about_subtitle">Thông tin ứng dụng</string>
-    <string name="app_version">Phiên bản</string>
-
-    <!-- Language Settings -->
     <string name="language_vietnamese">Tiếng Việt</string>
     <string name="language_english">Tiếng Anh</string>
     <string name="language_saved">Đã lưu cài đặt ngôn ngữ</string>
-
+    
+    <!-- Additional missing strings for better Vietnamese support -->
+    
     <!-- Log Screen -->
-    <string name="copy_log">Sao chép nhật ký</string>
-    <string name="clear_log">Xóa nhật ký</string>
-    <string name="log_copied">Đã sao chép nhật ký</string>
-    <string name="log_cleared">Đã xóa nhật ký</string>
+    <string name="copy_log">Sao chép Log</string>
+    <string name="clear_log">Xóa Log</string>
+    <string name="log_copied">Đã sao chép log</string>
+    <string name="log_cleared">Đã xóa log</string>
     <string name="log_yet">Chưa có nhật ký</string>
-
+    
     <!-- Log Message Types -->
     <string name="log_type_info">THÔNG TIN</string>
     <string name="log_type_success">THÀNH CÔNG</string>
     <string name="log_type_error">LỖI</string>
     <string name="log_type_warning">CẢNH BÁO</string>
-
+    
+    <!-- Translation Settings -->
+    <string name="translation_settings_title">Cài đặt dịch</string>
+    <string name="translation_settings_subtitle">Tốc độ dịch, Ngôn ngữ đích</string>
+    <string name="translation_speed">Tốc độ dịch</string>
+    <string name="batch_size">Kích thước batch</string>
+    <string name="batch_translation_size">Kích thước dịch batch</string>
+    <string name="batch_size_description">Dịch %1$d chuỗi cùng lúc</string>
+    <string name="batch_size_note">Batch size cao hơn = dịch nhanh hơn nhưng tốn API nhiều hơn</string>
+    <string name="refresh_models">Làm mới Models</string>
+    <string name="refreshing_models">Đang làm mới models...</string>
+    <string name="models_refreshed">Đã làm mới models</string>
+    <string name="error_fetching_models">Lỗi khi tải danh sách models</string>
+    <string name="available_models">Models khả dụng</string>
+    <string name="target_language">Ngôn ngữ đích</string>
+    <string name="continue_translation">Tiếp tục dịch</string>
+    
+    <!-- About -->
+    <string name="about_title">Giới thiệu</string>
+    <string name="about_subtitle">Thông tin ứng dụng</string>
+    <string name="app_version">Phiên bản</string>
+    
     <!-- Error Messages -->
-    <string name="error_no_api_key">Vui lòng nhập Khóa API trong Cài đặt</string>
-    <string name="error_no_model_selected">Vui lòng chọn Mô hình AI trong Cài đặt</string>
-    <string name="error_no_file_selected">Vui lòng chọn tệp strings.xml</string>
-    <string name="error_invalid_file">Tệp không hợp lệ. Vui lòng chọn tệp strings.xml</string>
-
+    <string name="error_no_api_key">Vui lòng nhập API Key trong phần Cài đặt</string>
+    <string name="error_no_model_selected">Vui lòng chọn Model AI trong phần Cài đặt</string>
+    <string name="error_no_file_selected">Vui lòng chọn file strings.xml</string>
+    <string name="error_invalid_file">File không hợp lệ. Vui lòng chọn file strings.xml</string>
+    
     <!-- Credit -->
     <string name="credit_title">Thông tin tác giả</string>
     <string name="credit_author">Tác giả: RenjiYuusei</string>
     <string name="credit_discord">Discord</string>
-
-    <!-- Background Translation -->
-    <string name="translation_service_toggle">Bật dịch trong nền</string>
-    <string name="translation_in_progress">Đang tiến hành dịch</string>
-    <string name="translation_complete">Dịch hoàn tất</string>
-    <string name="translation_notification_channel_name">Dịch thuật</string>
-    <string name="translation_notification_channel_description">Hiển thị tiến trình dịch trong nền</string>
-    <string name="preparing_translation">Đang chuẩn bị dịch...</string>
-    <string name="notification_permission_required">Yêu cầu quyền thông báo để dịch trong nền</string>
-    <string name="translation_progress_detail">Đang dịch %1$d/%2$d chuỗi</string>
     
-    <!-- Additional missing strings compared to English version -->
-    <string name="github">GitHub</string>
-    <string name="gemini_models_note">Ghi chú: Sử dụng các model Gemini được định sẵn. Không cần tải từ API.</string>
+    <!-- Background Translation -->
+    <string name="translation_service_toggle">Bật Dịch Trong Nền</string>
+    <string name="translation_in_progress">Đang dịch...</string>
+    <string name="translation_complete">Hoàn thành dịch</string>
+    <string name="translation_notification_channel_name">Dịch</string>
+    <string name="translation_notification_channel_description">Hiển thị tiến độ dịch trong nền</string>
+    <string name="preparing_translation">Đang chuẩn bị dịch...</string>
+    <string name="notification_permission_required">Cần quyền thông báo để dịch trong nền</string>
+    <string name="translation_progress_detail">%1$d/%2$d chuỗi đang được dịch</string>
 </resources>

@@ -23,8 +23,6 @@ import java.io.OutputStreamWriter
  */
 class TranslationRepository(
     private val groqRepository: GroqRepository,
-    private val geminiRepository: GeminiRepository,
-    private val preferencesRepository: PreferencesRepository,
     private val logRepository: LogRepository,
     private val context: Context
 ) {
@@ -38,13 +36,10 @@ class TranslationRepository(
     private val _selectedFileName = MutableStateFlow<String?>(null)
     val selectedFileName: StateFlow<String?> = _selectedFileName.asStateFlow()
     
-    private val _filteredStringsCount = MutableStateFlow(0)
-    val filteredStringsCount: StateFlow<Int> = _filteredStringsCount.asStateFlow()
-    
     /**
-     * Parse strings.xml file from URI with optional cleanup of unnecessary strings
+     * Parse strings.xml file from URI
      */
-    suspend fun parseStringsXml(context: Context, uri: Uri, enableCleanup: Boolean = true): Result<List<StringResource>> {
+    suspend fun parseStringsXml(context: Context, uri: Uri): Result<List<StringResource>> {
         return withContext(Dispatchers.IO) {
             try {
                 val fileName = getFileName(context, uri)
@@ -58,7 +53,6 @@ class TranslationRepository(
                     parser.setInput(stream, null)
                     
                     val stringResources = mutableListOf<StringResource>()
-                    val filteredResources = mutableListOf<String>() // Track filtered resources
                     var eventType = parser.eventType
                     var name: String? = null
                     var translatable: String? = null
@@ -74,17 +68,11 @@ class TranslationRepository(
                             XmlPullParser.TEXT -> {
                                 if (name != null) {
                                     val value = parser.text
+                                    // Check if string is translatable
+                                    val isTranslatable = translatable == null || translatable != "false"
                                     
-                                    // Check if this string should be filtered out
-                                    if (enableCleanup && isUnnecessaryString(name)) {
-                                        filteredResources.add(name)
-                                        // Skip this string entirely
-                                    } else {
-                                        // Check if string is translatable
-                                        val isTranslatable = translatable == null || translatable != "false"
-                                        
-                                        // Special case handling for known non-translatable strings
-                        val isSpecialCase = isSpecialNonTranslatableString(value)
+                                    // Special case handling for known non-translatable strings
+                    val isSpecialCase = isSpecialNonTranslatableString(value)
                     
                     if (isTranslatable && !isSpecialCase) {
                         // Check if the string contains technical parts that should be preserved
@@ -95,17 +83,16 @@ class TranslationRepository(
                         } else {
                             stringResources.add(StringResource(name, value))
                         }
-                        } else if (isSpecialCase) {
-                            // Add with pre-defined translation for special cases
-                            val predefinedTranslation = getSpecialCaseTranslation(value)
-                            stringResources.add(StringResource(
-                                name = name,
-                                value = value,
-                                translatedValue = predefinedTranslation,
-                                isTranslating = false,
-                                hasError = false
-                            ))
-                                        }
+                    } else if (isSpecialCase) {
+                        // Add with pre-defined translation for special cases
+                        val predefinedTranslation = getSpecialCaseTranslation(value)
+                        stringResources.add(StringResource(
+                            name = name,
+                            value = value,
+                            translatedValue = predefinedTranslation,
+                            isTranslating = false,
+                            hasError = false
+                        ))
                                     }
                                 }
                             }
@@ -119,12 +106,6 @@ class TranslationRepository(
                         eventType = parser.next()
                     }
                     
-                    // Update filtered count and log cleanup results
-                    _filteredStringsCount.value = filteredResources.size
-                    if (enableCleanup && filteredResources.isNotEmpty()) {
-                        logRepository.logInfo("Đã lọc bỏ ${filteredResources.size} chuỗi không cần thiết: ${filteredResources.joinToString(", ")}")
-                    }
-                    
                     _stringResources.value = stringResources
                     return@withContext Result.success(stringResources)
                 } ?: return@withContext Result.failure(Exception("Could not open file"))
@@ -132,22 +113,6 @@ class TranslationRepository(
                 return@withContext Result.failure(e)
             }
         }
-    }
-    
-    /**
-     * Check if a string name indicates it's an unnecessary string that should be filtered out
-     * 
-     * @param name The string name to check
-     * @return True if the string should be filtered out
-     */
-    private fun isUnnecessaryString(name: String): Boolean {
-        val unnecessaryPrefixes = listOf(
-            "abc_",        // ActionBar Compat strings
-            "mtrl_",       // Material Design Library strings
-            "material_",   // Material Design strings
-        )
-        
-        return unnecessaryPrefixes.any { prefix -> name.startsWith(prefix) }
     }
     
     /**
@@ -260,14 +225,7 @@ class TranslationRepository(
                 val startIndex = maxOf(0, continueFromIndex)
                 val remainingCount = resources.size - startIndex
                 
-                // Get the current provider and model for logging
-                val aiProvider = preferencesRepository.aiProvider.value
-                val modelName = when (aiProvider) {
-                    com.vtu.translate.data.model.AiProvider.GROQ -> groqRepository.getSelectedModel()
-                    com.vtu.translate.data.model.AiProvider.GEMINI -> geminiRepository.getSelectedModel()
-                }
-                
-                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với ${aiProvider.displayName} model [$modelName] sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
+                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [${groqRepository.getSelectedModel()}] sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
                 
                 // Create a mutable copy of the resources
                 val updatedResources = resources.toMutableList()
@@ -312,22 +270,14 @@ class TranslationRepository(
                         // Extract texts for batch translation
                         val textsToTranslate = batchResources.map { it.second.value }
                         
-                        // Translate batch using selected AI provider
+                        // Translate batch
                         val result = if (textsToTranslate.size == 1) {
                             // Single text, use regular translation
                             translateTextWithLanguages(textsToTranslate[0], targetLanguage)
                                 .map { listOf(it) }
                         } else {
-                            // Multiple texts, use batch translation based on selected provider
-                            val currentProvider = preferencesRepository.aiProvider.value
-                            when (currentProvider) {
-                                com.vtu.translate.data.model.AiProvider.GROQ -> {
-                                    groqRepository.translateBatch(textsToTranslate, targetLanguage)
-                                }
-                                com.vtu.translate.data.model.AiProvider.GEMINI -> {
-                                    geminiRepository.translateBatch(textsToTranslate, targetLanguage)
-                                }
-                            }
+                            // Multiple texts, use batch translation
+                            groqRepository.translateBatch(textsToTranslate, targetLanguage)
                         }
                         
                         if (result.isSuccess) {
@@ -560,17 +510,8 @@ class TranslationRepository(
      * Translate text to specified target language using selected API provider
      */
     private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result<String> {
-        return withContext(Dispatchers.IO) {
-            val aiProvider = preferencesRepository.aiProvider.value
-            when (aiProvider) {
-                com.vtu.translate.data.model.AiProvider.GROQ -> {
-                    groqRepository.translateText(text, targetLanguage)
-                }
-                com.vtu.translate.data.model.AiProvider.GEMINI -> {
-                    geminiRepository.translateText(text, targetLanguage)
-                }
-            }
-        }
+        // Use the selected API provider from preferences
+return groqRepository.translateText(text, targetLanguage)
     }
     
 }
