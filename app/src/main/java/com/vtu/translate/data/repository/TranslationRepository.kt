@@ -585,11 +585,11 @@ class TranslationRepository(
     /**
      * Translate text to specified target language using selected API provider
      */
-    private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result 3cString 3e {
+    private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result<String> {
         // Choose provider based on preference
         return when (preferencesRepository.selectedProvider.value.lowercase()) {
-            "gemini" - 3e geminiRepository.translateText(text, targetLanguage)
-            else - 3e groqRepository.translateText(text, targetLanguage)
+            "gemini" -> geminiRepository.translateText(text, targetLanguage)
+            else -> groqRepository.translateText(text, targetLanguage)
         }
     }
     
