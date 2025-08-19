@@ -56,7 +56,9 @@ class GeminiRepository(private val preferencesRepository: PreferencesRepository)
                 return Result.failure(Exception("Gemini API key chưa được thiết lập"))
             }
 
-            val model = preferencesRepository.selectedModel.first().takeIf { it.isNotBlank() } ?: DEFAULT_MODEL
+            // Ensure we always use a valid Gemini model
+            val selected = preferencesRepository.selectedModel.first()
+            val model = selected.takeIf { it.isNotBlank() && it.startsWith("gemini") } ?: DEFAULT_MODEL
 
             val prompt = if (texts.size == 1) {
                 "Translate the following Android string resource value into $targetLanguage. Return ONLY the translated text without quotes or extra text. Do NOT translate technical identifiers, package names, URLs, placeholders or format specifiers (%s, %d).\nOriginal: ${texts[0]}"

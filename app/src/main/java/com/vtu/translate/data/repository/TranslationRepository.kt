@@ -293,7 +293,8 @@ class TranslationRepository(
                 // Get the current provider and model for logging
                 val currentProvider = preferencesRepository.selectedProvider.first()
                 val currentModel = if (currentProvider.lowercase() == "gemini") {
-                    preferencesRepository.selectedModel.first().takeIf { it.isNotBlank() } ?: "gemini-2.5-flash"
+                    val sel = preferencesRepository.selectedModel.first()
+                    sel.takeIf { it.isNotBlank() && it.startsWith("gemini") } ?: "gemini-2.5-flash"
                 } else {
                     groqRepository.getSelectedModel()
                 }
