@@ -948,7 +948,7 @@ fun ThemeModeDropdown(
                 onDismissRequest = { expanded = false },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                ThemeMode.values().forEach { themeMode ->
+                listOf(ThemeMode.LIGHT, ThemeMode.DARK).forEach { themeMode ->
                     val isSelected = themeMode == selectedThemeMode
                     DropdownMenuItem(
                         text = {
