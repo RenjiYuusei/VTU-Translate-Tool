@@ -47,6 +47,7 @@ class MainViewModel(
     val isTranslating = translationRepository.isTranslating
     val isBackgroundTranslationEnabled = preferencesRepository.isBackgroundTranslationEnabled
     val selectedFileName = translationRepository.selectedFileName
+    val filteredStringsCount = translationRepository.filteredStringsCount
     val logs = logRepository.logs
     
     // Available models from API
@@ -229,6 +230,13 @@ class MainViewModel(
      */
     fun saveAiProvider(provider: com.vtu.translate.data.model.AiProvider) {
         preferencesRepository.saveAiProvider(provider)
+    }
+    
+    /**
+     * Parse strings XML file with optional cleanup
+     */
+    suspend fun parseStringsXml(context: android.content.Context, uri: android.net.Uri, enableCleanup: Boolean = true): kotlin.Result<List<com.vtu.translate.data.model.StringResource>> {
+        return translationRepository.parseStringsXml(context, uri, enableCleanup)
     }
     
     /**

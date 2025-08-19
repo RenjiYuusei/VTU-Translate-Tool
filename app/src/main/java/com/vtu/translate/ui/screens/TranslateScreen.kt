@@ -78,7 +78,10 @@ import androidx.compose.ui.unit.dp
 import com.vtu.translate.R
 import com.vtu.translate.data.model.StringResource
 import com.vtu.translate.service.TranslationService
+import com.vtu.translate.ui.components.*
 import com.vtu.translate.ui.viewmodel.MainViewModel
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.launch
 
 /**
@@ -117,6 +120,7 @@ fun TranslateScreen(
     val stringResources by viewModel.stringResources.collectAsState()
     val isTranslating by viewModel.isTranslating.collectAsState()
     val selectedFileName by viewModel.selectedFileName.collectAsState()
+    val filteredStringsCount by viewModel.filteredStringsCount.collectAsState()
     val apiKey by viewModel.apiKey.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val targetLanguage by viewModel.targetLanguage.collectAsState()
@@ -128,8 +132,8 @@ fun TranslateScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             coroutineScope.launch {
-                val app = context.applicationContext as com.vtu.translate.VtuTranslateApp
-                val result = app.translationRepository.parseStringsXml(context, uri)
+                // Use ViewModel's parseStringsXml method which includes cleanup by default
+                val result = viewModel.parseStringsXml(context, uri, enableCleanup = true)
                 
                 if (result.isFailure) {
                     Toast.makeText(
@@ -170,17 +174,54 @@ fun TranslateScreen(
             )
         }
         
-        // Show selected file name
-        if (selectedFileName != null) {
-            Text(
-                text = selectedFileName ?: "",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.no_file_selected),
-                style = MaterialTheme.typography.bodyMedium
-            )
+        // File status card with improved design
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = if (selectedFileName != null) R.drawable.ic_file else R.drawable.ic_file),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = selectedFileName ?: stringResource(R.string.no_file_selected),
+                            style = if (selectedFileName != null) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyMedium,
+                            color = if (selectedFileName != null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                        
+                        if (stringResources.isNotEmpty()) {
+                            Text(
+                                text = "${stringResources.size} chuỗi đã tải",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                        
+                        // Show filtered strings info if any were filtered
+                        if (filteredStringsCount > 0) {
+                            Text(
+                                text = "Đã lọc bỏ $filteredStringsCount chuỗi không cần thiết",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                        }
+                    }
+                }
+            }
         }
         
         // Background translation toggle
@@ -488,118 +529,213 @@ fun StringResourceItem(
     onTranslatedValueChange: (String) -> Unit,
     targetLanguage: String = "vi"
 ) {
-    // Kiểm tra xem chuỗi có phải là chuỗi đặc biệt thực sự hay không
-    // Chỉ đánh dấu là chuỗi đặc biệt nếu nó thỏa mãn các điều kiện của isSpecialNonTranslatableString
+    // Check if this is a special non-translatable string
     val isSpecialCase = isSpecialNonTranslatableString(resource.value) && 
                        resource.translatedValue.isNotBlank() && 
                        !resource.isTranslating && 
                        !resource.hasError
     
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSpecialCase) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
-        )
+    VTUCard(
+        elevation = if (resource.isTranslating) VTUElevation.high else VTUElevation.medium
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(VTUSpacing.large),
+            verticalArrangement = Arrangement.spacedBy(VTUSpacing.medium)
         ) {
-            // Resource name with badge for special cases
+            // Header with resource name and status badges
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = resource.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = resource.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    // Show character count
+                    Text(
+                        text = "${resource.value.length} ký tự",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 
-                if (isSpecialCase) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(4.dp)
+                // Status badges
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(VTUSpacing.xs)
+                ) {
+                    when {
+                        resource.isTranslating -> {
+                            VTUStatusBadge("Đang dịch", StatusType.INFO)
+                        }
+                        resource.hasError -> {
+                            VTUStatusBadge("Lỗi", StatusType.ERROR)
+                        }
+                        isSpecialCase -> {
+                            VTUStatusBadge("Đặc biệt", StatusType.WARNING)
+                        }
+                        resource.translatedValue.isNotBlank() -> {
+                            VTUStatusBadge("Hoàn thành", StatusType.SUCCESS)
+                        }
+                        else -> {
+                            VTUStatusBadge("Chưa dịch", StatusType.DEFAULT)
+                        }
+                    }
+                }
+            }
+            
+            // Original text field
+            VTUTextField(
+                value = resource.value,
+                onValueChange = { },
+                label = "Văn bản gốc",
+                readOnly = true,
+                maxLines = 3,
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_source),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            )
+            
+            // Translation text field with dynamic label
+            val translationLabel = when (targetLanguage) {
+                "vi" -> "Bản dịch tiếng Việt"
+                "en" -> "English Translation"
+                "zh" -> "中文翻译"
+                "ja" -> "日本語訳"
+                "ko" -> "한국어 번역"
+                "es" -> "Traducción en Español"
+                "fr" -> "Traduction Française"
+                "de" -> "Deutsche Übersetzung"
+                "ru" -> "Русский перевод"
+                else -> "Bản dịch"
+            }
+            
+            VTUTextField(
+                value = resource.translatedValue,
+                onValueChange = onTranslatedValueChange,
+                label = translationLabel,
+                enabled = !resource.isTranslating,
+                maxLines = 3,
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_target),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = if (resource.isTranslating) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                },
+                trailingIcon = if (resource.translatedValue.isNotBlank() && !resource.isTranslating) {
+                    {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_check),
+                            contentDescription = "Đã dịch",
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                } else null,
+                supportingText = if (resource.translatedValue.isNotBlank()) {
+                    "${resource.translatedValue.length} ký tự"
+                } else null
+            )
+            
+            // Translation progress indicator
+            AnimatedVisibility(
+                visible = resource.isTranslating,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                VTUCard(
+                    elevation = VTUElevation.low
+                ) {
+                    Row(
+                        modifier = Modifier.padding(VTUSpacing.medium),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Đặc biệt",
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(VTUSpacing.small))
+                        Text(
+                            text = "Đang dịch...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-                
-                if (resource.hasError) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(4.dp)
+            }
+            
+            // Special case information
+            AnimatedVisibility(
+                visible = isSpecialCase,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                VTUCard(
+                    elevation = VTUElevation.low
+                ) {
+                    Row(
+                        modifier = Modifier.padding(VTUSpacing.medium),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_info),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.tertiary
+                        )
+                        Spacer(modifier = Modifier.width(VTUSpacing.small))
                         Text(
-                            text = "Lỗi",
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            text = "Chuỗi này được giữ nguyên vì là định danh kỹ thuật hoặc chuỗi đặc biệt.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            
+            // Error state information
+            AnimatedVisibility(
+                visible = resource.hasError,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                VTUCard(
+                    elevation = VTUElevation.low
+                ) {
+                    Row(
+                        modifier = Modifier.padding(VTUSpacing.medium),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_error),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(VTUSpacing.small))
+                        Text(
+                            text = "Có lỗi xảy ra khi dịch chuỗi này. Bạn có thể thử dịch lại hoặc chỉnh sửa thủ công.",
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Original value
-            OutlinedTextField(
-                value = resource.value,
-                onValueChange = { },
-                readOnly = true,
-                label = { Text(stringResource(R.string.original_value)) },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            // Translated value with dynamic label based on target language
-            val translatedValueLabelId = when (targetLanguage) {
-                "vi" -> R.string.translated_value_vi
-                "en" -> R.string.translated_value_en
-                "zh" -> R.string.translated_value_zh
-                "ru" -> R.string.translated_value_ru
-                "ko" -> R.string.translated_value_ko
-                "es" -> R.string.translated_value_es
-                "fr" -> R.string.translated_value_fr
-                "de" -> R.string.translated_value_de
-                "ja" -> R.string.translated_value_ja
-                else -> R.string.translated_value_default
-            }
-            
-            OutlinedTextField(
-                value = resource.translatedValue,
-                onValueChange = onTranslatedValueChange,
-                label = { Text(stringResource(translatedValueLabelId)) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !resource.isTranslating,
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface, // Keep text visible when disabled
-                    disabledBorderColor = if (isSpecialCase) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    disabledLabelColor = if (isSpecialCase) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            )
-            
-            // Show loading indicator if translating
-            if (resource.isTranslating) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            
-            // Show info message for special cases
-            if (isSpecialCase) {
-                Text(
-                    text = "Chuỗi này được giữ nguyên do là định danh kỹ thuật hoặc chuỗi đặc biệt.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
             }
         }
     }
