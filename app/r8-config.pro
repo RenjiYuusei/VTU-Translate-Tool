@@ -9,8 +9,10 @@
 # Keep only essential attributes
 -keepattributes Signature,*Annotation*
 
-# Aggressive obfuscation (using only repackageclasses)
--repackageclasses ''
+# NOTE: Repackaging flattens package hierarchy and puts classes in the root package,
+# which makes smali appear uncategorized (no folders). Disable it to preserve
+# original package structure in classes.dex/smali.
+# -repackageclasses ''
 
 # Remove unused code based on SDK version
 -assumevalues class android.os.Build$VERSION {
