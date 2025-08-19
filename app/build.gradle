@@ -67,9 +67,6 @@ android {
             
             // Additional R8 optimizations
             consumerProguardFiles 'consumer-rules.pro'
-            
-            // Enable resource optimization
-            resValue "string", "app_version", versionName
         }
     }
     compileOptions {
