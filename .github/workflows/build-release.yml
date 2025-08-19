@@ -107,8 +107,16 @@ jobs:
         fi
         # Try to access private key using key password (no change performed)
         if ! keytool -keypasswd -keystore "$store_file" -storepass "$store_pass" -alias "$alias_name" -keypass "$key_pass" -new "$key_pass" >/dev/null 2>&1; then
-          echo "❌ Key password validation failed for alias '$alias_name'"
-          exit 1
+          echo "⚠️ Key password validation failed for alias '$alias_name' with provided keyPassword. Trying storePassword as key password..."
+          if keytool -keypasswd -keystore "$store_file" -storepass "$store_pass" -alias "$alias_name" -keypass "$store_pass" -new "$store_pass" >/dev/null 2>&1; then
+            echo "✅ Detected key password equals store password. Using store password for signing."
+            # Update keystore.properties in workspace for this run so Gradle reads the correct key password
+            sed -i "s/^keyPassword=.*/keyPassword=$store_pass/" keystore.properties
+            key_pass="$store_pass"
+          else
+            echo "❌ Key password validation failed for alias '$alias_name'"
+            exit 1
+          fi
         else
           echo "✅ Keystore and key credentials look valid"
         fi
