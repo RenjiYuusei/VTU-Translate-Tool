@@ -55,7 +55,7 @@ android {
                     def ksPassEnv = env['KEYSTORE_PASSWORD']
                     def keyAliasEnv = env['KEY_ALIAS']
                     def keyPassEnv = env['KEY_PASSWORD']
-                    if (ksFileEnv  ksPassEnv  keyAliasEnv  keyPassEnv) {
+                    if (ksFileEnv && ksPassEnv && keyAliasEnv && keyPassEnv) {
                         storeFile rootProject.file(ksFileEnv)
                         storePassword ksPassEnv
                         keyAlias keyAliasEnv
