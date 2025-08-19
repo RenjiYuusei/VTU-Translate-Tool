@@ -437,9 +437,24 @@ private fun LogSearchAndFilter(
                                     }
                                 } else null,
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = getLogTypeColor(logType).copy(alpha = 0.2f),
-                                    selectedLabelColor = getLogTypeColor(logType),
-                                    selectedLeadingIconColor = getLogTypeColor(logType)
+                                    selectedContainerColor = when (logType) {
+                                        LogType.INFO -> AccentBlue
+                                        LogType.SUCCESS -> AccentGreen  
+                                        LogType.WARNING -> AccentYellow
+                                        LogType.ERROR -> AccentRed
+                                    }.copy(alpha = 0.2f),
+                                    selectedLabelColor = when (logType) {
+                                        LogType.INFO -> AccentBlue
+                                        LogType.SUCCESS -> AccentGreen
+                                        LogType.WARNING -> AccentYellow
+                                        LogType.ERROR -> AccentRed
+                                    },
+                                    selectedLeadingIconColor = when (logType) {
+                                        LogType.INFO -> AccentBlue
+                                        LogType.SUCCESS -> AccentGreen
+                                        LogType.WARNING -> AccentYellow
+                                        LogType.ERROR -> AccentRed
+                                    }
                                 )
                             )
                         }
@@ -488,13 +503,23 @@ private fun ModernLogEntryItem(logEntry: LogEntry) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(getLogTypeColor(logEntry.type).copy(alpha = 0.1f)),
+                    .background(when (logEntry.type) {
+                        LogType.INFO -> AccentBlue
+                        LogType.SUCCESS -> AccentGreen
+                        LogType.WARNING -> AccentYellow
+                        LogType.ERROR -> AccentRed
+                    }.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = getLogTypeIcon(logEntry.type),
                     contentDescription = null,
-                    tint = getLogTypeColor(logEntry.type),
+                    tint = when (logEntry.type) {
+                        LogType.INFO -> AccentBlue
+                        LogType.SUCCESS -> AccentGreen
+                        LogType.WARNING -> AccentYellow
+                        LogType.ERROR -> AccentRed
+                    },
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -588,15 +613,6 @@ private fun NoResultsState(
 }
 
 // Helper functions
-@Composable
-private fun getLogTypeColor(logType: LogType): Color {
-    return when (logType) {
-        LogType.INFO -> AccentBlue
-        LogType.SUCCESS -> AccentGreen
-        LogType.WARNING -> AccentYellow
-        LogType.ERROR -> AccentRed
-    }
-}
 
 @Composable
 private fun getLogTypeIcon(logType: LogType): ImageVector {

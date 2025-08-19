@@ -370,7 +370,6 @@ private fun GroqAPIKeyCard(
                         contentDescription = null
                     )
                 },
-                visualTransformation = PasswordVisualTransformation(),
                 singleLine = true
             )
             
@@ -456,7 +455,6 @@ private fun GeminiAPIKeyCard(
                         contentDescription = null
                     )
                 },
-                visualTransformation = PasswordVisualTransformation(),
                 singleLine = true
             )
             
@@ -573,7 +571,7 @@ private fun ModelSelectionCard(
                     Toast.makeText(context, "Đang tải danh sách model...", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                loading = isLoading,
+                enabled = !isLoading,
                 icon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_refresh),
