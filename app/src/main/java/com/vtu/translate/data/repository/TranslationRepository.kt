@@ -289,7 +289,15 @@ class TranslationRepository(
                 val startIndex = maxOf(0, continueFromIndex)
                 val remainingCount = resources.size - startIndex
                 
-                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [${groqRepository.getSelectedModel()}] sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
+                // Get the current provider and model for logging
+                val currentProvider = preferencesRepository.selectedProvider.first()
+                val currentModel = if (currentProvider.lowercase() == "gemini") {
+                    preferencesRepository.selectedModel.first().takeIf { it.isNotBlank() } ?: "gemini-2.5-flash"
+                } else {
+                    groqRepository.getSelectedModel()
+                }
+                
+                logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [$currentModel] ($currentProvider) sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
                 
                 // Create a mutable copy of the resources
                 val updatedResources = resources.toMutableList()
@@ -340,8 +348,11 @@ class TranslationRepository(
                             translateTextWithLanguages(textsToTranslate[0], targetLanguage)
                                 .map { listOf(it) }
                         } else {
-                            // Multiple texts, use batch translation
-                            groqRepository.translateBatch(textsToTranslate, targetLanguage)
+                            // Multiple texts, use batch translation based on selected provider
+                            when (currentProvider.lowercase()) {
+                                "gemini" -> geminiRepository.translateBatch(textsToTranslate, targetLanguage)
+                                else -> groqRepository.translateBatch(textsToTranslate, targetLanguage)
+                            }
                         }
                         
                         if (result.isSuccess) {
@@ -587,7 +598,7 @@ class TranslationRepository(
      */
     private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result<String> {
         // Choose provider based on preference
-        return when (preferencesRepository.selectedProvider.value.lowercase()) {
+        return when (preferencesRepository.selectedProvider.first().lowercase()) {
             "gemini" -> geminiRepository.translateText(text, targetLanguage)
             else -> groqRepository.translateText(text, targetLanguage)
         }
