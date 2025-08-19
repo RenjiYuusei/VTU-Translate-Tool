@@ -81,6 +81,38 @@ jobs:
           fi
         done
 
+        # Read properties
+        store_file=$(grep '^storeFile=' keystore.properties | sed 's/^storeFile=//')
+        store_pass=$(grep '^storePassword=' keystore.properties | sed 's/^storePassword=//')
+        alias_name=$(grep '^keyAlias=' keystore.properties | sed 's/^keyAlias=//')
+        key_pass=$(grep '^keyPassword=' keystore.properties | sed 's/^keyPassword=//')
+
+        # Ensure keystore file exists (resolve relative to repo root)
+        if [ ! -f "$store_file" ]; then
+          echo "❌ Keystore file not found at '$store_file' (from keystore.properties)"
+          exit 1
+        fi
+
+        # Validate keystore, alias, and passwords using keytool (no secrets printed)
+        echo "Validating keystore and alias from keystore.properties..."
+        if ! keytool -list -keystore "$store_file" -storepass "$store_pass" >/dev/null 2>&1; then
+          echo "❌ Keystore validation failed: store password may be incorrect or file is corrupted"
+          exit 1
+        fi
+        if ! keytool -list -keystore "$store_file" -storepass "$store_pass" -alias "$alias_name" >/dev/null 2>&1; then
+          echo "❌ Alias validation failed: alias '$alias_name' not found in keystore"
+          echo "ℹ️ Available aliases:"
+          keytool -list -keystore "$store_file" -storepass "$store_pass" | sed -n 's/^\s\+Alias name: \(.*\)$/- \1/p' || true
+          exit 1
+        fi
+        # Try to access private key using key password (no change performed)
+        if ! keytool -keypasswd -keystore "$store_file" -storepass "$store_pass" -alias "$alias_name" -keypass "$key_pass" -new "$key_pass" >/dev/null 2>&1; then
+          echo "❌ Key password validation failed for alias '$alias_name'"
+          exit 1
+        else
+          echo "✅ Keystore and key credentials look valid"
+        fi
+
         # Keystore details validated above; proceeding without writing step summary
 
     - name: Build release APK
