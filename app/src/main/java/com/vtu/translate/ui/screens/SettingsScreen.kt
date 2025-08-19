@@ -98,6 +98,8 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val apiKey by viewModel.apiKey.collectAsState()
+    val geminiApiKey by viewModel.geminiApiKey.collectAsState()
+    val selectedProvider by viewModel.selectedProvider.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
     val translationSpeed by viewModel.translationSpeed.collectAsState()
@@ -136,7 +138,7 @@ fun SettingsScreen(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ApiKeySection(viewModel, apiKey)
+                    ApiKeySection(viewModel, selectedProvider, apiKey, geminiApiKey)
                     ModelSelectionSection(viewModel, selectedModel)
                 }
             }
@@ -320,26 +322,47 @@ fun SettingsCategoryItem(
 @Composable
 fun ApiKeySection(
     viewModel: MainViewModel,
+    selectedProvider: String,
     apiKey: String,
+    geminiApiKey: String,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var provider by remember { mutableStateOf(selectedProvider) }
     var apiKeyInput by remember { mutableStateOf(apiKey) }
+    var geminiKeyInput by remember { mutableStateOf(geminiApiKey) }
     
     SettingsSectionCard(
         title = stringResource(R.string.api_key_title),
         icon = R.drawable.ic_key,
         modifier = modifier
     ) {
-        // API Key input field
-        OutlinedTextField(
-            value = apiKeyInput,
-            onValueChange = { apiKeyInput = it },
-            label = { Text(stringResource(R.string.api_key_title)) },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+        // Provider dropdown
+        ProviderDropdown(
+            selected = provider,
+            onSelected = { provider = it; viewModel.saveSelectedProvider(it) }
         )
+
+        // API Key input fields per provider
+        if (provider.lowercase() == "gemini") {
+            OutlinedTextField(
+                value = geminiKeyInput,
+                onValueChange = { geminiKeyInput = it },
+                label = { Text("Gemini API Key") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+        } else {
+            OutlinedTextField(
+                value = apiKeyInput,
+                onValueChange = { apiKeyInput = it },
+                label = { Text(stringResource(R.string.api_key_title)) },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+        }
         
         // Buttons row
         Row(
@@ -349,25 +372,20 @@ fun ApiKeySection(
             // Save API Key button
             ElevatedButton(
                 onClick = {
-                    if (apiKeyInput.isBlank()) {
-                        Toast.makeText(
-                            context,
-                            "Vui lòng nhập API key",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@ElevatedButton
+                    if (provider.lowercase() == "gemini") {
+                        if (geminiKeyInput.isBlank()) {
+                            Toast.makeText(context, "Vui lòng nhập Gemini API key", Toast.LENGTH_SHORT).show()
+                            return@ElevatedButton
+                        }
+                        viewModel.saveGeminiApiKey(geminiKeyInput)
+                    } else {
+                        if (apiKeyInput.isBlank()) {
+                            Toast.makeText(context, "Vui lòng nhập API key", Toast.LENGTH_SHORT).show()
+                            return@ElevatedButton
+                        }
+                        // No strict format check to allow flexibility
+                        viewModel.saveApiKey(apiKeyInput)
                     }
-                    
-                    if (!isValidGroqApiKey(apiKeyInput)) {
-                        Toast.makeText(
-                            context,
-                            "API key không đúng định dạng Groq (phải bắt đầu với gsk_)",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@ElevatedButton
-                    }
-                    
-                    viewModel.saveApiKey(apiKeyInput)
                     Toast.makeText(
                         context,
                         context.getString(R.string.api_key_saved),
@@ -391,7 +409,12 @@ fun ApiKeySection(
             // Get API Key button
             ElevatedButton(
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://console.groq.com/keys"))
+                    val url = if (provider.lowercase() == "gemini") {
+                        "https://aistudio.google.com/app/apikey"
+                    } else {
+                        "https://console.groq.com/keys"
+                    }
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     context.startActivity(intent)
                 },
                 modifier = Modifier.weight(1f),
@@ -418,6 +441,7 @@ fun ModelSelectionSection(
     modifier: Modifier = Modifier
 ) {
     val apiKey by viewModel.apiKey.collectAsState()
+    val selectedProvider by viewModel.selectedProvider.collectAsState()
     val context = LocalContext.current
     
     SettingsSectionCard(
@@ -432,9 +456,9 @@ fun ModelSelectionSection(
             }
         }
         
-        // Model selection dropdown with animation
+        // Model selection dropdown with animation (only for Groq currently)
         AnimatedVisibility(
-            visible = true,
+            visible = selectedProvider.lowercase() == "groq",
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + slideOutVertically()
         ) {
@@ -446,7 +470,7 @@ fun ModelSelectionSection(
                     onModelSelected = { viewModel.saveSelectedModel(it) }
                 )
                 
-                // Refresh models button
+                // Refresh models button (Groq)
                 ElevatedButton(
                     onClick = {
                         if (apiKey.isBlank()) {
@@ -1089,6 +1113,81 @@ fun ModelSelectionDropdown(
                             enabled = false
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProviderDropdown(
+    selected: String,
+    onSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val providers = listOf("groq" to "Groq", "gemini" to "Gemini")
+
+    Column(modifier = modifier) {
+        Text(
+            text = "Provider",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TextField(
+                value = providers.firstOrNull { it.first == selected }?.second ?: selected,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    Icon(
+                        imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                providers.forEach { (id, name) ->
+                    val isSelected = id == selected
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = name,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        onClick = { onSelected(id); expanded = false },
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else null
+                    )
                 }
             }
         }

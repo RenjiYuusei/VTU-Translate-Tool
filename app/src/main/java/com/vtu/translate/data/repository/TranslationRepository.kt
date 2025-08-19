@@ -24,7 +24,9 @@ import java.io.OutputStreamWriter
 class TranslationRepository(
     private val groqRepository: GroqRepository,
     private val logRepository: LogRepository,
-    private val context: Context
+    private val context: Context,
+    private val preferencesRepository: PreferencesRepository,
+    private val geminiRepository: GeminiRepository
 ) {
     
     private val _stringResources = MutableStateFlow<List<StringResource>>(emptyList())
@@ -583,9 +585,12 @@ class TranslationRepository(
     /**
      * Translate text to specified target language using selected API provider
      */
-    private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result<String> {
-        // Use the selected API provider from preferences
-return groqRepository.translateText(text, targetLanguage)
+    private suspend fun translateTextWithLanguages(text: String, targetLanguage: String): Result 3cString 3e {
+        // Choose provider based on preference
+        return when (preferencesRepository.selectedProvider.value.lowercase()) {
+            "gemini" - 3e geminiRepository.translateText(text, targetLanguage)
+            else - 3e groqRepository.translateText(text, targetLanguage)
+        }
     }
     
 }

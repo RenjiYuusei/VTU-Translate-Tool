@@ -17,7 +17,9 @@ class PreferencesRepository(context: Context) {
     companion object {
         private const val PREFERENCES_FILE = "encrypted_prefs.xml"
         private const val KEY_API_KEY = "groq_api_key"
+        private const val KEY_GEMINI_API_KEY = "gemini_api_key"
         private const val KEY_SELECTED_MODEL = "selected_model"
+        private const val KEY_SELECTED_PROVIDER = "selected_provider"
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_TARGET_LANGUAGE = "target_language"
         private const val KEY_DARK_THEME = "dark_theme"
@@ -27,7 +29,8 @@ class PreferencesRepository(context: Context) {
         private const val KEY_BATCH_SIZE = "batch_size"
         private const val KEY_BACKGROUND_TRANSLATION = "background_translation"
         
-        // Default model - Using production model for stability
+        // Default selections
+        private const val DEFAULT_PROVIDER = "groq"
         private const val DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
         
         // Default language (Vietnamese)
@@ -51,6 +54,12 @@ class PreferencesRepository(context: Context) {
     
     private val _apiKey = MutableStateFlow<String>("")
     val apiKey: StateFlow<String> = _apiKey.asStateFlow()
+    
+    private val _geminiApiKey = MutableStateFlow<String>("")
+    val geminiApiKey: StateFlow<String> = _geminiApiKey.asStateFlow()
+    
+    private val _selectedProvider = MutableStateFlow<String>(DEFAULT_PROVIDER)
+    val selectedProvider: StateFlow<String> = _selectedProvider.asStateFlow()
     
     private val _selectedModel = MutableStateFlow<String>(DEFAULT_MODEL)
     val selectedModel: StateFlow<String> = _selectedModel.asStateFlow()
@@ -105,6 +114,8 @@ class PreferencesRepository(context: Context) {
 
     private fun loadSavedValues() {
         _apiKey.value = encryptedPrefs.getString(KEY_API_KEY, "") ?: ""
+        _geminiApiKey.value = encryptedPrefs.getString(KEY_GEMINI_API_KEY, "") ?: ""
+        _selectedProvider.value = encryptedPrefs.getString(KEY_SELECTED_PROVIDER, DEFAULT_PROVIDER) ?: DEFAULT_PROVIDER
         _selectedModel.value = encryptedPrefs.getString(KEY_SELECTED_MODEL, DEFAULT_MODEL) ?: DEFAULT_MODEL
         _appLanguage.value = encryptedPrefs.getString(KEY_APP_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE
         _isDarkTheme.value = encryptedPrefs.getBoolean(KEY_DARK_THEME, DEFAULT_DARK_THEME)
@@ -117,11 +128,27 @@ class PreferencesRepository(context: Context) {
     }
     
     /**
-     * Save API key to encrypted preferences
+     * Save API key to encrypted preferences (Groq)
      */
     fun saveApiKey(apiKey: String) {
         encryptedPrefs.edit().putString(KEY_API_KEY, apiKey).apply()
         _apiKey.value = apiKey
+    }
+    
+    /**
+     * Save Gemini API key to encrypted preferences
+     */
+    fun saveGeminiApiKey(apiKey: String) {
+        encryptedPrefs.edit().putString(KEY_GEMINI_API_KEY, apiKey).apply()
+        _geminiApiKey.value = apiKey
+    }
+    
+    /**
+     * Save selected provider (groq or gemini)
+     */
+    fun saveSelectedProvider(provider: String) {
+        encryptedPrefs.edit().putString(KEY_SELECTED_PROVIDER, provider).apply()
+        _selectedProvider.value = provider
     }
     
     /**

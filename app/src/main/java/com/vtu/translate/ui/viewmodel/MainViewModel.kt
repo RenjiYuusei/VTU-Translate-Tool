@@ -31,6 +31,8 @@ class MainViewModel(
     
     // Expose repository flows
     val apiKey = preferencesRepository.apiKey
+    val geminiApiKey = preferencesRepository.geminiApiKey
+    val selectedProvider = preferencesRepository.selectedProvider
     val selectedModel = preferencesRepository.selectedModel
     val appLanguage = preferencesRepository.appLanguage
     val isDarkTheme = preferencesRepository.isDarkTheme
@@ -60,10 +62,24 @@ class MainViewModel(
     }
     
     /**
-     * Save API key
+     * Save API key (Groq)
      */
     fun saveApiKey(apiKey: String) {
         preferencesRepository.saveApiKey(apiKey)
+    }
+    
+    /**
+     * Save Gemini API key
+     */
+    fun saveGeminiApiKey(apiKey: String) {
+        preferencesRepository.saveGeminiApiKey(apiKey)
+    }
+    
+    /**
+     * Save selected provider
+     */
+    fun saveSelectedProvider(provider: String) {
+        preferencesRepository.saveSelectedProvider(provider)
     }
     
     /**
