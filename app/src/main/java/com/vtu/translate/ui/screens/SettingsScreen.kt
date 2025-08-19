@@ -456,50 +456,58 @@ fun ModelSelectionSection(
             }
         }
         
-        // Model selection dropdown with animation (only for Groq currently)
+        // Model selection dropdown with animation 
         AnimatedVisibility(
-            visible = selectedProvider.lowercase() == "groq",
+            visible = true, // Show for both providers now
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + slideOutVertically()
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Model dropdown for Groq API
-                ModelSelectionDropdown(
-                    viewModel = viewModel,
-                    selectedModel = selectedModel,
-                    onModelSelected = { viewModel.saveSelectedModel(it) }
-                )
-                
-                // Refresh models button (Groq)
-                ElevatedButton(
-                    onClick = {
-                        if (apiKey.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                "Please enter API Key first",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            viewModel.fetchAvailableModels()
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.refreshing_models),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                if (selectedProvider.lowercase() == "gemini") {
+                    // Gemini model dropdown
+                    GeminiModelDropdown(
+                        selectedModel = selectedModel,
+                        onModelSelected = { viewModel.saveSelectedModel(it) }
                     )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_refresh),
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
+                } else {
+                    // Groq model dropdown
+                    ModelSelectionDropdown(
+                        viewModel = viewModel,
+                        selectedModel = selectedModel,
+                        onModelSelected = { viewModel.saveSelectedModel(it) }
                     )
-                    Text(stringResource(R.string.refresh_models))
+                    
+                    // Refresh models button (Groq only)
+                    ElevatedButton(
+                        onClick = {
+                            if (apiKey.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please enter API Key first",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                viewModel.fetchAvailableModels()
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.refreshing_models),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_refresh),
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(stringResource(R.string.refresh_models))
+                    }
                 }
             }
         }
@@ -1113,6 +1121,89 @@ fun ModelSelectionDropdown(
                             enabled = false
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GeminiModelDropdown(
+    selectedModel: String,
+    onModelSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val geminiModels = listOf(
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite", 
+        "gemini-2.0-flash"
+    )
+    
+    val currentModel = if (selectedModel in geminiModels) selectedModel else geminiModels[0]
+    
+    Column(modifier = modifier) {
+        Text(
+            text = "Gemini Model",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TextField(
+                value = currentModel,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    Icon(
+                        imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                geminiModels.forEach { model ->
+                    val isSelected = model == currentModel
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = model,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        onClick = { onModelSelected(model); expanded = false },
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else null
+                    )
                 }
             }
         }

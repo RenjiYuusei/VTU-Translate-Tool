@@ -118,6 +118,8 @@ fun TranslateScreen(
     val isTranslating by viewModel.isTranslating.collectAsState()
     val selectedFileName by viewModel.selectedFileName.collectAsState()
     val apiKey by viewModel.apiKey.collectAsState()
+    val geminiApiKey by viewModel.geminiApiKey.collectAsState()
+    val selectedProvider by viewModel.selectedProvider.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val targetLanguage by viewModel.targetLanguage.collectAsState()
     val isBackgroundEnabled by viewModel.isBackgroundTranslationEnabled.collectAsState()
@@ -280,7 +282,8 @@ fun TranslateScreen(
                 
                 ElevatedButton(
                     onClick = {
-                        if (apiKey.isBlank()) {
+                        val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
+                        if (currentApiKey.isBlank()) {
                             Toast.makeText(
                                 context,
                                 context.getString(R.string.error_no_api_key),
@@ -394,7 +397,8 @@ fun TranslateScreen(
             if (hasUntranslatedItems && translatedOrErrorCount > 0 && !isTranslating) {
                 Button(
                     onClick = {
-                        if (apiKey.isBlank()) {
+                        val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
+                        if (currentApiKey.isBlank()) {
                             Toast.makeText(
                                 context,
                                 context.getString(R.string.error_no_api_key),

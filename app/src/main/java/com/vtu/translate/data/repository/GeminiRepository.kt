@@ -11,6 +11,7 @@ import retrofit2.Retrofit
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 /**
  * Repository for interacting with Google Gemini Generative Language API
@@ -21,7 +22,7 @@ class GeminiRepository(private val preferencesRepository: PreferencesRepository)
     companion object {
         // v1beta models endpoint
         private const val BASE_URL = "https://generativelanguage.googleapis.com/"
-        private const val DEFAULT_MODEL = "models/gemini-2.5-flash"
+        private const val DEFAULT_MODEL = "gemini-2.5-flash"
     }
 
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
@@ -55,7 +56,7 @@ class GeminiRepository(private val preferencesRepository: PreferencesRepository)
                 return Result.failure(Exception("Gemini API key chưa được thiết lập"))
             }
 
-            val model = DEFAULT_MODEL // could be extended later to selectable
+            val model = preferencesRepository.selectedModel.first().takeIf { it.isNotBlank() } ?: DEFAULT_MODEL
 
             val prompt = if (texts.size == 1) {
                 "Translate the following Android string resource value into $targetLanguage. Return ONLY the translated text without quotes or extra text. Do NOT translate technical identifiers, package names, URLs, placeholders or format specifiers (%s, %d).\nOriginal: ${texts[0]}"
@@ -67,7 +68,7 @@ class GeminiRepository(private val preferencesRepository: PreferencesRepository)
             }
 
             val request = GeminiRequest(contents = listOf(Content(parts = listOf(Part(text = prompt)))))
-            val response = service.generateContent("$model:generateContent?key=$apiKey", request)
+            val response = service.generateContent(model, request, apiKey)
             val textOut = response.candidates?.firstOrNull()?.content?.parts?.joinToString("") { it.text ?: "" }?.trim()
                 ?: return Result.failure(Exception("No response from Gemini"))
 
@@ -81,11 +82,11 @@ class GeminiRepository(private val preferencesRepository: PreferencesRepository)
 
 // --- Retrofit API + DTOs ---
 private interface GeminiService {
-    @POST("v1beta/{modelPath}")
+    @POST("v1beta/models/{model}:generateContent")
     suspend fun generateContent(
-        @retrofit2.http.Path(value = "modelPath", encoded = true) modelPath: String,
+        @retrofit2.http.Path("model") model: String,
         @Body request: GeminiRequest,
-        @Header("Content-Type") contentType: String = "application/json"
+        @Header("x-goog-api-key") apiKey: String
     ): GeminiResponse
 }
 
