@@ -44,8 +44,8 @@ jobs:
         set -euo pipefail
         mkdir -p ci/keystore
 
-        if [ -f ci/keystore/keystore.properties ]; then
-          echo "Using repository keystore at ci/keystore/keystore.properties"
+        if [ -f keystore.properties ]; then
+          echo "Using repository keystore at keystore.properties"
         elif [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
           echo "Using keystore from GitHub Secrets"
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ci/keystore/Yuusei.jks
@@ -55,28 +55,28 @@ jobs:
             exit 1
           fi
 
-          # Generate keystore.properties from secrets
+          # Generate keystore.properties at repo root from secrets
           {
             echo "storeFile=ci/keystore/Yuusei.jks"
             echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}"
             echo "keyAlias=${{ secrets.KEY_ALIAS }}"
             echo "keyPassword=${{ secrets.KEY_PASSWORD }}"
-          } > ci/keystore/keystore.properties
+          } > keystore.properties
 
-          echo "✅ Generated ci/keystore/keystore.properties from secrets"
+          echo "✅ Generated keystore.properties at repository root from secrets"
         else
-          echo "❌ No keystore provided. Add ci/keystore/keystore.properties to repo or set secrets."
+          echo "❌ No keystore provided. Commit keystore.properties and Yuusei.jks or set secrets."
           exit 1
         fi
 
         # Normalize file (strip UTF-8 BOM if present) to ensure grep works
-        sed -i '1s/^\xEF\xBB\xBF//' ci/keystore/keystore.properties || true
+        sed -i '1s/^\xEF\xBB\xBF//' keystore.properties || true
 
         # Validate keystore.properties has required keys
         required=(storeFile storePassword keyAlias keyPassword)
         for k in "${required[@]}"; do
-          if ! grep -q "^${k}=" ci/keystore/keystore.properties; then
-            echo "❌ Missing '${k}' in ci/keystore/keystore.properties"
+          if ! grep -q "^${k}=" keystore.properties; then
+            echo "❌ Missing '${k}' in keystore.properties"
             exit 1
           fi
         done
