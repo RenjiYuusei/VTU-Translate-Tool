@@ -66,6 +66,9 @@ jobs:
           echo "✅ Generated ci/keystore/keystore.properties from secrets"
         else
           echo "❌ No keystore provided. Add ci/keystore/keystore.properties to repo or set secrets."
+          echo "## 🔐 Keystore Configuration" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Status: ❌ No keystore provided" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Hint: Commit ci/keystore/keystore.properties and Yuusei.jks or set secrets" >> "$GITHUB_STEP_SUMMARY"
           exit 1
         fi
 
@@ -85,39 +88,59 @@ jobs:
         echo "- storePassword: ✅ (hidden)" >> "$GITHUB_STEP_SUMMARY"
         echo "- keyPassword: ✅ (hidden)" >> "$GITHUB_STEP_SUMMARY"
 
-    - name: Build release APK
+    - name: Build release APK (logs in summary)
       id: build_apk
       shell: bash
       continue-on-error: true
       run: |
         set -o pipefail
-        ./gradlew --no-daemon assembleRelease --stacktrace | tee build.log
-
-    - name: Summarize build result
-      if: always()
-      shell: bash
-      run: |
         echo "" >> "$GITHUB_STEP_SUMMARY"
         echo "## 🧾 Build Result" >> "$GITHUB_STEP_SUMMARY"
-        if grep -q "BUILD SUCCESSFUL" build.log; then
+        echo "### Gradle Output" >> "$GITHUB_STEP_SUMMARY"
+        ./gradlew --no-daemon assembleRelease --stacktrace 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+        STATUS=${PIPESTATUS[0]}
+        if [ $STATUS -eq 0 ]; then
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Status: ✅ Success" >> "$GITHUB_STEP_SUMMARY"
-          APK_PATH="app/build/outputs/apk/release/app-release.apk"
-          if [ -f "$APK_PATH" ]; then
-            SIZE=$(du -h "$APK_PATH" | cut -f1)
-            echo "- APK: $APK_PATH ($SIZE)" >> "$GITHUB_STEP_SUMMARY"
-          fi
         else
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Status: ❌ Failed" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### 🔎 Error Snippet" >> "$GITHUB_STEP_SUMMARY"
-          # Print last 200 lines to summary
-          tail -n 200 build.log >> "$GITHUB_STEP_SUMMARY"
-          # Also extract common Gradle error lines for quick view
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### ⚠️ Detected error lines" >> "$GITHUB_STEP_SUMMARY"
-          (grep -E "(FAILURE: Build failed|ERROR|\[\w+\] error|Exception:)" build.log || true) | tail -n 50 >> "$GITHUB_STEP_SUMMARY"
-          exit 1
         fi
+        exit $STATUS
+
+    - name: Get commit info
+      id: commit
+      run: |
+        echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "commit_msg=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
+        echo "build_date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+        
+    - name: Rename APK file
+      if: ${{ steps.build_apk.outcome == 'success' }}
+      run: |
+        mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
+        
+    - name: Upload release APK
+      if: ${{ steps.build_apk.outcome == 'success' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: VTU-Translate-release-${{ steps.commit.outputs.build_date }}
+        path: app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
+        retention-days: 90
+        
+    - name: Build summary
+      if: always()
+      run: |
+        echo "## 🚀 Release Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ steps.commit.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Message**: ${{ steps.commit.outputs.commit_msg }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Date**: ${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📱 Download Release APK" >> $GITHUB_STEP_SUMMARY
+        echo "The signed release APK is available in the **Artifacts** section." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Release APK**: VTU-Translate-release-${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
       
     - name: Get commit info
       id: commit
