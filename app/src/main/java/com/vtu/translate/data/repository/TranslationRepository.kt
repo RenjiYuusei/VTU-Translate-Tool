@@ -39,7 +39,7 @@ class TranslationRepository(
     /**
      * Parse strings.xml file from URI
      */
-    suspend fun parseStringsXml(context: Context, uri: Uri): Result<List<StringResource>> {
+    suspend fun parseStringsXml(context: Context, uri: Uri, autoClean: Boolean = true): Result<List<StringResource>> {
         return withContext(Dispatchers.IO) {
             try {
                 val fileName = getFileName(context, uri)
@@ -67,32 +67,37 @@ class TranslationRepository(
                             }
                             XmlPullParser.TEXT -> {
                                 if (name != null) {
-                                    val value = parser.text
-                                    // Check if string is translatable
-                                    val isTranslatable = translatable == null || translatable != "false"
-                                    
-                                    // Special case handling for known non-translatable strings
-                    val isSpecialCase = isSpecialNonTranslatableString(value)
-                    
-                    if (isTranslatable && !isSpecialCase) {
-                        // Check if the string contains technical parts that should be preserved
-                        if (containsTechnicalParts(value)) {
-                            // Add with pre-processed value that marks technical parts
-                            val preprocessedValue = preprocessStringWithTechnicalParts(value)
-                            stringResources.add(StringResource(name, preprocessedValue))
-                        } else {
-                            stringResources.add(StringResource(name, value))
-                        }
-                    } else if (isSpecialCase) {
-                        // Add with pre-defined translation for special cases
-                        val predefinedTranslation = getSpecialCaseTranslation(value)
-                        stringResources.add(StringResource(
-                            name = name,
-                            value = value,
-                            translatedValue = predefinedTranslation,
-                            isTranslating = false,
-                            hasError = false
-                        ))
+                                    // Skip unnecessary strings if autoClean is enabled
+                                    if (autoClean && isUnnecessaryString(name)) {
+                                        logRepository.logInfo("Đã bỏ qua chuỗi không cần thiết: $name")
+                                    } else {
+                                        val value = parser.text
+                                        // Check if string is translatable
+                                        val isTranslatable = translatable == null || translatable != "false"
+                                        
+                                        // Special case handling for known non-translatable strings
+                                        val isSpecialCase = isSpecialNonTranslatableString(value)
+                                        
+                                        if (isTranslatable && !isSpecialCase) {
+                                            // Check if the string contains technical parts that should be preserved
+                                            if (containsTechnicalParts(value)) {
+                                                // Add with pre-processed value that marks technical parts
+                                                val preprocessedValue = preprocessStringWithTechnicalParts(value)
+                                                stringResources.add(StringResource(name, preprocessedValue))
+                                            } else {
+                                                stringResources.add(StringResource(name, value))
+                                            }
+                                        } else if (isSpecialCase) {
+                                            // Add with pre-defined translation for special cases
+                                            val predefinedTranslation = getSpecialCaseTranslation(value)
+                                            stringResources.add(StringResource(
+                                                name = name,
+                                                value = value,
+                                                translatedValue = predefinedTranslation,
+                                                isTranslating = false,
+                                                hasError = false
+                                            ))
+                                        }
                                     }
                                 }
                             }
@@ -106,6 +111,11 @@ class TranslationRepository(
                         eventType = parser.next()
                     }
                     
+                    // Log cleaning statistics
+                    if (autoClean) {
+                        logRepository.logSuccess("Đã tải ${stringResources.size} chuỗi sau khi dọn dẹp.")
+                    }
+                    
                     _stringResources.value = stringResources
                     return@withContext Result.success(stringResources)
                 } ?: return@withContext Result.failure(Exception("Could not open file"))
@@ -113,6 +123,58 @@ class TranslationRepository(
                 return@withContext Result.failure(e)
             }
         }
+    }
+    
+    /**
+     * Check if a string name indicates it's an unnecessary library string
+     * 
+     * @param name The string resource name to check
+     * @return True if the string is from Material/AndroidX libraries and should be removed
+     */
+    private fun isUnnecessaryString(name: String): Boolean {
+        // List of prefixes for strings that should be removed
+        val unnecessaryPrefixes = listOf(
+            "abc_",           // AppCompat library strings
+            "mtrl_",          // Material Design library strings  
+            "material_",      // Material Design library strings
+            "search_menu_",   // Search view strings
+            "status_bar_",    // Status bar notification strings
+            "exo_",           // ExoPlayer library strings
+            "common_google_", // Google Play Services strings
+            "gcm_",           // Google Cloud Messaging strings
+            "ime_",           // Input method editor strings
+            "tooltip_",       // Tooltip library strings
+            "fab_",           // Floating Action Button strings
+            "character_counter_", // Material text field counter
+            "password_toggle_",   // Password visibility toggle
+            "path_password_"      // Password path strings
+        )
+        
+        // Check if the string name starts with any of the unnecessary prefixes
+        return unnecessaryPrefixes.any { prefix -> name.startsWith(prefix) }
+    }
+    
+    /**
+     * Clean unnecessary strings from the current list
+     * 
+     * @return The count of removed strings
+     */
+    fun cleanUnnecessaryStrings(): Int {
+        val currentList = _stringResources.value
+        val cleanedList = currentList.filterNot { resource ->
+            isUnnecessaryString(resource.name)
+        }
+        
+        val removedCount = currentList.size - cleanedList.size
+        
+        if (removedCount > 0) {
+            _stringResources.value = cleanedList
+            logRepository.logSuccess("Đã xóa $removedCount chuỗi không cần thiết khỏi danh sách.")
+        } else {
+            logRepository.logInfo("Không tìm thấy chuỗi không cần thiết nào để xóa.")
+        }
+        
+        return removedCount
     }
     
     /**
@@ -353,12 +415,24 @@ class TranslationRepository(
     /**
      * Save translated strings to a new XML file
      */
-    suspend fun saveTranslatedFile(targetLanguage: String = "vi"): Result<String> {
+    suspend fun saveTranslatedFile(targetLanguage: String = "vi", autoClean: Boolean = true): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
-                val resources = _stringResources.value
+                var resources = _stringResources.value
                 if (resources.isEmpty()) {
                     return@withContext Result.failure(Exception("No strings to save"))
+                }
+                
+                // Filter out unnecessary strings if autoClean is enabled
+                if (autoClean) {
+                    val originalCount = resources.size
+                    resources = resources.filterNot { resource ->
+                        isUnnecessaryString(resource.name)
+                    }
+                    val removedCount = originalCount - resources.size
+                    if (removedCount > 0) {
+                        logRepository.logInfo("Đã lọc bỏ $removedCount chuỗi không cần thiết khi lưu file.")
+                    }
                 }
                 
                 // Map language codes to folder suffixes
@@ -418,7 +492,7 @@ class TranslationRepository(
                 writer.close()
                 
                 val filePath = outputFile.absolutePath
-                logRepository.logInfo("Đã lưu file vào $filePath.")
+                logRepository.logInfo("Đã lưu ${resources.size} chuỗi vào $filePath.")
                 
                 return@withContext Result.success(filePath)
             } catch (e: Exception) {

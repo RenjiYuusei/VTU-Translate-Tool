@@ -183,6 +183,49 @@ fun TranslateScreen(
             )
         }
         
+        // Clean unnecessary strings button - only show when file is loaded
+        if (stringResources.isNotEmpty() && !isTranslating) {
+            FilledTonalButton(
+                onClick = {
+                    coroutineScope.launch {
+                        val app = context.applicationContext as com.vtu.translate.VtuTranslateApp
+                        val removedCount = app.translationRepository.cleanUnnecessaryStrings()
+                        
+                        if (removedCount > 0) {
+                            Toast.makeText(
+                                context,
+                                "Đã xóa $removedCount chuỗi không cần thiết (abc_*, mtrl_*, material_*...)",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Không tìm thấy chuỗi không cần thiết nào để xóa",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_clear),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                Text(
+                    text = "Dọn dẹp strings không cần thiết",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        
         // Background translation toggle
         Row(
             modifier = Modifier.fillMaxWidth(),
