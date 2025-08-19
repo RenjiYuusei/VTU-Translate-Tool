@@ -29,23 +29,41 @@ android {
 
     signingConfigs {
         release {
-            def keystorePropsFile = rootProject.file("keystore.properties")
-            def keystoreProps = new Properties()
-            
-            if (keystorePropsFile.exists()) {
-                keystoreProps.load(new FileInputStream(keystorePropsFile))
-                // Resolve storeFile path relative to root project
-                storeFile rootProject.file(keystoreProps['storeFile'])
-                storePassword keystoreProps['storePassword']
-                keyAlias keystoreProps['keyAlias']
-                keyPassword keystoreProps['keyPassword']
+            // Preferred: repository-kept config in ci/keystore/keystore.properties (if present)
+            def ciKeystorePropsFile = rootProject.file("ci/keystore/keystore.properties")
+            if (ciKeystorePropsFile.exists()) {
+                def ksProps = new Properties()
+                ksProps.load(new FileInputStream(ciKeystorePropsFile))
+                storeFile rootProject.file(ksProps['storeFile'])
+                storePassword ksProps['storePassword']
+                keyAlias ksProps['keyAlias']
+                keyPassword ksProps['keyPassword']
             } else {
-                // Use local keystore
-                def rootStoreFile = rootProject.file("Yuusei.jks")
-                storeFile rootStoreFile
-                storePassword 'Yuusei123@'
-                keyAlias 'key0'
-                keyPassword 'Yuusei123@'
+                // Next: root keystore.properties (local dev)
+                def rootKeystorePropsFile = rootProject.file("keystore.properties")
+                if (rootKeystorePropsFile.exists()) {
+                    def ksProps = new Properties()
+                    ksProps.load(new FileInputStream(rootKeystorePropsFile))
+                    storeFile rootProject.file(ksProps['storeFile'])
+                    storePassword ksProps['storePassword']
+                    keyAlias ksProps['keyAlias']
+                    keyPassword ksProps['keyPassword']
+                } else {
+                    // Finally: environment variables (e.g., from CI)
+                    def env = System.getenv()
+                    def ksFileEnv = env['KEYSTORE_FILE']
+                    def ksPassEnv = env['KEYSTORE_PASSWORD']
+                    def keyAliasEnv = env['KEY_ALIAS']
+                    def keyPassEnv = env['KEY_PASSWORD']
+                    if (ksFileEnv  ksPassEnv  keyAliasEnv  keyPassEnv) {
+                        storeFile rootProject.file(ksFileEnv)
+                        storePassword ksPassEnv
+                        keyAlias keyAliasEnv
+                        keyPassword keyPassEnv
+                    } else {
+                        throw new GradleException("Release signing is not configured. Provide ci/keystore/keystore.properties or keystore.properties, or set env vars.")
+                    }
+                }
             }
         }
     }
