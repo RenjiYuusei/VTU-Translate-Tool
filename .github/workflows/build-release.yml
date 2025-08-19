@@ -142,34 +142,3 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "- **Release APK**: VTU-Translate-release-${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
       
-    - name: Get commit info
-      id: commit
-      run: |
-        echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-        echo "commit_msg=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
-        echo "build_date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
-        
-    - name: Rename APK file
-      run: |
-        mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
-        
-    - name: Upload release APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: VTU-Translate-release-${{ steps.commit.outputs.build_date }}
-        path: app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
-        retention-days: 90
-        
-    - name: Build summary
-      if: always()
-      run: |
-        echo "## 🚀 Release Build Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- **Commit**: ${{ steps.commit.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Message**: ${{ steps.commit.outputs.commit_msg }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Build Date**: ${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📱 Download Release APK" >> $GITHUB_STEP_SUMMARY
-        echo "The signed release APK is available in the **Artifacts** section." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Release APK**: VTU-Translate-release-${{ steps.commit.outputs.build_date }}" >> $GITHUB_STEP_SUMMARY
