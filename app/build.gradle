@@ -13,7 +13,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode 9
-        versionName "1.2.4"
+        versionName "1.2.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -64,9 +64,6 @@ android {
             crunchPngs false
             // Enable more aggressive optimizations
             zipAlignEnabled true
-            
-            // Additional R8 optimizations
-            consumerProguardFiles 'consumer-rules.pro'
         }
     }
     compileOptions {
