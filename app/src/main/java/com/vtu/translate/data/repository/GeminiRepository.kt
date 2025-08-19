@@ -61,11 +61,12 @@ class GeminiRepository(private val preferencesRepository: PreferencesRepository)
             val model = selected.takeIf { it.isNotBlank() && it.startsWith("gemini") } ?: DEFAULT_MODEL
 
             val prompt = if (texts.size == 1) {
-                "Translate the following Android string resource value into $targetLanguage. Return ONLY the translated text without quotes or extra text. Do NOT translate technical identifiers, package names, URLs, placeholders or format specifiers (%s, %d).\nOriginal: ${texts[0]}"
+                "Translate the following Android string resource value into $targetLanguage. Return ONLY the translated text without quotes, numbering, bullets, or extra text. Do NOT translate technical identifiers, package names, URLs, placeholders or format specifiers (%s, %d).\nOriginal: ${texts[0]}"
             } else {
                 buildString {
-                    append("Translate the following Android string resource values into $targetLanguage. Return one translated line per input, in order. Do NOT translate technical identifiers, package names, URLs, placeholders or format specifiers (%s, %d).\n")
-                    texts.forEachIndexed { i, s -> append("${i + 1}. ").append(s).append('\n') }
+                    append("Translate the following Android string resource values into $targetLanguage. Return ONLY the translated texts, one per line, in the same order. Do NOT include numbers, bullets, brackets, or any extra characters. Output plain text lines only. Do NOT translate technical identifiers, package names, URLs, placeholders or format specifiers (%s, %d).\n")
+                    append("Original texts:\n")
+                    texts.forEach { s -> append(s).append('\n') }
                 }
             }
 
@@ -74,7 +75,21 @@ class GeminiRepository(private val preferencesRepository: PreferencesRepository)
             val textOut = response.candidates?.firstOrNull()?.content?.parts?.joinToString("") { it.text ?: "" }?.trim()
                 ?: return Result.failure(Exception("No response from Gemini"))
 
-            val outputs = if (texts.size == 1) listOf(textOut) else textOut.lines().filter { it.isNotBlank() }.take(texts.size)
+            // Clean lines: strip quotes, leading numbering/bullets if any
+            fun cleanLine(s: String): String {
+                val unquoted = s.trim().removeSurrounding("\"").removeSurrounding("'")
+                return unquoted.replace(Regex("^\\s*(?:[0-9]+[.)]|[-•])\\s*"), "").trim()
+            }
+
+            val outputs = if (texts.size == 1) {
+                listOf(cleanLine(textOut))
+            } else {
+                textOut.lines()
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .map { cleanLine(it) }
+                    .take(texts.size)
+            }
             Result.success(outputs)
         } catch (e: Exception) {
             Result.failure(e)
