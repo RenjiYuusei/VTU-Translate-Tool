@@ -39,12 +39,17 @@ class TranslationRepository(
     private val _selectedFileName = MutableStateFlow<String?>(null)
     val selectedFileName: StateFlow<String?> = _selectedFileName.asStateFlow()
     
+    // Parsing state to indicate when strings.xml is being processed
+    private val _isParsing = MutableStateFlow(false)
+    val isParsing: StateFlow<Boolean> = _isParsing.asStateFlow()
+    
     /**
      * Parse strings.xml file from URI
      */
     suspend fun parseStringsXml(context: Context, uri: Uri, autoClean: Boolean = true): Result<List<StringResource>> {
         return withContext(Dispatchers.IO) {
             try {
+                _isParsing.value = true
                 val fileName = getFileName(context, uri)
                 _selectedFileName.value = fileName
                 
@@ -124,6 +129,8 @@ class TranslationRepository(
                 } ?: return@withContext Result.failure(Exception("Could not open file"))
             } catch (e: Exception) {
                 return@withContext Result.failure(e)
+            } finally {
+                _isParsing.value = false
             }
         }
     }

@@ -42,6 +42,7 @@ class MainViewModel(
     val batchSize = preferencesRepository.batchSize
     val stringResources = translationRepository.stringResources
     val isTranslating = translationRepository.isTranslating
+    val isParsing = translationRepository.isParsing
     val isBackgroundTranslationEnabled = preferencesRepository.isBackgroundTranslationEnabled
     val selectedFileName = translationRepository.selectedFileName
     val logs = logRepository.logs

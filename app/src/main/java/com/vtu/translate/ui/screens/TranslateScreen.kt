@@ -117,6 +117,7 @@ fun TranslateScreen(
     val stringResources by viewModel.stringResources.collectAsState()
     val isTranslating by viewModel.isTranslating.collectAsState()
     val selectedFileName by viewModel.selectedFileName.collectAsState()
+    val isParsing by viewModel.isParsing.collectAsState()
     val apiKey by viewModel.apiKey.collectAsState()
     val geminiApiKey by viewModel.geminiApiKey.collectAsState()
     val selectedProvider by viewModel.selectedProvider.collectAsState()
@@ -154,22 +155,43 @@ fun TranslateScreen(
         Button(
             onClick = { filePickerLauncher.launch("text/xml") },
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isParsing,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_file),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-            Text(
-                text = stringResource(R.string.select_file),
-                style = MaterialTheme.typography.bodyMedium
-            )
+            AnimatedContent(
+                targetState = isParsing,
+                transitionSpec = { fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(200)) }
+            ) { parsing ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_file),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                    if (parsing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = stringResource(R.string.translating),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.select_file),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
         }
         
         // Show selected file name
@@ -183,6 +205,17 @@ fun TranslateScreen(
                 text = stringResource(R.string.no_file_selected),
                 style = MaterialTheme.typography.bodyMedium
             )
+        }
+        // Parsing status
+        if (isParsing) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = stringResource(id = R.string.translating))
+                LinearProgressIndicator(modifier = Modifier.weight(1f))
+            }
         }
         
         // Cleaning of unnecessary strings is done automatically during parsing and saving.
@@ -223,10 +256,29 @@ fun TranslateScreen(
             )
         }
 
+        // Placeholder while parsing to avoid sudden layout shift
+        if (isParsing) {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.elevatedCardColors()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Text(text = stringResource(id = R.string.translating))
+                }
+            }
+        }
+
         AnimatedVisibility(
-            visible = stringResources.isNotEmpty(),
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
+            visible = stringResources.isNotEmpty() && !isParsing,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             // Translation actions
             Column(
