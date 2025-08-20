@@ -223,211 +223,217 @@ fun TranslateScreen(
             )
         }
 
-        // Translation actions
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        AnimatedVisibility(
+            visible = stringResources.isNotEmpty(),
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
         ) {
-            // Translation buttons row
-            Row(
+            // Translation actions
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Start translation button with animation
-                val startButtonElevation by animateDpAsState(
-                    targetValue = if (!isTranslating && stringResources.isNotEmpty()) 6.dp else 2.dp,
-                    animationSpec = spring(stiffness = Spring.StiffnessMedium)
-                )
-                
-                ElevatedButton(
-                    onClick = {
-                        val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
-                        if (currentApiKey.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.error_no_api_key),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@ElevatedButton
-                        }
-                        
-                        if (selectedModel.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.error_no_model_selected),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@ElevatedButton
-                        }
-                        
-                        if (stringResources.isEmpty()) {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.error_no_file_selected),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@ElevatedButton
-                        }
-                        
-                        viewModel.startTranslation()
-                    },
-                    modifier = Modifier.weight(1f),
-                    enabled = !isTranslating && stringResources.isNotEmpty(),
-                    elevation = ButtonDefaults.elevatedButtonElevation(
-                        defaultElevation = startButtonElevation,
-                        pressedElevation = 8.dp
-                    ),
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = if (isTranslating) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
-                        contentColor = if (isTranslating) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onPrimary
-                    )
+                // Translation buttons row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    AnimatedContent(
-                        targetState = isTranslating,
-                        transitionSpec = {
-                            fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
-                        }
-                    ) { translating ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            if (translating) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onSecondary
-                                )
-                                Spacer(modifier = Modifier.size(8.dp))
-                            } else {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_start_translate),
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(end = 8.dp)
+                    // Start translation button with animation
+                    val startButtonElevation by animateDpAsState(
+                        targetValue = if (!isTranslating && stringResources.isNotEmpty()) 6.dp else 2.dp,
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium)
+                    )
+                    
+                    ElevatedButton(
+                        onClick = {
+                            val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
+                            if (currentApiKey.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_no_api_key),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@ElevatedButton
+                            }
+                            
+                            if (selectedModel.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_no_model_selected),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@ElevatedButton
+                            }
+                            
+                            if (stringResources.isEmpty()) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_no_file_selected),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@ElevatedButton
+                            }
+                            
+                            viewModel.startTranslation()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isTranslating && stringResources.isNotEmpty(),
+                        elevation = ButtonDefaults.elevatedButtonElevation(
+                            defaultElevation = startButtonElevation,
+                            pressedElevation = 8.dp
+                        ),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = if (isTranslating) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+                            contentColor = if (isTranslating) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        AnimatedContent(
+                            targetState = isTranslating,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                            }
+                        ) { translating ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                if (translating) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onSecondary
+                                    )
+                                    Spacer(modifier = Modifier.size(8.dp))
+                                } else {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_start_translate),
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(if (translating) R.string.translating else R.string.start_translate),
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
-                            Text(
-                                text = stringResource(if (translating) R.string.translating else R.string.start_translate),
-                                style = MaterialTheme.typography.labelLarge
-                            )
                         }
+                    }
+                    
+                    // Stop translation button with animation
+                    val stopButtonElevation by animateDpAsState(
+                        targetValue = if (isTranslating) 6.dp else 2.dp,
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium)
+                    )
+                    
+                    ElevatedButton(
+                        onClick = {
+                            viewModel.stopTranslation()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = isTranslating,
+                        elevation = ButtonDefaults.elevatedButtonElevation(
+                            defaultElevation = stopButtonElevation,
+                            pressedElevation = 8.dp
+                        ),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_stop_translate),
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.stop_translation),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
                 
-                // Stop translation button with animation
-                val stopButtonElevation by animateDpAsState(
-                    targetValue = if (isTranslating) 6.dp else 2.dp,
-                    animationSpec = spring(stiffness = Spring.StiffnessMedium)
-                )
+                // Continue translation button (only show if there's partially translated content)
+                val translatedOrErrorCount = stringResources.count { it.translatedValue.isNotBlank() || it.hasError }
+                val hasUntranslatedItems = stringResources.any { it.translatedValue.isBlank() && !it.hasError }
                 
-                ElevatedButton(
-                    onClick = {
-                        viewModel.stopTranslation()
-                    },
-                    modifier = Modifier.weight(1f),
-                    enabled = isTranslating,
-                    elevation = ButtonDefaults.elevatedButtonElevation(
-                        defaultElevation = stopButtonElevation,
-                        pressedElevation = 8.dp
-                    ),
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_stop_translate),
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.stop_translation),
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                if (hasUntranslatedItems && translatedOrErrorCount > 0 && !isTranslating) {
+                    Button(
+                        onClick = {
+                            val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
+                            if (currentApiKey.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_no_api_key),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            
+                            if (selectedModel.isBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_no_model_selected),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            
+                            viewModel.continueTranslation()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            contentColor = MaterialTheme.colorScheme.onTertiary
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_start_translate),
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = "${stringResource(R.string.continue_translation)} ($translatedOrErrorCount/${stringResources.size})",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
                 }
-            }
-            
-            // Continue translation button (only show if there's partially translated content)
-            val translatedOrErrorCount = stringResources.count { it.translatedValue.isNotBlank() || it.hasError }
-            val hasUntranslatedItems = stringResources.any { it.translatedValue.isBlank() && !it.hasError }
-            
-            if (hasUntranslatedItems && translatedOrErrorCount > 0 && !isTranslating) {
+                
+                // Save file button
                 Button(
                     onClick = {
-                        val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
-                        if (currentApiKey.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.error_no_api_key),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@Button
+                        coroutineScope.launch {
+                            val app = context.applicationContext as com.vtu.translate.VtuTranslateApp
+                            val result = app.translationRepository.saveTranslatedFile(targetLanguage)
+                            
+                            if (result.isSuccess) {
+                                val filePath = result.getOrNull()
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.file_saved, filePath),
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                val error = result.exceptionOrNull()?.message ?: "Unknown error"
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.error_saving_file, error),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
-                        
-                        if (selectedModel.isBlank()) {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.error_no_model_selected),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@Button
-                        }
-                        
-                        viewModel.continueTranslation()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    )
+                    enabled = !isTranslating && stringResources.isNotEmpty()
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_start_translate),
+                        painter = painterResource(id = R.drawable.ic_save),
                         contentDescription = null,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text(
-                        text = "${stringResource(R.string.continue_translation)} ($translatedOrErrorCount/${stringResources.size})",
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    Text(stringResource(R.string.save_translated_file))
                 }
-            }
-            
-            // Save file button
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        val app = context.applicationContext as com.vtu.translate.VtuTranslateApp
-                        val result = app.translationRepository.saveTranslatedFile(targetLanguage)
-                        
-                        if (result.isSuccess) {
-                            val filePath = result.getOrNull()
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.file_saved, filePath),
-                                Toast.LENGTH_LONG
-                            ).show()
-                        } else {
-                            val error = result.exceptionOrNull()?.message ?: "Unknown error"
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.error_saving_file, error),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isTranslating && stringResources.isNotEmpty()
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_save),
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(stringResource(R.string.save_translated_file))
             }
         }
         
