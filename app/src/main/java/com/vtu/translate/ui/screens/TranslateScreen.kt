@@ -17,6 +17,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -70,6 +71,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -80,6 +84,7 @@ import com.vtu.translate.data.model.StringResource
 import com.vtu.translate.service.TranslationService
 import com.vtu.translate.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 /**
  * Kiểm tra xem một chuỗi có phải là chuỗi đặc biệt không cần dịch hay không
@@ -124,6 +129,17 @@ fun TranslateScreen(
     val selectedModel by viewModel.selectedModel.collectAsState()
     val targetLanguage by viewModel.targetLanguage.collectAsState()
     val isBackgroundEnabled by viewModel.isBackgroundTranslationEnabled.collectAsState()
+    
+    // Trì hoãn hiển thị danh sách và action sau khi parse xong để tránh giật
+    var showList by remember { mutableStateOf(false) }
+    LaunchedEffect(isParsing, stringResources.size) {
+        if (!isParsing && stringResources.isNotEmpty()) {
+            delay(120) // một chút thời gian để UI ổn định trước khi render danh sách lớn
+            showList = true
+        } else {
+            showList = false
+        }
+    }
     
     // File picker launcher
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -181,7 +197,7 @@ fun TranslateScreen(
                         )
                         Spacer(modifier = Modifier.size(8.dp))
                         Text(
-                            text = stringResource(R.string.translating),
+                            text = stringResource(R.string.loading_file),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     } else {
@@ -213,7 +229,7 @@ fun TranslateScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = stringResource(id = R.string.translating))
+                Text(text = stringResource(id = R.string.loading_file))
                 LinearProgressIndicator(modifier = Modifier.weight(1f))
             }
         }
@@ -270,19 +286,21 @@ fun TranslateScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     CircularProgressIndicator()
-                    Text(text = stringResource(id = R.string.translating))
+                    Text(text = stringResource(id = R.string.loading_file))
                 }
             }
         }
 
         AnimatedVisibility(
-            visible = stringResources.isNotEmpty() && !isParsing,
-            enter = fadeIn(),
-            exit = fadeOut()
+            visible = showList,
+            enter = fadeIn(animationSpec = tween(220)) + expandVertically(),
+            exit = fadeOut(animationSpec = tween(150)) + shrinkVertically()
         ) {
             // Translation actions
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Translation buttons row
@@ -527,7 +545,7 @@ fun TranslateScreen(
         }
         
         // List of string resources
-        if (stringResources.isNotEmpty()) {
+        if (showList) {
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)

@@ -24,6 +24,7 @@
     <string name="translated_value_default">Value-đã dịch</string>
     <string name="no_file_selected">Chưa chọn file</string>
     <string name="translating">Đang dịch…</string>
+    <string name="loading_file">Đang tải...</string>
     <string name="file_saved">Đã lưu file vào Downloads/VTU-Translate: %1$s</string>
     <string name="error_saving_file">Lỗi khi lưu file: %1$s</string>
     

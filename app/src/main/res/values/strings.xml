@@ -24,6 +24,7 @@
     <string name="translated_value_default">Value-translated</string>
     <string name="no_file_selected">No file selected</string>
     <string name="translating">Translating…</string>
+    <string name="loading_file">Reading file…</string>
     <string name="file_saved">File saved to Downloads/VTU-Translate: %1$s</string>
     <string name="error_saving_file">Error saving file: %1$s</string>
     
