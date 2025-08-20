@@ -126,7 +126,6 @@ jobs:
     - name: Build release APK
       id: build_apk
       shell: bash
-      continue-on-error: true
       run: |
         set -o pipefail
         ./gradlew --no-daemon assembleRelease --stacktrace
