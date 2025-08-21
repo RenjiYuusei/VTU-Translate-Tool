@@ -7,6 +7,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -144,6 +147,14 @@ jobs:
         echo "commit_msg=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
         echo "build_date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
         
+    - name: Read app version
+      id: ver
+      run: |
+        VERSION_NAME=$(sed -n 's/.*versionName\s*"\(.*\)".*/\1/p' app/build.gradle | head -n1)
+        VERSION_CODE=$(sed -n 's/.*versionCode\s*\([0-9][0-9]*\).*/\1/p' app/build.gradle | head -n1)
+        echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+        echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+        
     - name: Rename APK file
       if: ${{ steps.build_apk.outcome == 'success' }}
       run: |
@@ -157,3 +168,20 @@ jobs:
         path: app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
         retention-days: 90
         
+    - name: Create GitHub Release (manual runs)
+      if: ${{ github.event_name == 'workflow_dispatch' && steps.build_apk.outcome == 'success' }}
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ steps.ver.outputs.version_name }}-${{ steps.commit.outputs.build_date }}
+        name: VTU Translate v${{ steps.ver.outputs.version_name }} (code ${{ steps.ver.outputs.version_code }})
+        body: |
+          Commit: ${{ steps.commit.outputs.short_sha }}
+          Message: ${{ steps.commit.outputs.commit_msg }}
+          Build time: ${{ steps.commit.outputs.build_date }}
+        draft: false
+        prerelease: false
+        files: app/build/outputs/apk/release/VTU-Translate-release-${{ steps.commit.outputs.short_sha }}.apk
+        target_commitish: ${{ github.sha }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+///888888888888
