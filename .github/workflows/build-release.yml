@@ -13,6 +13,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Ho_Chi_Minh
     
     steps:
     - name: Checkout repository
@@ -173,7 +175,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.ver.outputs.version_name }}-${{ steps.commit.outputs.build_date }}
-        name: VTU Translate v${{ steps.ver.outputs.version_name }} (code ${{ steps.ver.outputs.version_code }})
+        name: VTU Translate v${{ steps.ver.outputs.version_name }}
         body: |
           Commit: ${{ steps.commit.outputs.short_sha }}
           Message: ${{ steps.commit.outputs.commit_msg }}

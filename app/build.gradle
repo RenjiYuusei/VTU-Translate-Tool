@@ -92,6 +92,9 @@ android {
             excludes += '/kotlin/**'
             excludes += '/META-INF/com.android.tools/**'
             excludes += '/META-INF/proguard/**'
+            excludes += 'androidsupportmultidexversion.txt'
+            excludes += 'DebugProbesKt.bin'
+            excludes += 'kotlin-tooling-metadata.json'
         }
         // Giảm dung lượng APK
         jniLibs {
