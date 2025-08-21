@@ -22,9 +22,6 @@ android {
         
         // Reduce APK size by excluding unnecessary resources
         resConfigs "en", "vi"
-        
-        // Enable multidex for better performance
-        multiDexEnabled true
     }
 
     signingConfigs {
@@ -103,9 +100,6 @@ android {
 }
 
 dependencies {
-    // Multidex support
-    implementation 'androidx.multidex:multidex:2.0.1'
-    
     // Core Android
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
@@ -119,6 +113,8 @@ dependencies {
     implementation 'androidx.compose.material3:material3:1.1.2'
     implementation 'androidx.compose.material:material-icons-extended'
     implementation 'androidx.navigation:navigation-compose:2.7.0'
+    // Material Components (XML) for Theme.Material3.*
+    implementation 'com.google.android.material:material:1.12.0'
     
     // ViewModel
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1'
