@@ -8,10 +8,12 @@ import com.vtu.translate.data.repository.LogRepository
 import com.vtu.translate.data.repository.PreferencesRepository
 import com.vtu.translate.data.repository.TranslationRepository
 import com.vtu.translate.data.repository.GroqRepository
+import com.vtu.translate.data.repository.CerebrasRepository
 import com.vtu.translate.data.model.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
