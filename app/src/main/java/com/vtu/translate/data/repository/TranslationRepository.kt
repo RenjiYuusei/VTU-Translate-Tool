@@ -193,21 +193,22 @@ class TranslationRepository(
         
         // Check if the entire string is purely technical (no natural language)
         val purelyTechnicalPatterns = listOf(
-            "^[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+$", // Package names like androidx.startup
-            "^[A-Z][a-zA-Z0-9]*$", // Class names like MainActivity (but only if it's the entire string)
-            "^[a-zA-Z0-9_-]+$", // Simple technical identifiers (underscore/hyphen only)
-            "^(http|https)://[a-zA-Z0-9./?_=-]+$", // Complete URLs
-            "^[0-9]+$", // Pure numbers
-            "^[0-9]+\\.[0-9]+(\\.[0-9]+)*$", // Version numbers like 1.0.0
-            "^#[0-9a-fA-F]{6}$", // Hex color codes
-            "^[a-zA-Z_][a-zA-Z0-9_]*$" // Variable names (but only if short and no spaces)
+            // Package names (lowercase dot-separated like androidx.startup)
+            "^(?:[a-z_]+\\.)+[a-z_][a-z0-9_]*$",
+            // Complete URLs
+            "^(http|https)://[\\w./?&%=-]+$",
+            // Pure numbers
+            "^\\d+$",
+            // Version numbers like 1.0.0
+            "^\\d+\\.\\d+(?:\\.\\d+)*$",
+            // Hex color codes
+            "^#[0-9a-fA-F]{6}$",
+            // UPPER_CASE constants
+            "^[A-Z0-9_]{2,}$"
         )
         
-        // Check if the string matches purely technical patterns AND is relatively short
-        // This prevents longer descriptive text from being marked as non-translatable
-        val isPurelyTechnical = purelyTechnicalPatterns.any { trimmedValue.matches(Regex(it)) } && 
-                                trimmedValue.length <= 50 && 
-                                !trimmedValue.contains(" ") // No spaces in purely technical strings
+        // Check if the string matches purely technical patterns
+        val isPurelyTechnical = purelyTechnicalPatterns.any { trimmedValue.matches(Regex(it)) }
         
         // Check for strings that are only placeholders or format specifiers
         val isOnlyPlaceholders = trimmedValue.matches(Regex("^[%{}\\s\\d\\w]*$")) &&
