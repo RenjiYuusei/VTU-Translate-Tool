@@ -114,4 +114,14 @@
     <string name="preparing_translation">Preparing translation...</string>
     <string name="notification_permission_required">Notification permission required for background translation</string>
     <string name="translation_progress_detail">%1$d/%2$d strings being translated</string>
+    
+    <!-- Cerebras API Error Messages -->
+    <string name="connection_retries">Connection retries</string>
+    <string name="connectretrymaxmessage">Maximum connection retries reached. Please check your internet connection and try again.</string>
+    <string name="cerebras_model_not_available">Cerebras model does not exist or is not available</string>
+    <string name="cerebras_api_key_invalid">Cerebras API key is invalid or expired. Please check your API key in Settings.</string>
+    <string name="cerebras_rate_limit_exceeded">API rate limit exceeded. Retrying...</string>
+    <string name="cerebras_access_denied">Access denied to Cerebras API. Please check your API key.</string>
+    <string name="cerebras_server_error">Cerebras server error (HTTP %1$d). Please try again later.</string>
+    <string name="cerebras_api_key_not_set">Cerebras API Key is not set. Please enter API key in Settings.</string>
 </resources>

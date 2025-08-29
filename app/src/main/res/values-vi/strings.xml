@@ -112,4 +112,14 @@
     <string name="preparing_translation">Đang chuẩn bị dịch...</string>
     <string name="notification_permission_required">Cần quyền thông báo để dịch trong nền</string>
     <string name="translation_progress_detail">%1$d/%2$d chuỗi đang được dịch</string>
+    
+    <!-- Cerebras API Error Messages -->
+    <string name="connection_retries">Số lần thử lại kết nối</string>
+    <string name="connectretrymaxmessage">Đã đạt số lần thử lại kết nối tối đa. Vui lòng kiểm tra kết nối internet và thử lại.</string>
+    <string name="cerebras_model_not_available">Model Cerebras không tồn tại hoặc không khả dụng</string>
+    <string name="cerebras_api_key_invalid">API key Cerebras không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key trong Cài đặt.</string>
+    <string name="cerebras_rate_limit_exceeded">Đã vượt quá giới hạn tốc độ API. Đang thử lại...</string>
+    <string name="cerebras_access_denied">Không có quyền truy cập API Cerebras. Vui lòng kiểm tra API key.</string>
+    <string name="cerebras_server_error">Lỗi máy chủ Cerebras (HTTP %1$d). Vui lòng thử lại sau.</string>
+    <string name="cerebras_api_key_not_set">Chưa thiết lập API Key Cerebras. Vui lòng nhập API key trong Cài đặt.</string>
 </resources>

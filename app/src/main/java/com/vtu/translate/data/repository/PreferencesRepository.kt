@@ -35,6 +35,8 @@ class PreferencesRepository(context: Context) {
         // Default selections
         private const val DEFAULT_PROVIDER = "groq"
         private const val DEFAULT_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct"
+        private const val DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b"
+        private const val DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
         
         // Default language (Vietnamese)
         private const val DEFAULT_LANGUAGE = "vi"
@@ -159,11 +161,37 @@ class PreferencesRepository(context: Context) {
     }
     
     /**
-     * Save selected provider (groq or gemini)
+     * Save selected provider and update model if needed
      */
     fun saveSelectedProvider(provider: String) {
         encryptedPrefs.edit().putString(KEY_SELECTED_PROVIDER, provider).apply()
         _selectedProvider.value = provider
+        
+        // Auto-select appropriate default model for the provider if current model is not compatible
+        val currentModel = _selectedModel.value
+        val needsModelUpdate = when (provider.lowercase()) {
+            "cerebras" -> !listOf(
+ "llama-4-scout-17b-16e-instruct",
+                "llama-4-maverick-17b-128e-instruct", "qwen-3-32b", 
+                "qwen-3-235b-a22b-instruct-2507", "qwen-3-235b-a22b-thinking-2507",
+                "qwen-3-coder-480b", "gpt-oss-120b"
+            ).contains(currentModel)
+            "gemini" -> !currentModel.startsWith("gemini")
+            "groq" -> currentModel.startsWith("gemini") || listOf(
+"llama-4-scout-17b-16e-instruct",
+                "qwen-3-32b", "gpt-oss-120b"
+            ).contains(currentModel)
+            else -> false
+        }
+        
+        if (needsModelUpdate) {
+            val defaultModel = when (provider.lowercase()) {
+                "cerebras" -> DEFAULT_CEREBRAS_MODEL
+                "gemini" -> DEFAULT_GEMINI_MODEL
+                else -> DEFAULT_MODEL
+            }
+            saveSelectedModel(defaultModel)
+        }
     }
     
     /**

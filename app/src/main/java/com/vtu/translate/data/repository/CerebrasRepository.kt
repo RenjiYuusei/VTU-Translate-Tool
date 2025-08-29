@@ -28,6 +28,25 @@ class CerebrasRepository(private val preferencesRepository: PreferencesRepositor
     
     companion object {
         private const val BASE_URL = "https://api.cerebras.ai/v1/"
+        
+        /**
+         * Available Cerebras models as of API documentation
+         * https://inference-docs.cerebras.ai/api-reference/chat-completions
+         */
+        val AVAILABLE_MODELS = listOf(
+            "llama-4-scout-17b-16e-instruct",
+            "llama-4-maverick-17b-128e-instruct", // preview
+            "qwen-3-32b",
+            "qwen-3-235b-a22b-instruct-2507", // preview
+            "qwen-3-235b-a22b-thinking-2507", // preview
+            "qwen-3-coder-480b", // preview
+            "gpt-oss-120b"
+        )
+        
+        /**
+         * Default model - using the most stable and widely available model
+         */
+        const val DEFAULT_MODEL = "gpt-oss-120b"
     }
     
     private val json = Json {
@@ -70,12 +89,21 @@ class CerebrasRepository(private val preferencesRepository: PreferencesRepositor
             Log.d("CerebrasRepository", "API Key length: ${apiKey.length}")
             if (apiKey.isBlank()) {
                 Log.e("CerebrasRepository", "API Key is blank or empty")
-                return Result.failure(Exception("Cerebras API Key không được thiết lập. Vui lòng nhập API key trong Settings."))
+                return Result.failure(Exception("Chưa thiết lập API Key Cerebras. Vui lòng nhập API key trong Cài đặt."))
             }
             
             val model = preferencesRepository.selectedModel.first()
             if (model.isBlank()) {
                 return Result.failure(Exception("Model is not selected"))
+            }
+            
+            // Validate if the model is supported by Cerebras and use fallback if needed
+            val finalModel = if (!AVAILABLE_MODELS.contains(model)) {
+                Log.w("CerebrasRepository", "Model '$model' not supported by Cerebras, using fallback: $DEFAULT_MODEL")
+                preferencesRepository.saveSelectedModel(DEFAULT_MODEL)
+                DEFAULT_MODEL
+            } else {
+                model
             }
             
             // Map language codes to language names
@@ -112,7 +140,7 @@ class CerebrasRepository(private val preferencesRepository: PreferencesRepositor
             }
             
             val request = ChatCompletionRequest(
-                model = model,
+                model = finalModel,
                 messages = listOf(ChatMessage(role = "user", content = batchPrompt)),
                 temperature = 0.0 // Use temperature 0 for more deterministic translation
             )
@@ -160,10 +188,10 @@ class CerebrasRepository(private val preferencesRepository: PreferencesRepositor
                     // Handle specific HTTP errors
                     when (e.code()) {
                         401 -> {
-                            return Result.failure(Exception("Cerebras API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key trong Settings."))
+                            return Result.failure(Exception("API key Cerebras không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key trong Cài đặt."))
                         }
                         429 -> {
-                            lastException = Exception("Đạt giới hạn tốc độ API (HTTP 429). Đang thử lại...")
+                            lastException = Exception("Đã vượt quá giới hạn tốc độ API. Đang thử lại...")
                             Log.w("CerebrasRepository", "HTTP 429 received, retrying after delay. Attempt ${retryCount + 1}/$maxRetries")
                             
                             // Exponential backoff: 1s, 2s, 4s
@@ -172,10 +200,10 @@ class CerebrasRepository(private val preferencesRepository: PreferencesRepositor
                             retryCount++
                         }
                         403 -> {
-                            return Result.failure(Exception("Không có quyền truy cập Cerebras API. Vui lòng kiểm tra API key."))
+                            return Result.failure(Exception("Không có quyền truy cập API Cerebras. Vui lòng kiểm tra API key."))
                         }
                         404 -> {
-                            return Result.failure(Exception("Cerebras model không tồn tại hoặc không khả dụng."))
+                            return Result.failure(Exception("Model Cerebras không tồn tại hoặc không khả dụng"))
                         }
                         500, 502, 503, 504 -> {
                             return Result.failure(Exception("Lỗi máy chủ Cerebras (HTTP ${e.code()}). Vui lòng thử lại sau."))
@@ -203,7 +231,7 @@ class CerebrasRepository(private val preferencesRepository: PreferencesRepositor
         return try {
             val apiKey = preferencesRepository.cerebrasApiKey.first()
             if (apiKey.isBlank()) {
-                return Result.failure(Exception("Cerebras API Key không được thiết lập"))
+                return Result.failure(Exception("Chưa thiết lập API Key Cerebras"))
             }
             
             val response = cerebrasService.getModels("Bearer $apiKey")
@@ -218,8 +246,8 @@ class CerebrasRepository(private val preferencesRepository: PreferencesRepositor
             val errorBody = e.response()?.errorBody()?.string()
             Log.e("CerebrasRepository", "Error fetching models - HTTP ${e.code()}: $errorBody")
             when (e.code()) {
-                401 -> Result.failure(Exception("Cerebras API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key"))
-                403 -> Result.failure(Exception("Không có quyền truy cập Cerebras API models. Vui lòng kiểm tra API key"))
+                401 -> Result.failure(Exception("API key Cerebras không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại API key"))
+                403 -> Result.failure(Exception("Không có quyền truy cập API Cerebras models. Vui lòng kiểm tra API key"))
                 429 -> Result.failure(Exception("Đã vượt quá giới hạn request. Vui lòng thử lại sau"))
                 else -> Result.failure(Exception("Lỗi khi tải danh sách model (HTTP ${e.code()}): ${errorBody ?: e.message()}"))
             }
