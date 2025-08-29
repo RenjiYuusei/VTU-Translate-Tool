@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.vtu.translate.data.repository
 
 import android.content.Context
