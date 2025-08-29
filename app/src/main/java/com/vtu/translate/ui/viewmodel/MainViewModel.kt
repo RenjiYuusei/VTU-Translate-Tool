@@ -22,6 +22,7 @@ class MainViewModel(
     private val translationRepository: TranslationRepository,
     private val logRepository: LogRepository,
     private val groqRepository: GroqRepository,
+    private val cerebrasRepository: CerebrasRepository,
     private val application: VtuTranslateApp
 ) : ViewModel() {
     
@@ -32,6 +33,7 @@ class MainViewModel(
     // Expose repository flows
     val apiKey = preferencesRepository.apiKey
     val geminiApiKey = preferencesRepository.geminiApiKey
+    val cerebrasApiKey = preferencesRepository.cerebrasApiKey
     val selectedProvider = preferencesRepository.selectedProvider
     val selectedModel = preferencesRepository.selectedModel
     val appLanguage = preferencesRepository.appLanguage
@@ -74,6 +76,13 @@ class MainViewModel(
      */
     fun saveGeminiApiKey(apiKey: String) {
         preferencesRepository.saveGeminiApiKey(apiKey)
+    }
+    
+    /**
+     * Save Cerebras API key
+     */
+    fun saveCerebrasApiKey(apiKey: String) {
+        preferencesRepository.saveCerebrasApiKey(apiKey)
     }
     
     /**
@@ -223,12 +232,17 @@ class MainViewModel(
     }
     
     /**
-     * Fetch available models from Groq API
+     * Fetch available models from selected API provider
      */
     fun fetchAvailableModels() {
         viewModelScope.launch {
             _isLoadingModels.value = true
-            groqRepository.fetchAvailableModels()
+            val provider = preferencesRepository.selectedProvider.first().lowercase()
+            val result = when (provider) {
+                "cerebras" -> cerebrasRepository.fetchAvailableModels()
+                else -> groqRepository.fetchAvailableModels()
+            }
+            result
                 .onSuccess { models ->
                     _availableModels.value = models
                 }
@@ -252,6 +266,7 @@ class MainViewModel(
                     application.translationRepository,
                     application.logRepository,
                     application.groqRepository,
+                    application.cerebrasRepository,
                     application
                 ) as T
             }

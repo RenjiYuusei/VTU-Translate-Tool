@@ -126,6 +126,7 @@ fun TranslateScreen(
     val isParsing by viewModel.isParsing.collectAsState()
     val apiKey by viewModel.apiKey.collectAsState()
     val geminiApiKey by viewModel.geminiApiKey.collectAsState()
+    val cerebrasApiKey by viewModel.cerebrasApiKey.collectAsState()
     val selectedProvider by viewModel.selectedProvider.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val targetLanguage by viewModel.targetLanguage.collectAsState()
@@ -317,7 +318,11 @@ fun TranslateScreen(
                     
                     ElevatedButton(
                         onClick = {
-                            val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
+                            val currentApiKey = when (selectedProvider.lowercase()) {
+                                "gemini" -> geminiApiKey
+                                "cerebras" -> cerebrasApiKey
+                                else -> apiKey
+                            }
                             if (currentApiKey.isBlank()) {
                                 Toast.makeText(
                                     context,
@@ -432,7 +437,11 @@ fun TranslateScreen(
                 if (hasUntranslatedItems && translatedOrErrorCount > 0 && !isTranslating) {
                     Button(
                         onClick = {
-                            val currentApiKey = if (selectedProvider.lowercase() == "gemini") geminiApiKey else apiKey
+                            val currentApiKey = when (selectedProvider.lowercase()) {
+                                "gemini" -> geminiApiKey
+                                "cerebras" -> cerebrasApiKey
+                                else -> apiKey
+                            }
                             if (currentApiKey.isBlank()) {
                                 Toast.makeText(
                                     context,

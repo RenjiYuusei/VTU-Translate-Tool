@@ -20,6 +20,7 @@ class PreferencesRepository(context: Context) {
         private const val PREFERENCES_FILE = "encrypted_prefs.xml"
         private const val KEY_API_KEY = "groq_api_key"
         private const val KEY_GEMINI_API_KEY = "gemini_api_key"
+        private const val KEY_CEREBRAS_API_KEY = "cerebras_api_key"
         private const val KEY_SELECTED_MODEL = "selected_model"
         private const val KEY_SELECTED_PROVIDER = "selected_provider"
         private const val KEY_APP_LANGUAGE = "app_language"
@@ -59,6 +60,9 @@ class PreferencesRepository(context: Context) {
     
     private val _geminiApiKey = MutableStateFlow<String>("")
     val geminiApiKey: StateFlow<String> = _geminiApiKey.asStateFlow()
+    
+    private val _cerebrasApiKey = MutableStateFlow<String>("")
+    val cerebrasApiKey: StateFlow<String> = _cerebrasApiKey.asStateFlow()
     
     private val _selectedProvider = MutableStateFlow<String>(DEFAULT_PROVIDER)
     val selectedProvider: StateFlow<String> = _selectedProvider.asStateFlow()
@@ -117,6 +121,7 @@ class PreferencesRepository(context: Context) {
     private fun loadSavedValues() {
         _apiKey.value = encryptedPrefs.getString(KEY_API_KEY, "") ?: ""
         _geminiApiKey.value = encryptedPrefs.getString(KEY_GEMINI_API_KEY, "") ?: ""
+        _cerebrasApiKey.value = encryptedPrefs.getString(KEY_CEREBRAS_API_KEY, "") ?: ""
         _selectedProvider.value = encryptedPrefs.getString(KEY_SELECTED_PROVIDER, DEFAULT_PROVIDER) ?: DEFAULT_PROVIDER
         _selectedModel.value = encryptedPrefs.getString(KEY_SELECTED_MODEL, DEFAULT_MODEL) ?: DEFAULT_MODEL
         _appLanguage.value = encryptedPrefs.getString(KEY_APP_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE
@@ -143,6 +148,14 @@ class PreferencesRepository(context: Context) {
     fun saveGeminiApiKey(apiKey: String) {
         encryptedPrefs.edit().putString(KEY_GEMINI_API_KEY, apiKey).apply()
         _geminiApiKey.value = apiKey
+    }
+    
+    /**
+     * Save Cerebras API key to encrypted preferences
+     */
+    fun saveCerebrasApiKey(apiKey: String) {
+        encryptedPrefs.edit().putString(KEY_CEREBRAS_API_KEY, apiKey).apply()
+        _cerebrasApiKey.value = apiKey
     }
     
     /**

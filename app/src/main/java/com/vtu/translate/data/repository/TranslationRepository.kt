@@ -27,7 +27,8 @@ class TranslationRepository(
     private val logRepository: LogRepository,
     private val context: Context,
     private val preferencesRepository: PreferencesRepository,
-    private val geminiRepository: GeminiRepository
+    private val geminiRepository: GeminiRepository,
+    private val cerebrasRepository: CerebrasRepository
 ) {
     
     private val _stringResources = MutableStateFlow<List<StringResource>>(emptyList())
@@ -351,6 +352,7 @@ class TranslationRepository(
                             // Multiple texts, use batch translation based on selected provider
                             when (currentProvider.lowercase()) {
                                 "gemini" -> geminiRepository.translateBatch(textsToTranslate, targetLanguage)
+                                "cerebras" -> cerebrasRepository.translateBatch(textsToTranslate, targetLanguage)
                                 else -> groqRepository.translateBatch(textsToTranslate, targetLanguage)
                             }
                         }
@@ -600,6 +602,7 @@ class TranslationRepository(
         // Choose provider based on preference
         return when (preferencesRepository.selectedProvider.first().lowercase()) {
             "gemini" -> geminiRepository.translateText(text, targetLanguage)
+            "cerebras" -> cerebrasRepository.translateText(text, targetLanguage)
             else -> groqRepository.translateText(text, targetLanguage)
         }
     }

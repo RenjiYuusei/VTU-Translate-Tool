@@ -99,6 +99,7 @@ fun SettingsScreen(
 ) {
     val apiKey by viewModel.apiKey.collectAsState()
     val geminiApiKey by viewModel.geminiApiKey.collectAsState()
+    val cerebrasApiKey by viewModel.cerebrasApiKey.collectAsState()
     val selectedProvider by viewModel.selectedProvider.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
@@ -138,7 +139,7 @@ fun SettingsScreen(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ApiKeySection(viewModel, selectedProvider, apiKey, geminiApiKey)
+                    ApiKeySection(viewModel, selectedProvider, apiKey, geminiApiKey, cerebrasApiKey)
                     ModelSelectionSection(viewModel, selectedModel)
                 }
             }
@@ -325,12 +326,14 @@ fun ApiKeySection(
     selectedProvider: String,
     apiKey: String,
     geminiApiKey: String,
+    cerebrasApiKey: String,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var provider by remember { mutableStateOf(selectedProvider) }
     var apiKeyInput by remember { mutableStateOf(apiKey) }
     var geminiKeyInput by remember { mutableStateOf(geminiApiKey) }
+    var cerebrasKeyInput by remember { mutableStateOf(cerebrasApiKey) }
     
     SettingsSectionCard(
         title = stringResource(R.string.api_key_title),
@@ -344,24 +347,37 @@ fun ApiKeySection(
         )
 
         // API Key input fields per provider
-        if (provider.lowercase() == "gemini") {
-            OutlinedTextField(
-                value = geminiKeyInput,
-                onValueChange = { geminiKeyInput = it },
-                label = { Text("Gemini API Key") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-        } else {
-            OutlinedTextField(
-                value = apiKeyInput,
-                onValueChange = { apiKeyInput = it },
-                label = { Text(stringResource(R.string.api_key_title)) },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+        when (provider.lowercase()) {
+            "gemini" -> {
+                OutlinedTextField(
+                    value = geminiKeyInput,
+                    onValueChange = { geminiKeyInput = it },
+                    label = { Text("Gemini API Key") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+            "cerebras" -> {
+                OutlinedTextField(
+                    value = cerebrasKeyInput,
+                    onValueChange = { cerebrasKeyInput = it },
+                    label = { Text("Cerebras API Key") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+            else -> {
+                OutlinedTextField(
+                    value = apiKeyInput,
+                    onValueChange = { apiKeyInput = it },
+                    label = { Text(stringResource(R.string.api_key_title)) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
         }
         
         // Buttons row
@@ -372,19 +388,29 @@ fun ApiKeySection(
             // Save API Key button
             ElevatedButton(
                 onClick = {
-                    if (provider.lowercase() == "gemini") {
-                        if (geminiKeyInput.isBlank()) {
-                            Toast.makeText(context, "Vui lòng nhập Gemini API key", Toast.LENGTH_SHORT).show()
-                            return@ElevatedButton
+                    when (provider.lowercase()) {
+                        "gemini" -> {
+                            if (geminiKeyInput.isBlank()) {
+                                Toast.makeText(context, "Vui lòng nhập Gemini API key", Toast.LENGTH_SHORT).show()
+                                return@ElevatedButton
+                            }
+                            viewModel.saveGeminiApiKey(geminiKeyInput)
                         }
-                        viewModel.saveGeminiApiKey(geminiKeyInput)
-                    } else {
-                        if (apiKeyInput.isBlank()) {
-                            Toast.makeText(context, "Vui lòng nhập API key", Toast.LENGTH_SHORT).show()
-                            return@ElevatedButton
+                        "cerebras" -> {
+                            if (cerebrasKeyInput.isBlank()) {
+                                Toast.makeText(context, "Vui lòng nhập Cerebras API key", Toast.LENGTH_SHORT).show()
+                                return@ElevatedButton
+                            }
+                            viewModel.saveCerebrasApiKey(cerebrasKeyInput)
                         }
-                        // No strict format check to allow flexibility
-                        viewModel.saveApiKey(apiKeyInput)
+                        else -> {
+                            if (apiKeyInput.isBlank()) {
+                                Toast.makeText(context, "Vui lòng nhập API key", Toast.LENGTH_SHORT).show()
+                                return@ElevatedButton
+                            }
+                            // No strict format check to allow flexibility
+                            viewModel.saveApiKey(apiKeyInput)
+                        }
                     }
                     Toast.makeText(
                         context,
@@ -409,10 +435,10 @@ fun ApiKeySection(
             // Get API Key button
             ElevatedButton(
                 onClick = {
-                    val url = if (provider.lowercase() == "gemini") {
-                        "https://aistudio.google.com/app/apikey"
-                    } else {
-                        "https://console.groq.com/keys"
+                    val url = when (provider.lowercase()) {
+                        "gemini" -> "https://aistudio.google.com/app/apikey"
+                        "cerebras" -> "https://cloud.cerebras.ai/platform/apikeys"
+                        else -> "https://console.groq.com/keys"
                     }
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     context.startActivity(intent)
@@ -441,6 +467,8 @@ fun ModelSelectionSection(
     modifier: Modifier = Modifier
 ) {
     val apiKey by viewModel.apiKey.collectAsState()
+    val geminiApiKey by viewModel.geminiApiKey.collectAsState()
+    val cerebrasApiKey by viewModel.cerebrasApiKey.collectAsState()
     val selectedProvider by viewModel.selectedProvider.collectAsState()
     val context = LocalContext.current
     
@@ -463,50 +491,93 @@ fun ModelSelectionSection(
             exit = fadeOut() + slideOutVertically()
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (selectedProvider.lowercase() == "gemini") {
-                    // Gemini model dropdown
-                    GeminiModelDropdown(
-                        selectedModel = selectedModel,
-                        onModelSelected = { viewModel.saveSelectedModel(it) }
-                    )
-                } else {
-                    // Groq model dropdown
-                    ModelSelectionDropdown(
-                        viewModel = viewModel,
-                        selectedModel = selectedModel,
-                        onModelSelected = { viewModel.saveSelectedModel(it) }
-                    )
-                    
-                    // Refresh models button (Groq only)
-                    ElevatedButton(
-                        onClick = {
-                            if (apiKey.isBlank()) {
-                                Toast.makeText(
-                                    context,
-                                    "Please enter API Key first",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } else {
-                                viewModel.fetchAvailableModels()
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.refreshing_models),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.elevatedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                when (selectedProvider.lowercase()) {
+                    "gemini" -> {
+                        // Gemini model dropdown
+                        GeminiModelDropdown(
+                            selectedModel = selectedModel,
+                            onModelSelected = { viewModel.saveSelectedModel(it) }
                         )
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_refresh),
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 8.dp)
+                    }
+                    "cerebras" -> {
+                        // Cerebras model dropdown
+                        ModelSelectionDropdown(
+                            viewModel = viewModel,
+                            selectedModel = selectedModel,
+                            onModelSelected = { viewModel.saveSelectedModel(it) }
                         )
-                        Text(stringResource(R.string.refresh_models))
+                        
+                        // Refresh models button (Cerebras)
+                        ElevatedButton(
+                            onClick = {
+                                if (cerebrasApiKey.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Please enter Cerebras API Key first",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    viewModel.fetchAvailableModels()
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.refreshing_models),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_refresh),
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(stringResource(R.string.refresh_models))
+                        }
+                    }
+                    else -> {
+                        // Groq model dropdown
+                        ModelSelectionDropdown(
+                            viewModel = viewModel,
+                            selectedModel = selectedModel,
+                            onModelSelected = { viewModel.saveSelectedModel(it) }
+                        )
+                        
+                        // Refresh models button (Groq only)
+                        ElevatedButton(
+                            onClick = {
+                                if (apiKey.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Please enter API Key first",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    viewModel.fetchAvailableModels()
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.refreshing_models),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_refresh),
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(stringResource(R.string.refresh_models))
+                        }
                     }
                 }
             }
@@ -1217,7 +1288,7 @@ fun ProviderDropdown(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val providers = listOf("groq" to "Groq", "gemini" to "Gemini")
+    val providers = listOf("groq" to "Groq", "gemini" to "Gemini", "cerebras" to "Cerebras")
 
     Column(modifier = modifier) {
         Text(

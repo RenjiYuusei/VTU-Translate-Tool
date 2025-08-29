@@ -3,6 +3,7 @@ package com.vtu.translate
 import android.app.Application
 import com.vtu.translate.data.repository.GroqRepository
 import com.vtu.translate.data.repository.GeminiRepository
+import com.vtu.translate.data.repository.CerebrasRepository
 import com.vtu.translate.data.repository.LogRepository
 import com.vtu.translate.data.repository.PreferencesRepository
 import com.vtu.translate.data.repository.TranslationRepository
@@ -19,6 +20,9 @@ class VtuTranslateApp : Application() {
     lateinit var geminiRepository: GeminiRepository
         private set
     
+    lateinit var cerebrasRepository: CerebrasRepository
+        private set
+    
     lateinit var translationRepository: TranslationRepository
         private set
     
@@ -33,7 +37,8 @@ class VtuTranslateApp : Application() {
         preferencesRepository = PreferencesRepository(this)
         groqRepository = GroqRepository(preferencesRepository)
         geminiRepository = GeminiRepository(preferencesRepository)
+        cerebrasRepository = CerebrasRepository(preferencesRepository)
         logRepository = LogRepository()
-        translationRepository = TranslationRepository(groqRepository, logRepository, this, preferencesRepository, geminiRepository)
+        translationRepository = TranslationRepository(groqRepository, logRepository, this, preferencesRepository, geminiRepository, cerebrasRepository)
     }
 }
