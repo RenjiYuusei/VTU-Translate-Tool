@@ -12,6 +12,7 @@ import com.vtu.translate.data.model.ThemeMode
 /**
  * Repository for managing encrypted preferences
  */
+@Suppress("DEPRECATION")
 class PreferencesRepository(context: Context) {
     
     companion object {
