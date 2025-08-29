@@ -147,17 +147,7 @@ class TranslationRepository(
             "abc_",           // AppCompat library strings
             "mtrl_",          // Material Design library strings  
             "material_",      // Material Design library strings
-            "search_menu_",   // Search view strings
-            "status_bar_",    // Status bar notification strings
-            "exo_",           // ExoPlayer library strings
             "common_google_", // Google Play Services strings
-            "gcm_",           // Google Cloud Messaging strings
-            "ime_",           // Input method editor strings
-            "tooltip_",       // Tooltip library strings
-            "fab_",           // Floating Action Button strings
-            "character_counter_", // Material text field counter
-            "password_toggle_",   // Password visibility toggle
-            "path_password_"      // Password path strings
         )
         
         // Check if the string name starts with any of the unnecessary prefixes
