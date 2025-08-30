@@ -305,13 +305,15 @@ fun TranslateScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Translation buttons row
+                val translatedOrErrorCount = stringResources.count { it.translatedValue.isNotBlank() || it.hasError }
+                val hasUntranslatedItems = stringResources.any { it.translatedValue.isBlank() && !it.hasError }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Start translation button with animation
                     val startButtonElevation by animateDpAsState(
-                        targetValue = if (!isTranslating && stringResources.isNotEmpty()) 6.dp else 2.dp,
+                        targetValue = if (!isTranslating && hasUntranslatedItems) 6.dp else 2.dp,
                         animationSpec = spring(stiffness = Spring.StiffnessMedium)
                     )
                     
@@ -344,11 +346,20 @@ fun TranslateScreen(
                                 ).show()
                                 return@ElevatedButton
                             }
+                            // Không có chuỗi cần dịch (tất cả đã dịch/loại trừ)
+                            if (!hasUntranslatedItems) {
+                                Toast.makeText(
+                                    context,
+                                    "Không có chuỗi cần dịch.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@ElevatedButton
+                            }
                             
                             viewModel.startTranslation()
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = !isTranslating && stringResources.isNotEmpty(),
+                        enabled = !isTranslating && hasUntranslatedItems,
                         elevation = ButtonDefaults.elevatedButtonElevation(
                             defaultElevation = startButtonElevation,
                             pressedElevation = 8.dp
@@ -426,8 +437,6 @@ fun TranslateScreen(
                 }
                 
                 // Continue translation button (only show if there's partially translated content)
-                val translatedOrErrorCount = stringResources.count { it.translatedValue.isNotBlank() || it.hasError }
-                val hasUntranslatedItems = stringResources.any { it.translatedValue.isBlank() && !it.hasError }
                 
                 if (hasUntranslatedItems && translatedOrErrorCount > 0 && !isTranslating) {
                     Button(
@@ -479,10 +488,9 @@ fun TranslateScreen(
                             val result = app.translationRepository.saveTranslatedFile(targetLanguage)
                             
                             if (result.isSuccess) {
-                                val filePath = result.getOrNull()
                                 Toast.makeText(
                                     context,
-                                    context.getString(R.string.file_saved, filePath),
+                                    context.getString(R.string.file_saved),
                                     Toast.LENGTH_LONG
                                 ).show()
                             } else {

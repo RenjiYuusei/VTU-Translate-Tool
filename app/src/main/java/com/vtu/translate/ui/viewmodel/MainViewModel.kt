@@ -140,6 +140,13 @@ class MainViewModel(
             val targetLang = targetLanguage.value
             val batchSizePref = batchSize.value
             val speed = translationSpeed.value
+            val currentIndex = translationRepository.getCurrentTranslationIndex()
+            
+            // Không có chuỗi cần dịch -> thoát sớm, tránh khởi chạy service và log dư thừa
+            if (currentIndex == -1) {
+                logRepository.logInfo("Không có chuỗi cần dịch.")
+                return@launch
+            }
             
             // Start the service if background translation is enabled
             if (isBackgroundTranslationEnabled.value) {
@@ -147,7 +154,7 @@ class MainViewModel(
                 application.startService(serviceIntent)
             }
             
-            translationRepository.translateAll(targetLang, getCurrentTranslationIndex(), speed, batchSizePref)
+            translationRepository.translateAll(targetLang, currentIndex, speed, batchSizePref)
         }
     }
     
@@ -166,6 +173,13 @@ class MainViewModel(
             val targetLang = targetLanguage.value
             val speed = translationSpeed.value
             val batchSizePref = batchSize.value
+            val currentIndex = translationRepository.getCurrentTranslationIndex()
+            
+            // Không có chuỗi cần dịch -> thoát sớm
+            if (currentIndex == -1) {
+                logRepository.logInfo("Không có chuỗi cần dịch.")
+                return@launch
+            }
             
             // Start the service if background translation is enabled
             if (isBackgroundTranslationEnabled.value) {

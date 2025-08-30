@@ -25,7 +25,7 @@
     <string name="no_file_selected">Chưa chọn file</string>
     <string name="translating">Đang dịch…</string>
     <string name="loading_file">Đang tải...</string>
-    <string name="file_saved">Đã lưu file vào Downloads/VTU-Translate: %1$s</string>
+    <string name="file_saved">Đã lưu file vào Downloads/VTU-Translate</string>
     <string name="error_saving_file">Lỗi khi lưu file: %1$s</string>
     
     <!-- Settings Screen -->
@@ -38,8 +38,6 @@
     <string name="get_api_key">Lấy API Key</string>
     <string name="api_key_saved">Lưu API Key</string>
     <string name="select_model">Chọn Model AI</string>
-    <string name="model_group_meta">Meta</string>
-    <string name="model_group_deepseek_meta">Deepseek &amp; Meta</string>
     
     <!-- Interface Settings -->
     <string name="interface_title">Giao diện</string>
@@ -49,12 +47,6 @@
     <string name="theme_dark">Tối</string>
     <string name="theme_system">Hệ thống</string>
     <string name="app_language">Ngôn ngữ ứng dụng</string>
-    <string name="dark_theme">Chế độ tối</string>
-    <string name="enabled">Đã bật</string>
-    <string name="disabled">Đã tắt</string>
-    <string name="language_vietnamese">Tiếng Việt</string>
-    <string name="language_english">Tiếng Anh</string>
-    <string name="language_saved">Đã lưu cài đặt ngôn ngữ</string>
     
     <!-- Additional missing strings for better Vietnamese support -->
     
@@ -75,21 +67,17 @@
     <string name="translation_settings_title">Cài đặt dịch</string>
     <string name="translation_settings_subtitle">Tốc độ dịch, Ngôn ngữ đích</string>
     <string name="translation_speed">Tốc độ dịch</string>
-    <string name="batch_size">Kích thước batch</string>
     <string name="batch_translation_size">Kích thước dịch batch</string>
     <string name="batch_size_description">Dịch %1$d chuỗi cùng lúc</string>
     <string name="batch_size_note">Batch size cao hơn = dịch nhanh hơn nhưng tốn API nhiều hơn</string>
     <string name="refresh_models">Làm mới Models</string>
     <string name="refreshing_models">Đang làm mới models...</string>
-    <string name="models_refreshed">Đã làm mới models</string>
-    <string name="error_fetching_models">Lỗi khi tải danh sách models</string>
     <string name="available_models">Models khả dụng</string>
     <string name="target_language">Ngôn ngữ đích</string>
     <string name="continue_translation">Tiếp tục dịch</string>
     
     <!-- About -->
     <string name="about_title">Giới thiệu</string>
-    <string name="about_subtitle">Thông tin ứng dụng</string>
     <string name="app_version">Phiên bản</string>
     
     <!-- Error Messages -->
@@ -111,5 +99,4 @@
     <string name="translation_notification_channel_description">Hiển thị tiến độ dịch trong nền</string>
     <string name="preparing_translation">Đang chuẩn bị dịch...</string>
     <string name="notification_permission_required">Cần quyền thông báo để dịch trong nền</string>
-    <string name="translation_progress_detail">%1$d/%2$d chuỗi đang được dịch</string>
 </resources>
