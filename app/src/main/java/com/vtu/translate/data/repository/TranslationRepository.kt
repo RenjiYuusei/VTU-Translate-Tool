@@ -3,6 +3,7 @@ package com.vtu.translate.data.repository
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import android.util.Xml
 import com.vtu.translate.data.model.LogType
 import com.vtu.translate.data.model.StringResource
 import kotlinx.coroutines.Dispatchers
@@ -482,45 +483,27 @@ class TranslationRepository(
                     }
                     val removedCount = originalCount - resources.size
                     if (removedCount > 0) {
-                        logRepository.logInfo("Đã lọc bỏ $removedCount chuỗi không cần thiết khi lưu file.")
+                        logRepository.logInfo("Đã loại bỏ $removedCount chuỗi không cần thiết trước khi lưu.")
                     }
                 }
-                
-                // Map language codes to folder suffixes
-                val languageFolderMap = mapOf(
-                    "vi" to "values-vi",
-                    "en" to "values", // Default folder for English
-                    "zh" to "values-zh",
-                    "ru" to "values-ru", 
-                    "ko" to "values-ko",
-                    "es" to "values-es",
-                    "fr" to "values-fr",
-                    "de" to "values-de",
-                    "ja" to "values-ja"
-                )
-                
-                val folderName = languageFolderMap[targetLanguage] ?: "values-$targetLanguage"
-                
-                // Create directory structure in Downloads/VTU-Translate
+
+                // Prepare output directory and file
                 val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val vtuTranslateDir = File(downloadsDir, "VTU-Translate")
-                val resDir = File(vtuTranslateDir, "res")
-                val valuesDir = File(resDir, folderName)
-                
-                if (!valuesDir.exists()) {
-                    valuesDir.mkdirs()
+                if (!vtuTranslateDir.exists()) {
+                    vtuTranslateDir.mkdirs()
                 }
-                
-                val outputFile = File(valuesDir, "strings.xml")
-                
-                // Create XML file
-                val serializer = XmlPullParserFactory.newInstance().newSerializer()
-                val writer = OutputStreamWriter(FileOutputStream(outputFile), "UTF-8")
-                
+                val langSuffix = if (targetLanguage.isNotBlank()) targetLanguage else "vi"
+                val outputFile = File(vtuTranslateDir, "strings-$langSuffix.xml")
+
+                // Prepare XML serializer and writer
+                val fos = FileOutputStream(outputFile)
+                val writer = OutputStreamWriter(fos, Charsets.UTF_8)
+                val serializer = Xml.newSerializer()
                 serializer.setOutput(writer)
                 serializer.startDocument("UTF-8", true)
                 serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true)
-                
+
                 serializer.startTag("", "resources")
                 
                 for (resource in resources) {
@@ -537,7 +520,7 @@ class TranslationRepository(
                     serializer.text(value)
                     serializer.endTag("", "string")
                 }
-                
+
                 serializer.endTag("", "resources")
                 serializer.endDocument()
                 writer.close()

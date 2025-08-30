@@ -488,10 +488,9 @@ fun TranslateScreen(
                             val result = app.translationRepository.saveTranslatedFile(targetLanguage)
                             
                             if (result.isSuccess) {
-                                val filePath = result.getOrNull()
                                 Toast.makeText(
                                     context,
-                                    context.getString(R.string.file_saved, filePath),
+                                    context.getString(R.string.file_saved),
                                     Toast.LENGTH_LONG
                                 ).show()
                             } else {

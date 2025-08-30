@@ -25,7 +25,7 @@
     <string name="no_file_selected">No file selected</string>
     <string name="translating">Translating…</string>
     <string name="loading_file">Reading file…</string>
-    <string name="file_saved">File saved to Downloads/VTU-Translate: %1$s</string>
+    <string name="file_saved">File saved to Downloads/VTU-Translate</string>
     <string name="error_saving_file">Error saving file: %1$s</string>
     
     <!-- Settings Screen -->
@@ -38,8 +38,6 @@
     <string name="get_api_key">Get API Key</string>
     <string name="api_key_saved">API Key saved</string>
     <string name="select_model">Select AI Model</string>
-    <string name="model_group_meta">Meta</string>
-    <string name="model_group_deepseek_meta">Deepseek &amp; Meta</string>
     
     <!-- Interface Settings -->
     <string name="interface_title">Interface</string>
@@ -49,35 +47,25 @@
     <string name="theme_dark">Dark</string>
     <string name="theme_system">System</string>
     <string name="app_language">App Language</string>
-    <string name="dark_theme">Dark Mode</string>
-    <string name="enabled">Enabled</string>
-    <string name="disabled">Disabled</string>
     
     <!-- Translation Settings -->
     <string name="translation_settings_title">Translation Settings</string>
     <string name="translation_settings_subtitle">Translation Speed, Target Language</string>
     <string name="translation_speed">Translation Speed</string>
-    <string name="batch_size">Batch Size</string>
     <string name="batch_translation_size">Batch Translation Size</string>
     <string name="batch_size_description">Translate %1$d strings at a time</string>
     <string name="batch_size_note">Higher batch size = faster translation but more API usage</string>
     <string name="refresh_models">Refresh Models</string>
     <string name="refreshing_models">Refreshing models...</string>
-    <string name="models_refreshed">Models refreshed</string>
-    <string name="error_fetching_models">Error fetching models</string>
     <string name="available_models">Available Models</string>
     <string name="target_language">Target Language</string>
     <string name="continue_translation">Continue Translation</string>
     
     <!-- About -->
     <string name="about_title">About</string>
-    <string name="about_subtitle">App Information</string>
     <string name="app_version">Version</string>
     
     <!-- Language Settings -->
-    <string name="language_vietnamese">Vietnamese</string>
-    <string name="language_english">English</string>
-    <string name="language_saved">Language settings saved</string>
     
     <!-- Additional missing strings for better UI support -->
     
@@ -113,5 +101,4 @@
     <string name="translation_notification_channel_description">Shows translation progress in background</string>
     <string name="preparing_translation">Preparing translation...</string>
     <string name="notification_permission_required">Notification permission required for background translation</string>
-    <string name="translation_progress_detail">%1$d/%2$d strings being translated</string>
 </resources>
