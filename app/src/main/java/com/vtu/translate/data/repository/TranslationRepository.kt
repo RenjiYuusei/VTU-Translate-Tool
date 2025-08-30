@@ -80,31 +80,42 @@ class TranslationRepository(
                                         logRepository.logInfo("Đã bỏ qua chuỗi không cần thiết: $name")
                                     } else {
                                         val value = parser.text
-                                        // Check if string is translatable
-                                        val isTranslatable = translatable == null || translatable != "false"
-                                        
-                                        // Special case handling for known non-translatable strings
-                                        val isSpecialCase = isSpecialNonTranslatableString(value)
-                                        
-                                        if (isTranslatable && !isSpecialCase) {
-                                            // Check if the string contains technical parts that should be preserved
-                                            if (containsTechnicalParts(value)) {
-                                                // Add with pre-processed value that marks technical parts
-                                                val preprocessedValue = preprocessStringWithTechnicalParts(value)
-                                                stringResources.add(StringResource(name, preprocessedValue))
-                                            } else {
-                                                stringResources.add(StringResource(name, value))
-                                            }
-                                        } else if (isSpecialCase) {
-                                            // Add with pre-defined translation for special cases
-                                            val predefinedTranslation = getSpecialCaseTranslation(value)
+                                        // Exclude certain keys from translation (kept as-is)
+                                        if (isExcludedKey(name)) {
                                             stringResources.add(StringResource(
                                                 name = name,
                                                 value = value,
-                                                translatedValue = predefinedTranslation,
+                                                translatedValue = value,
                                                 isTranslating = false,
                                                 hasError = false
                                             ))
+                                        } else {
+                                            // Check if string is translatable
+                                            val isTranslatable = translatable == null || translatable != "false"
+                                            
+                                            // Special case handling for known non-translatable strings
+                                            val isSpecialCase = isSpecialNonTranslatableString(value)
+                                            
+                                            if (isTranslatable && !isSpecialCase) {
+                                                // Check if the string contains technical parts that should be preserved
+                                                if (containsTechnicalParts(value)) {
+                                                    // Add with pre-processed value that marks technical parts
+                                                    val preprocessedValue = preprocessStringWithTechnicalParts(value)
+                                                    stringResources.add(StringResource(name, preprocessedValue))
+                                                } else {
+                                                    stringResources.add(StringResource(name, value))
+                                                }
+                                            } else if (isSpecialCase) {
+                                                // Add with pre-defined translation for special cases
+                                                val predefinedTranslation = getSpecialCaseTranslation(value)
+                                                stringResources.add(StringResource(
+                                                    name = name,
+                                                    value = value,
+                                                    translatedValue = predefinedTranslation,
+                                                    isTranslating = false,
+                                                    hasError = false
+                                                ))
+                                            }
                                         }
                                     }
                                 }
@@ -152,6 +163,16 @@ class TranslationRepository(
         
         // Check if the string name starts with any of the unnecessary prefixes
         return unnecessaryPrefixes.any { prefix -> name.startsWith(prefix) }
+    }
+    
+    /**
+     * Determine whether a key should be excluded from translation and kept as-is.
+     */
+    private fun isExcludedKey(name: String): Boolean {
+        val excludedKeys = setOf(
+            "app_name"
+        )
+        return excludedKeys.contains(name)
     }
     
     /**
