@@ -297,17 +297,30 @@ class TranslationRepository(
     suspend fun translateAll(targetLanguage: String = "vi", continueFromIndex: Int = 0, translationSpeed: Int = 3, batchSize: Int = 1): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                _isTranslating.value = true
-                shouldStopTranslation = false
+                // Prevent duplicate starts if a translation is already in progress
+                if (_isTranslating.value) {
+                    logRepository.logInfo("Quá trình dịch đang chạy, bỏ qua yêu cầu mới.")
+                    return@withContext Result.success(Unit)
+                }
                 
                 val resources = _stringResources.value
                 if (resources.isEmpty()) {
                     return@withContext Result.failure(Exception("No strings to translate"))
                 }
                 
-                // Determine the starting index based on continueFromIndex parameter
-                val startIndex = maxOf(0, continueFromIndex)
-                val remainingCount = resources.size - startIndex
+                // Find the first item that actually needs translating
+                val firstPendingIndex = resources.indexOfFirst { it.translatedValue.isBlank() && !it.hasError }
+                if (firstPendingIndex == -1) {
+                    // Nothing to translate (all translated or excluded)
+                    logRepository.logInfo("Không có chuỗi cần dịch. Tất cả chuỗi đã được dịch hoặc không cần dịch.")
+                    _isTranslating.value = false
+                    return@withContext Result.success(Unit)
+                }
+                
+                // Determine the starting index based on continueFromIndex parameter and pending index
+                val startIndex = maxOf(0, continueFromIndex, firstPendingIndex)
+                // Count only items that really need translating
+                val remainingCount = resources.subList(startIndex, resources.size).count { it.translatedValue.isBlank() && !it.hasError }
                 
                 // Get the current provider and model for logging
                 val currentProvider = preferencesRepository.selectedProvider.first()
@@ -317,6 +330,10 @@ class TranslationRepository(
                 } else {
                     groqRepository.getSelectedModel()
                 }
+                
+                // Mark translating only when we actually have pending work
+                _isTranslating.value = true
+                shouldStopTranslation = false
                 
                 logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [$currentModel] ($currentProvider) sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
                 
