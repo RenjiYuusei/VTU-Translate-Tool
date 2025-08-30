@@ -3,6 +3,7 @@ package com.vtu.translate.data.repository
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import android.util.Xml
 import com.vtu.translate.data.model.LogType
 import com.vtu.translate.data.model.StringResource
 import kotlinx.coroutines.Dispatchers
@@ -80,31 +81,42 @@ class TranslationRepository(
                                         logRepository.logInfo("Đã bỏ qua chuỗi không cần thiết: $name")
                                     } else {
                                         val value = parser.text
-                                        // Check if string is translatable
-                                        val isTranslatable = translatable == null || translatable != "false"
-                                        
-                                        // Special case handling for known non-translatable strings
-                                        val isSpecialCase = isSpecialNonTranslatableString(value)
-                                        
-                                        if (isTranslatable && !isSpecialCase) {
-                                            // Check if the string contains technical parts that should be preserved
-                                            if (containsTechnicalParts(value)) {
-                                                // Add with pre-processed value that marks technical parts
-                                                val preprocessedValue = preprocessStringWithTechnicalParts(value)
-                                                stringResources.add(StringResource(name, preprocessedValue))
-                                            } else {
-                                                stringResources.add(StringResource(name, value))
-                                            }
-                                        } else if (isSpecialCase) {
-                                            // Add with pre-defined translation for special cases
-                                            val predefinedTranslation = getSpecialCaseTranslation(value)
+                                        // Exclude certain keys from translation (kept as-is)
+                                        if (isExcludedKey(name)) {
                                             stringResources.add(StringResource(
                                                 name = name,
                                                 value = value,
-                                                translatedValue = predefinedTranslation,
+                                                translatedValue = value,
                                                 isTranslating = false,
                                                 hasError = false
                                             ))
+                                        } else {
+                                            // Check if string is translatable
+                                            val isTranslatable = translatable == null || translatable != "false"
+                                            
+                                            // Special case handling for known non-translatable strings
+                                            val isSpecialCase = isSpecialNonTranslatableString(value)
+                                            
+                                            if (isTranslatable && !isSpecialCase) {
+                                                // Check if the string contains technical parts that should be preserved
+                                                if (containsTechnicalParts(value)) {
+                                                    // Add with pre-processed value that marks technical parts
+                                                    val preprocessedValue = preprocessStringWithTechnicalParts(value)
+                                                    stringResources.add(StringResource(name, preprocessedValue))
+                                                } else {
+                                                    stringResources.add(StringResource(name, value))
+                                                }
+                                            } else if (isSpecialCase) {
+                                                // Add with pre-defined translation for special cases
+                                                val predefinedTranslation = getSpecialCaseTranslation(value)
+                                                stringResources.add(StringResource(
+                                                    name = name,
+                                                    value = value,
+                                                    translatedValue = predefinedTranslation,
+                                                    isTranslating = false,
+                                                    hasError = false
+                                                ))
+                                            }
                                         }
                                     }
                                 }
@@ -152,6 +164,16 @@ class TranslationRepository(
         
         // Check if the string name starts with any of the unnecessary prefixes
         return unnecessaryPrefixes.any { prefix -> name.startsWith(prefix) }
+    }
+    
+    /**
+     * Determine whether a key should be excluded from translation and kept as-is.
+     */
+    private fun isExcludedKey(name: String): Boolean {
+        val excludedKeys = setOf(
+            "app_name"
+        )
+        return excludedKeys.contains(name)
     }
     
     /**
@@ -276,17 +298,30 @@ class TranslationRepository(
     suspend fun translateAll(targetLanguage: String = "vi", continueFromIndex: Int = 0, translationSpeed: Int = 3, batchSize: Int = 1): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                _isTranslating.value = true
-                shouldStopTranslation = false
+                // Prevent duplicate starts if a translation is already in progress
+                if (_isTranslating.value) {
+                    logRepository.logInfo("Quá trình dịch đang chạy, bỏ qua yêu cầu mới.")
+                    return@withContext Result.success(Unit)
+                }
                 
                 val resources = _stringResources.value
                 if (resources.isEmpty()) {
                     return@withContext Result.failure(Exception("No strings to translate"))
                 }
                 
-                // Determine the starting index based on continueFromIndex parameter
-                val startIndex = maxOf(0, continueFromIndex)
-                val remainingCount = resources.size - startIndex
+                // Find the first item that actually needs translating
+                val firstPendingIndex = resources.indexOfFirst { it.translatedValue.isBlank() && !it.hasError }
+                if (firstPendingIndex == -1) {
+                    // Nothing to translate (all translated or excluded)
+                    logRepository.logInfo("Không có chuỗi cần dịch. Tất cả chuỗi đã được dịch hoặc không cần dịch.")
+                    _isTranslating.value = false
+                    return@withContext Result.success(Unit)
+                }
+                
+                // Determine the starting index based on continueFromIndex parameter and pending index
+                val startIndex = maxOf(0, continueFromIndex, firstPendingIndex)
+                // Count only items that really need translating
+                val remainingCount = resources.subList(startIndex, resources.size).count { it.translatedValue.isBlank() && !it.hasError }
                 
                 // Get the current provider and model for logging
                 val currentProvider = preferencesRepository.selectedProvider.first()
@@ -296,6 +331,10 @@ class TranslationRepository(
                 } else {
                     groqRepository.getSelectedModel()
                 }
+                
+                // Mark translating only when we actually have pending work
+                _isTranslating.value = true
+                shouldStopTranslation = false
                 
                 logRepository.logInfo("Bắt đầu dịch $remainingCount chuỗi (từ index $startIndex) với model [$currentModel] ($currentProvider) sang ngôn ngữ '$targetLanguage' với tốc độ $translationSpeed.")
                 
@@ -444,45 +483,27 @@ class TranslationRepository(
                     }
                     val removedCount = originalCount - resources.size
                     if (removedCount > 0) {
-                        logRepository.logInfo("Đã lọc bỏ $removedCount chuỗi không cần thiết khi lưu file.")
+                        logRepository.logInfo("Đã loại bỏ $removedCount chuỗi không cần thiết trước khi lưu.")
                     }
                 }
-                
-                // Map language codes to folder suffixes
-                val languageFolderMap = mapOf(
-                    "vi" to "values-vi",
-                    "en" to "values", // Default folder for English
-                    "zh" to "values-zh",
-                    "ru" to "values-ru", 
-                    "ko" to "values-ko",
-                    "es" to "values-es",
-                    "fr" to "values-fr",
-                    "de" to "values-de",
-                    "ja" to "values-ja"
-                )
-                
-                val folderName = languageFolderMap[targetLanguage] ?: "values-$targetLanguage"
-                
-                // Create directory structure in Downloads/VTU-Translate
+
+                // Prepare output directory and file
                 val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val vtuTranslateDir = File(downloadsDir, "VTU-Translate")
-                val resDir = File(vtuTranslateDir, "res")
-                val valuesDir = File(resDir, folderName)
-                
-                if (!valuesDir.exists()) {
-                    valuesDir.mkdirs()
+                if (!vtuTranslateDir.exists()) {
+                    vtuTranslateDir.mkdirs()
                 }
-                
-                val outputFile = File(valuesDir, "strings.xml")
-                
-                // Create XML file
-                val serializer = XmlPullParserFactory.newInstance().newSerializer()
-                val writer = OutputStreamWriter(FileOutputStream(outputFile), "UTF-8")
-                
+                val langSuffix = if (targetLanguage.isNotBlank()) targetLanguage else "vi"
+                val outputFile = File(vtuTranslateDir, "strings-$langSuffix.xml")
+
+                // Prepare XML serializer and writer
+                val fos = FileOutputStream(outputFile)
+                val writer = OutputStreamWriter(fos, Charsets.UTF_8)
+                val serializer = Xml.newSerializer()
                 serializer.setOutput(writer)
                 serializer.startDocument("UTF-8", true)
                 serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true)
-                
+
                 serializer.startTag("", "resources")
                 
                 for (resource in resources) {
@@ -499,7 +520,7 @@ class TranslationRepository(
                     serializer.text(value)
                     serializer.endTag("", "string")
                 }
-                
+
                 serializer.endTag("", "resources")
                 serializer.endDocument()
                 writer.close()
